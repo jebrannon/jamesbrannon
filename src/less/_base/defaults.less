@@ -1,0 +1,61 @@
+/*
+ *	File :		_base/default.less
+ *	Info : 		This is for the remaining globally applied styling a resets not covered in 'normalize.less'.
+ *	Usage : 	@import "_base/defaults.less";
+ *
+ */
+
+
+html {
+	font-size: 62.5%;
+	height: 100%;
+
+	* {
+		-webkit-box-sizing: border-box;
+		-moz-box-sizing: border-box;
+		-ms-box-sizing: border-box;
+		box-sizing: border-box;
+	}
+
+	body {
+		height: 100%;
+
+		a,
+		b,
+		s {
+			font-weight: 100;
+		}
+
+		s {
+			text-decoration: none;
+		}
+
+		p,
+		pre,
+		blockquote,
+		a,
+		ul,
+		ol,
+		li,
+		h1,
+		h2,
+		h3,
+		h4,
+		h5,
+		h6 {
+			margin: 0;
+			padding: 0;
+		}
+
+		ul,
+		li {
+			list-style: none;
+		}
+
+	}
+
+	iframe {
+		border: 0;
+	  max-width: 100%;
+	}
+}

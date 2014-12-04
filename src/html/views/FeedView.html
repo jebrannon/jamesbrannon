@@ -1,0 +1,7 @@
+<ul class="feed-list">  
+	<li class="feed-item" ng-repeat="item in blogger" data-is-bound>
+		<h2 ng-if="item.title && item.link" class="feed-title"><a href="{{item.link}}" title="{{item.title}}">{{item.title}}</a></h2>
+		<h2 ng-if="item.title && !item.link" class="feed-title">{{item.title}}</h2>
+		<p ng-if="item.body" class="feed-body" ng-bind-html="item.body|truncate:200"></p>
+	</li>
+</ul>

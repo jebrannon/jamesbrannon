@@ -1,0 +1,45 @@
+/*
+ *  File :    _mixins/typography.less
+ *  Info :    Here we define typographical related mixins.
+ *  Usage :   @import "_mixins/typography.less";
+ *
+ */
+
+
+/*
+ *  .font-face('chosen-font-name', 'path-to-files', 'font-file-name');
+ */
+.font-face(@family-name, @font-path, @filename) {
+  @font-face {
+    font-family: @family-name;
+      src: url('@{font-path}@{filename}.eot');
+      src: url('@{font-path}@{filename}.eot?#iefix') format('embedded-opentype'),
+           url('@{font-path}@{filename}.woff') format('woff'),
+           url('@{font-path}@{filename}.ttf') format('truetype'),
+           url('@{font-path}@{filename}.svg#@{filename}') format('svg');
+    font-weight: normal;
+    font-style: normal;
+  }
+}
+
+
+/*
+ *  .font-size('decimal-number');
+ */
+.font-size(@sizeValue) {
+  @remValue: @sizeValue;
+  @pxValue: (@sizeValue * 10);
+  font-size: ~"@{pxValue}px"; 
+  font-size: ~"@{remValue}rem";
+}
+
+
+/*
+ *  .line-height('decimal-number');
+ */
+.line-height(@sizeValue) {
+  @remValue: @sizeValue;
+  @pxValue: (@sizeValue * 10);
+  line-height: ~"@{pxValue}px"; 
+  line-height: ~"@{remValue}rem";
+}

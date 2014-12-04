@@ -1,0 +1,32 @@
+/*
+ *  File :    _theme/color-scheme.less
+ *  Info :    Define colour scheme for this theme.
+ *  Usage :   @import "_theme/color-scheme.less";
+ *
+ */
+
+.theme {
+	background-color: @colour-dark;
+	color: @colour-light;
+
+	a {
+		color: @colour-light;
+
+		&:hover {
+			color: @colour-accent;
+		}
+	}
+
+	.invert {
+		background-color: @colour-light;
+		color: @colour-dark;
+
+		a {
+			color: @colour-dark;
+
+			&:hover {
+				color: @colour-accent;
+			}
+		}
+	}
+}

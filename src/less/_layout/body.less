@@ -1,0 +1,35 @@
+/*
+ *  File :    _layout/body.less
+ *  Info :    Layout for the body of the website.
+ *  Usage :   @import "_layout/body.less";
+ *
+ */
+
+
+#body {
+	position: absolute;
+	top: 0;
+	transition: all 500ms ease-out;
+	width: 100%;
+
+	&.collapse {
+		transition: all 500ms ease-out;
+		transform: translate(20%, 0);
+
+		.collapse-overlay {
+			pointer-events: auto;
+			opacity: .75;
+		}
+	}
+
+	.collapse-overlay {
+		pointer-events: none;
+		transition: opacity 500ms ease-out;
+		background-color: @colour-dark;
+		opacity: 0;
+		position: absolute;
+		width: 100%;
+		height: 100%;
+		top: 0;
+	}
+}

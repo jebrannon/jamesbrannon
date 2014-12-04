@@ -1,0 +1,106 @@
+/*
+ *  File :    _layout/menu.less
+ *  Info :    Layout for navigation element.
+ *  Usage :   @import "_layout/menu.less";
+ *
+ */
+
+
+#menu {
+	height: 100%;
+	position: absolute;
+	transform: translate(-100%, 0);
+	transition: .5s ease-out;
+	width: 70%;
+	z-index: 100;
+
+
+	.menu-button {
+		cursor: pointer;
+		display: block;
+		height: 40px;
+		left: 100%;
+		position: absolute;
+		top: 10px;
+		transition: background-color 250ms ease-out;
+		width: 50px;
+
+		span,
+		span:before,
+		span:after {
+			background-color: @colour-light;
+			left: 20px;
+			pointer-events: none;
+		  border-radius: 1px;
+		  content: '';
+		  cursor: pointer;
+		  display: block;
+		  height: 3px;
+		  position: absolute;
+		  transition: transform 500ms ease-out, background-color 500ms ease-out, top 500ms ease-out;
+		  width: 20px;
+		}
+
+		span {
+			top: 19px;
+		}
+		span:before {
+		  top: -6px;
+		  left: 0;
+		}
+		span:after {
+		  top: 6px;
+		  left: 0;
+		}
+
+		&:hover {
+
+			span,
+			span:before,
+			span:after {
+				// background-color: @colour-accent;
+			}
+		}
+	}
+
+	&.expand {
+		transform: translate(0, 0);
+
+		.menu-button {
+
+			span {
+			  background-color: transparent;
+
+			  &:before,
+				&:after {
+				  top: 0;
+				}
+				&:before {
+				  transform: rotate(45deg);
+				}
+				&:after {
+				  transform: rotate(-45deg);
+				}
+			}
+		}
+	}
+
+	.inner {
+		// margin: 0 auto;
+		// max-width: 1024px;
+		// overflow: hidden;
+
+
+		li {
+			display: inline-block;
+		}
+
+		.nav {
+			// float: right;
+
+			li {
+				margin: 0 0 0 20px;
+			}
+		}	
+	}
+}
