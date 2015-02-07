@@ -1,0 +1,10 @@
+# ignore all compiled directories
+# matches "develop" and "release" in any subfolder
+develop/
+release/
+
+# ignore all node modules
+node_modules/
+
+# ignore all files ending with ~
+*~ 
