@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html data-ng-app='ngApp' data-ng-controller="PageController" ng-init="init()">
+<html data-ng-app='ngApp' data-ng-controller="PageController">
     <head>
         <title>James Brannon // Digital Creative</title>
         <meta charset="utf-8">
@@ -11,13 +11,13 @@
         <!-- Favicon -->
         <link rel="shortcut icon" href="images/favicon.ico" />
 
-        <link href='http://fonts.googleapis.com/css?family=Cantarell' rel='stylesheet' type='text/css'>
+        <link href='http://fonts.googleapis.com/css?family=Muli' rel='stylesheet' type='text/css'>
 
 
         <!-- Main Stylesheet -->
         <link href="css/main.css" rel="stylesheet" type="text/css" />
     </head>
-    <body class="theme">
+    <body class="theme" data-ng-body>
         <noscript>
             <div class="no-script">
                 <p>For full functionality of this site it is necessary to enable JavaScript.</p>
@@ -25,23 +25,32 @@
             </div>
         </noscript>
 
-        <div id="menu" class="invert" data-ng-menu>
-          <div class="inner">
-            <ul class="nav">
-              <li><a href="#about" title="About">About</a></li>
-              <li><a href="#contact" title="Contact">Contact</a></li>
-              <li><a href="#blog" title="Blog">Blog</a></li>
-            </ul>
-          </div>
-          <a class="menu-button" href="#"><span></span></a>
+        <div id="SiteNav" class="invert" data-jb-transition="SiteNav">
+            <div class="site-nav-inner">
+                <ul class="menu">
+                    <li><a href="#about" title="About">About</a></li>
+                    <li><a href="#contact" title="Contact">Contact</a></li>
+                    <li><a href="#blog" title="Blog">Blog</a></li>
+                </ul>
+            </div>
+            <a class="site-nav-button" title="Site Navigation" data-jb-action="OpenSiteNav">
+                <ul>
+                    <li class="button-bar"></li>
+                    <li class="button-bar"></li>
+                    <li class="button-bar"></li>
+                </ul>
+            </a>
         </div>
 
-        <div id="body" class="theme" data-ng-body>
-            <div id="header">
-              <img class="ident" src="/images/ident.svg"/></br>
-              <a class="email" href="mailto:me@jamesbrannon.co.uk" title="me@jamesbrannon.co.uk">me@jamesbrannon.co.uk</a>
+        <div id="Body" class="theme">
+            <div id="Header" class="section">
+                <div class="ident"><div class="ident-inner"></div></div>
+                <h1 class="james"><img src="/images/james.png" height="30" width="121" alt="James" draggable="false"/></h1>
+                <h2>Draw . Design . Code</h2>
+                <p>Hello, I'm a Digital Creative based in Brighton, working at product startup <a title="StoryStream" target="_blank" href="http://storystream.it">StoryStream</a> and this is my home in the Digital World.<br>Please take a look around.</p>
             </div>
-            <div class="feed-module" data-ng-feed></div>
+            <div class="section invert"></div>
+            <!-- <div class="feed-module" data-ng-feed></div> -->
 
             <div class="collapse-overlay theme"></div>
         </div>

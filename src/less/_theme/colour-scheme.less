@@ -6,26 +6,68 @@
  */
 
 .theme {
-	background-color: @colour-dark;
-	color: @colour-light;
+	background-color: @colour-light;
+	color: @colour-copy;
+
+	h1,
+	h2 {
+		color: @colour-dark;
+	}
 
 	a {
-		color: @colour-light;
+		color: @colour-dark;
 
 		&:hover {
 			color: @colour-accent;
 		}
 	}
 
+	.ident {
+		background-color: @colour-dark;
+
+		.ident-inner {
+			background-color: @colour-light;
+		}
+	}
+
+	.site-nav-button {
+
+		&:hover {
+			
+			ul {
+				.button-bar {
+					background-color: @colour-accent;
+				}
+			}
+
+		}
+	}
+
+	
 	.invert {
-		background-color: @colour-light;
-		color: @colour-dark;
+		background-color: @colour-dark;
+		color: @colour-light;
 
 		a {
-			color: @colour-dark;
+			color: @colour-light;
 
 			&:hover {
 				color: @colour-accent;
+			}
+		}
+
+		.ident {
+			background-color: @colour-dark;
+
+			.ident-inner {
+				background-color: @colour-light;
+			}
+		}
+
+		.site-nav-button {
+
+			.button-bar {
+				background-color: @colour-dark;
 			}
 		}
 	}

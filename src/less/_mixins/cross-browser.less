@@ -1,0 +1,69 @@
+/*
+ *  File :    _mixins/cross-browser.less
+ *  Info :    Here we define mixins specifically for handling cross browser CSS.
+ *  Usage :   @import "_mixins/cross-browser.less";
+ *
+ */
+
+
+/*
+ *  .box-sizing('border-box');
+ */
+.box-sizing(@params) {
+	-webkit-box-sizing: @params;
+  	-moz-box-sizing: @params;
+  	box-sizing: @params;
+}
+
+/*
+ *  .box-shadow('properties');
+ */
+.box-shadow(@properties) {
+	-moz-box-shadow: @properties;
+	-webkit-box-shadow: @properties;
+	box-shadow: @properties;
+}
+
+
+/*
+ *  .border-radius('params');
+ */
+.border-radius(@params) {
+	-webkit-border-radius: @params;
+	-moz-border-radius: @params;
+	border-radius: @params;
+}
+
+
+/*
+ *  .user-select('param');
+ */
+.user-select(@param) {
+	-webkit-user-select: @param;
+	-moz-user-select: @param;
+	-ms-user-select: @param;
+	-o-user-select: @param;
+	user-select: @param;
+}
+
+
+/*
+ *  .transform('params');
+ */
+.transform(@params) {
+	-webkit-transform: @params;
+	-ms-transform: @params;
+	transform: @params;
+}
+
+
+/*
+ *  .transition('params');
+ */
+.transition(...) {
+  -webkit-transition: @arguments;   
+  -moz-transition: @arguments;   
+  -ms-transition: @arguments;   
+  -o-transition: @arguments;   
+  transition: @arguments; 
+}

@@ -6,41 +6,48 @@
  */
 
 
-#body {
+#Body {
+	.transform(translate(0, 0));
+	.transition(all 0.5s ease-out);
 	position: absolute;
 	top: 0;
-	-webkit-transition: all 500ms ease-out;
-	transition: all 500ms ease-out;
-
-	-webkit-transform: translate(0, 0);
-	-ms-transform: translate(0, 0);
-	transform: translate(0, 0);
 	width: 100%;
 
-	&.collapse {
-		-webkit-transition: all 500ms ease-out;
-		transition: all 500ms ease-out;
-		-webkit-transform: translate(20%, 0);
-		-ms-transform: translate(20%, 0);
-		transform: translate(20%, 0);
-		transition: all 500ms ease-out;
+	h1 {
+		padding: 40px 0;
+	}
 
-		.collapse-overlay {
-			opacity: .75;
-			pointer-events: auto;
-		}
+	h2 {
+		padding: 30px 0;
+	}
+
+	.section {
+		padding: 60px;
 	}
 
 	.collapse-overlay {
+		
+		.transition(opacity 0.5s ease-out);
 		height: 100%;
-		pointer-events: none;
-		-webkit-transition: opacity 500ms ease-out;
-		transition: opacity 500ms ease-out;
-		background-color: @colour-dark;
 		opacity: 0;
 		pointer-events: none;
 		position: absolute;
 		top: 0;
 		width: 100%;
+	}
+}
+
+.site-nav-open {
+
+	#Body {
+
+		.transform(translate(20%, 0));
+		.transition(all 0.5s ease-out);
+
+		.collapse-overlay {
+
+			opacity: 0.75;
+			pointer-events: none;
+		}
 	}
 }

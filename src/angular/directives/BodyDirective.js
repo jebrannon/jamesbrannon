@@ -4,28 +4,51 @@ var BodyDirective = function ($window, $sce) {
 	return {
 		restrict: 'AE',
 		link: function(scope, elem, attrs) {
+			var transitionEnd = 'webkitTransitionEnd transitionend msTransitionEnd oTransitionEnd';
 
-			/*
-			  Event Handler
-			*/
-			var _handleEvent = function (e, data) {
+			var handleEvent = function (e, data) {
 				var eventType = e.type ? e.type : e.name;
 				switch(eventType) {
-					case 'ng_menuExpanded':
-						console.log('hg ng_menuExpanded',elem[0]);
-						elem.toggleClass('collapse');
+					case 'click':
+						handleClickEvents(e);
+						break;
+					case 'webkitTransitionEnd':
+					case 'transitionend':
+					case 'msTransitionEnd':
+					case 'oTransitionEnd':
+						handleAnimationEvents(e);
 						break;
 				}
 			};
+			var handleClickEvents = function(e) {
+				var action = $(e.target).attr('data-jb-action');
+				switch(action) {
+					case 'OpenSiteNav':
+						if (!elem.hasClass('site-nav-open')) {
+							elem.addClass('prevent-scroll');
+						}
+						elem.toggleClass('site-nav-open');
+						break;
+				}
+			}
+			var handleAnimationEvents = function (e) {
+				var transition = $(e.target).attr('data-jb-transition');
+				switch(transition) {
+					case 'SiteNav':
+						if (!elem.hasClass('site-nav-open')) {
+							elem.removeClass('prevent-scroll');
+						}
+						break;
+				}
+			}
 
-			/*
-			  Methods
-			*/
+			
+			var init = function () {
+				elem.on('click', handleEvent);
+				elem.on(transitionEnd, handleEvent);
+			}
 
-		  /*
-		  	Event Listeners
-		  */
-			scope.$on('ng_menuExpanded', _handleEvent);
+			init();
 		}
   };
 };
