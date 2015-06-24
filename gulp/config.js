@@ -40,7 +40,17 @@ module.exports = {
 	images: {
 		dev: develop + '/images',
 		release: release + '/images',
-		src: src + 'images/**'
+		src: src + 'images/*'
+	},
+	svg: {
+		dev: develop + '/images/svg',
+		release: release + '/images/svg',
+		src: src + 'images/svg/*.svg'
+	},
+	fonts: {
+		dev: develop + '/fonts',
+		release: release + '/fonts',
+		src: src + 'fonts/**'
 	},
 	server: {
 		dev: {
