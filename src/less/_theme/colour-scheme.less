@@ -5,7 +5,15 @@
  *
  */
 
+@colour-light: rgb(251, 251, 251);
+@colour-dark: rgb(36, 40, 46);
+@colour-copy: rgb(100, 100, 107);
+@colour-accent: rgb(210, 70, 60);
+@colour-opaque: rgba(0, 0, 0, .8);
+
+
 .theme {
+
 	background-color: @colour-light;
 	color: @colour-copy;
 
@@ -15,6 +23,7 @@
 	}
 
 	a {
+		.transition(color .15s ease);
 		color: @colour-dark;
 
 		&:hover {
@@ -27,6 +36,38 @@
 
 		.ident-inner {
 			background-color: @colour-light;
+		}
+	}
+
+	.james {
+
+		.logo-svg {
+
+			fill: @colour-dark;
+		}
+	}
+
+	.icon {
+
+		.icon-svg {
+
+			fill: currentColor;
+		}
+	}
+
+	.disc-icon {
+
+		.transition(background-color .15s ease);
+		background-color: @colour-dark;
+
+		.disc-icon-svg {
+
+			fill: @colour-light;
+		}
+
+		&:hover {
+
+			background-color: @colour-accent;
 		}
 	}
 
