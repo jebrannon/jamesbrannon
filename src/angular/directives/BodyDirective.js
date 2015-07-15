@@ -23,19 +23,19 @@ var BodyDirective = function ($window, $sce) {
 			var handleClickEvents = function(e) {
 				var action = $(e.target).attr('data-jb-action');
 				switch(action) {
-					case 'OpenSiteNav':
-						if (!elem.hasClass('site-nav-open')) {
+					case 'OpenNavigation':
+						if (!elem.hasClass('nav-open')) {
 							elem.addClass('prevent-scroll');
 						}
-						elem.toggleClass('site-nav-open');
+						elem.toggleClass('nav-open');
 						break;
 				}
 			}
 			var handleAnimationEvents = function (e) {
 				var transition = $(e.target).attr('data-jb-transition');
 				switch(transition) {
-					case 'SiteNav':
-						if (!elem.hasClass('site-nav-open')) {
+					case 'Navigation':
+						if (!elem.hasClass('nav-open')) {
 							elem.removeClass('prevent-scroll');
 						}
 						break;
@@ -50,6 +50,6 @@ var BodyDirective = function ($window, $sce) {
 
 			init();
 		}
-  };
+	};
 };
 module.exports = BodyDirective;
