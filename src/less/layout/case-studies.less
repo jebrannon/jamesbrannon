@@ -1,0 +1,104 @@
+/**
+ *  All layout styling for case studies section.
+ *  @import layout/case-studies
+ */
+
+
+#CaseStudies {
+
+	overflow: hidden;
+
+	.grid-table {
+
+		font-size: 0;
+		line-height: 0;
+
+		.grid-cell {
+
+			display: block;
+		}
+
+		&.row-1 {
+
+			.grid-cell {
+
+				width: 100%;
+				padding-bottom: 56.25%;
+			}
+		}
+
+		&.row-2,
+		&.row-3 {
+
+			.grid-cell {
+
+				float: left;
+				width: 50%;
+				padding-bottom: 28.125%;
+			}
+		}
+
+		&.row-3 {
+
+			.grid-cell {
+
+				&:last-child {
+					display: none;
+				}
+			}
+		}
+	}
+
+	@media @large {
+
+		.grid-table {
+
+			display: table;
+			position: relative;
+			table-layout: fixed;
+			width: 100%;
+
+			.grid-cell {
+
+				float: none;
+
+				display: table-cell;
+				vertical-align: middle;
+			}
+
+			&.row-1 {
+
+				.grid-cell {
+
+					width: 50%;
+					padding-bottom: 30%;
+				}
+			}
+			&.row-2 {
+
+				.grid-cell {
+					width: 33.33%;
+					padding-bottom: 23%;
+				}
+			}
+			&.row-3 {
+
+
+				.grid-cell {
+					width: 25%;
+					padding-bottom: 18%;
+				}
+			}
+
+			&.row-3 {
+
+				.grid-cell {
+
+					&:last-child {
+						display: table-cell;
+					}
+				}
+			}
+		}
+	}
+}
