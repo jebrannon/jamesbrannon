@@ -10,12 +10,51 @@
 
 	.grid-table {
 
-		font-size: 0;
-		line-height: 0;
-
 		.grid-cell {
 
 			display: block;
+			position: relative;
+
+			.grid-link {
+
+				display: block;
+				height: 100%;
+				left: 0;
+				position: absolute;
+				text-align: center;
+				top: 0;
+				width: 100%;
+
+				span {
+
+					bottom: 15%;
+					left: 0;
+					position: absolute;
+					width: 100%;
+				}
+
+				.icon-svg {
+
+					.transition(transform .6s ease);
+					height: 50%;
+					margin-top: 11%;
+
+					&.british-airways {
+
+						height: auto;
+						margin-top: 15%;
+						width: 50%;
+					}
+				}
+
+				&:hover {
+
+					.icon-svg {
+
+						.transform(scale(1.05));
+					}
+				}
+			}
 		}
 
 		&.row-1 {
