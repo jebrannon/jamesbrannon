@@ -30,20 +30,5 @@ var MarkupTask = function () {
     gulp.src(config.directives.src)
         .pipe(minifyhtml({comments: false}))
         .pipe(gulp.dest(config.directives.dev));
-
-
-    //  Release
-    gulp.src(config.index.src)
-        .pipe(inject(svgs, { transform: fileContents }))
-        .pipe(minifyhtml({comments: false}))
-        .pipe(gulp.dest(config.index.release));
-
-    gulp.src(config.views.src)
-        .pipe(minifyhtml({comments: false}))
-        .pipe(gulp.dest(config.views.release));
-
-    gulp.src(config.directives.src)
-        .pipe(minifyhtml({comments: false}))
-        .pipe(gulp.dest(config.directives.release));
 };
 module.exports = MarkupTask;

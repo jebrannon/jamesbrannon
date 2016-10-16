@@ -23,7 +23,7 @@ var BodyDirective = function ($window, $sce, $timeout) {
 
 				elem.on('click', handleEvent);
 				$window.addEventListener('scroll', handleEvent);
-			}
+			};
 
 			$timeout(init);
 		}

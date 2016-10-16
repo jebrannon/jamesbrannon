@@ -42,7 +42,7 @@ var RingsDirective = function ($timeout) {
 						elem.addClass('animate');
 						break;
 				}
-			}
+			};
 
 			var willSizeRingsBasedOnScroll = function () {
 				var limit = window.innerHeight / 2;
@@ -69,17 +69,17 @@ var RingsDirective = function ($timeout) {
 					scale4 = ((6 - (ratio * 6)) >= 0.2) ? (6 - (ratio * 6)) : 0.2;
 
 					//  Add scale transforms
-					rings.one.style.transform = "translateX(-50%) scale(" + scale1 + ")";
-					rings.two.style.transform = "translateX(-50%) scale(" + scale2 + ")";
-					rings.three.style.transform = "translateX(-50%) scale(" + scale3 + ")";
-					rings.four.style.transform = "translateX(-50%) scale(" + scale4 + ")";
+					rings.one.style.transform = 'translateX(-50%) scale(' + scale1 + ')';
+					rings.two.style.transform = 'translateX(-50%) scale(' + scale2 + ')';
+					rings.three.style.transform = 'translateX(-50%) scale(' + scale3 + ')';
+					rings.four.style.transform = 'translateX(-50%) scale(' + scale4 + ')';
 
 
 					//  Position elements vertically
-					rings.one.style.top = top + "%";
-					rings.two.style.top = top + "%";
-					rings.three.style.top = top + "%";
-					rings.four.style.top = top + "%";
+					rings.one.style.top = top + '%';
+					rings.two.style.top = top + '%';
+					rings.three.style.top = top + '%';
+					rings.four.style.top = top + '%';
 				}
 			};
 
@@ -98,7 +98,7 @@ var RingsDirective = function ($timeout) {
 				scope.$on('onScroll', handleEvent);
 				elem.on(AnimationEnd, handleEvent);
 				elem.on(AnimationStart, handleEvent);
-			}
+			};
 
 			$timeout(init);
 		}

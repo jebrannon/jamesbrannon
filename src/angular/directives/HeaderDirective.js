@@ -25,7 +25,7 @@ var HeaderDirective = function ($timeout) {
 				//  Add listeners
 				scope.$on('onScroll', handleEvent);
 				scope.$on('onClick', handleEvent);
-			}
+			};
 
 			$timeout(init);
 		}

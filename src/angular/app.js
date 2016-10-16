@@ -4,7 +4,6 @@ var ng = require('angular');
 var sanitize = require('angular-module-sanitize');
 
 var PageController = require('./controllers/PageController');
-var FeedDirective = require('./directives/FeedDirective');
 var UtilsService = require('./services/UtilsService');
 var BodyDirective = require('./directives/BodyDirective');
 var RingsDirective = require('./directives/RingsDirective');
@@ -20,7 +19,6 @@ app.config(['$locationProvider',
 	}
 ]);
 
-app.directive('ngFeed', ['$window', '$sce', FeedDirective]);
 app.directive('ngBody', ['$window', '$sce', '$timeout', BodyDirective]);
 app.directive('ngRings', ['$timeout', RingsDirective]);
 app.directive('ngHeader', ['$timeout', HeaderDirective]);

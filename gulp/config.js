@@ -33,9 +33,6 @@ module.exports = {
 		src: src + 'libs/**/*',
 		watch: src + 'libs/**/*.js'
 	},
-	lint: {
-		src: src + 'angular/**/*.js'
-	},
 	angular: {
 		dev: develop + '/js',
 		release: release + '/js',

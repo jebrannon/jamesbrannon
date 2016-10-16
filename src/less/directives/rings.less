@@ -8,20 +8,22 @@
 	70% {
 		.transform(translateX(-50%) scale(0.9));
 	}
+
 	85% {
 		.transform(translateX(-50%) scale(1.1));
 	}
+
 	100% {
 		.transform(translateX(-50%) scale(1));
 	}
 }
 
-#Rings {
+.rings {
 
 	height: 100%;
-	left: 0;
+	left: 0px;
 	position: fixed;
-	top: 0;
+	top: 0px;
 	width: 100%;
 
 	.ident-svg {
@@ -41,8 +43,8 @@
 	.ring-4 {
 
 		.transform(translateX(-50%));
-		left: 50%;
 		height: 40%;
+		left: 50%;
 		position: absolute;
 		top: 10%;
 		width: 80%;
@@ -56,17 +58,17 @@
 
 		.ident-svg {
 
+			fill: @colour-dark;
 			height: 100%;
 			width: 100%;
-			fill: @colour-dark;
-		}	
+		}
 	}
 
 	&.pulse {
 
 		.ring-1 {
 
-			animation: pulse .75s 1;
+			animation: pulse 0.75s 1;
 		}
 	}
 
@@ -83,25 +85,25 @@
 
 			.ident-svg {
 
-				fill: lighten(@colour-dark, 3%)
+				fill: lighten(@colour-dark, 3%);
 			}
 		}
 
 		.ring-3 {
 
 			.transform(translateX(-50%) scale(4));
-			
+
 			.ident-svg {
-				fill: lighten(@colour-dark, 2%)
+				fill: lighten(@colour-dark, 2%);
 			}
 		}
 
 		.ring-4 {
 
 			.transform(translateX(-50%) scale(8));
-			
+
 			.ident-svg {
-				fill: lighten(@colour-dark, 1%)
+				fill: lighten(@colour-dark, 1%);
 			}
 		}
 	}
@@ -109,24 +111,24 @@
 
 .about {
 
-	#Rings {
+	.rings {
 
 		.ring-2 {
 
+			opacity: 0.08;
 			transform: scale(2);
-			opacity: .08;
 		}
 
 		.ring-3 {
 
+			opacity: 0.06;
 			transform: scale(4);
-			opacity: .06;
 		}
 
 		.ring-4 {
 
+			opacity: 0.04;
 			transform: scale(8);
-			opacity: .04;
 		}
 	}
 }
