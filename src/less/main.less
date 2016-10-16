@@ -1,8 +1,6 @@
 /*
- *  File :    main.less
- *  Info :    This is the core/primary stylesheet for the whole site, all other stylesheets are pulled in by this one.
- *  Usage :   <link rel='stylesheet' href='/path/to/file/syle.css') }}' />
- *
+ *  This is the core/primary stylesheet for the whole site, all other stylesheets are pulled in by this one.
+ *  @import "main.less";
  */
 
 
@@ -19,21 +17,9 @@
 @import "core/normalize";
 @import "core/defaults";
 @import "core/helpers";
-
-
-/*
-	Theme
-*/
-@import "theme/colour-scheme";
-@import "theme/typography-scheme";
-
-
-/*
-	Views
-*/
-@import "layout/navigation";
-@import "layout/body";
-@import "layout/case-studies";
+@import "core/layout";
+@import "core/colours";
+@import "core/typography";
 
 
 /*
@@ -41,3 +27,9 @@
 */
 @import "directives/rings";
 @import "directives/header";
+
+
+/*
+	Views
+*/
+@import "layout/case-studies";

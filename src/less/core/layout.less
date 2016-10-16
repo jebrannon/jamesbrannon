@@ -1,8 +1,6 @@
 /*
- *  File :    _layout/body.less
- *  Info :    Layout for the body of the website.
- *  Usage :   @import "_layout/body.less";
- *
+ *  Layout for the body of the website.
+ *  @import "core/layout.less";
  */
 
 
@@ -43,20 +41,5 @@
 		position: absolute;
 		top: 0;
 		width: 100%;
-	}
-}
-
-.nav-open {
-
-	#Body {
-
-		.transform(translate(20%, 0));
-		.transition(all 0.5s ease-out);
-
-		.collapse-overlay {
-
-			opacity: 0.75;
-			pointer-events: none;
-		}
 	}
 }

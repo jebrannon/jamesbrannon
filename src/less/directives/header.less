@@ -1,8 +1,8 @@
 /*
- *  Styling for the website header
- *  @import "_layout/header.less";
- *
+ *  Styling for the website header directive.
+ *  @import "directives/header.less";
  */
+
 
 #Header {
 
@@ -41,6 +41,32 @@
 
 	h2 {
 		padding: 0 0 25px 0;
+	}
+
+	#Nav {
+
+		width: 100%;
+		text-align: center;
+		padding-top: 50px;
+
+		.nav-item {
+
+			display: inline-block;
+			width: 40px;
+			height: 40px;
+
+			.icon-svg {
+
+				height: 100%;
+				width: 100%;
+				fill: currentColor;
+			}
+
+			&:first-child {
+
+				margin-right: 30px;
+			}
+		}
 	}
 
 	p {
