@@ -17,17 +17,6 @@ var BodyDirective = function ($window, $sce, $timeout) {
 						break;
 				}
 			};
-			var handleClickEvents = function(e) {
-				var action = angular.element(e.target).attr('data-jb-action');
-				switch(action) {
-					case 'OpenNavigation':
-						if (!elem.hasClass('nav-open')) {
-							elem.addClass('prevent-scroll');
-						}
-						elem.toggleClass('nav-open');
-						break;
-				}
-			}
 
 			
 			var init = function () {

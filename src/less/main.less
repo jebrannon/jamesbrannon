@@ -7,14 +7,14 @@
 
 
 /*
-		Mixins
+	Mixins
 */
 @import "mixins/typography";
 @import "mixins/cross-browser";
 
 
 /*
-		Base styles
+	Core styles
 */
 @import "core/normalize";
 @import "core/defaults";
@@ -22,17 +22,22 @@
 
 
 /*
-		Theme
+	Theme
 */
 @import "theme/colour-scheme";
 @import "theme/typography-scheme";
 
 
 /*
-		Layout
+	Views
 */
-@import "layout/rings";
 @import "layout/navigation";
 @import "layout/body";
-@import "layout/header";
 @import "layout/case-studies";
+
+
+/*
+	Directives
+*/
+@import "directives/rings";
+@import "directives/header";

@@ -10,9 +10,14 @@ module.exports = {
 			src: src + 'html/*.html'
 		},
 		views: {
-			dev: develop + 'html/',
-			release: release + 'html/',
+			dev: develop + 'html/views/',
+			release: release + 'html/views/',
 			src: src + 'html/views/**/*'
+		},
+		directives: {
+			dev: develop + 'html/directives/',
+			release: release + 'html/directives/',
+			src: src + 'html/directives/**/*'
 		},
 		watch: src + 'html/**/*.html'
 	},

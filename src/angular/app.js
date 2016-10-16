@@ -8,6 +8,7 @@ var FeedDirective = require('./directives/FeedDirective');
 var UtilsService = require('./services/UtilsService');
 var BodyDirective = require('./directives/BodyDirective');
 var RingsDirective = require('./directives/RingsDirective');
+var HeaderDirective = require('./directives/HeaderDirective');
 var FeedService = require('./services/FeedService');
 var TruncateFilter = require('./filters/TruncateFilter');
 
@@ -22,6 +23,7 @@ app.config(['$locationProvider',
 app.directive('ngFeed', ['$window', '$sce', FeedDirective]);
 app.directive('ngBody', ['$window', '$sce', '$timeout', BodyDirective]);
 app.directive('ngRings', ['$timeout', RingsDirective]);
+app.directive('ngHeader', ['$timeout', HeaderDirective]);
 app.filter('truncate', ['$sce', TruncateFilter]);
 app.service('Utils', UtilsService);
 app.service('FeedService', ['$http', '$q', 'Utils', FeedService]);
