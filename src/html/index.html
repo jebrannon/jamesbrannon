@@ -10,7 +10,7 @@
 
         <!-- Favicon -->
         <link rel="shortcut icon" href="images/favicon.ico" />
-        <link href='http://fonts.googleapis.com/css?family=Muli' rel='stylesheet' type='text/css'>
+        <link href='https://fonts.googleapis.com/css?family=Josefin+Sans:400,300,600,700,300italic' rel='stylesheet' type='text/css'>
 
         <!-- Main Stylesheet -->
         <link href="css/main.css" rel="stylesheet" type="text/css" />
@@ -27,120 +27,35 @@
         <div class="svg-hide"><!-- inject:svg --><!-- endinject --></div>
 
         <!--  Navigation  -->
-        <div id="Navigation" class="invert" data-jb-transition="Navigation">
-            <div class="nav-table">
-                <div class="nav-cell">
-                    
-                    <!--  Site Links  -->
-                    <ul class="nav-list">
-                        <li class="nav-item"><a href="#case-studies" title="Case Studies">Case Studies</a></li>
-                        <li class="nav-item"><a href="#blog" title="Blog">Blog</a></li>
-                        <li class="nav-item"><a href="#about" title="About">About</a></li>
-                        <li class="nav-item"><a href="#contact" title="Contact">Contact</a></li>
-                    </ul>
-                    <!--  End of Site Links  -->
-
-                    <!--  Quick Contact  -->
-                    <div class="nav-contact">
-                        <a class="icon twitter" href="https://twitter.com/jebrannon" title="Twitter" target="_blank">
-                           <svg class="icon-svg"><use xlink:href="#twitter"></use></svg>
-                        </a>
-                        <a class="icon email" href="mailto:me@jamesbrannon.co.uk" title="Email" target="_blank">
-                           <svg class="icon-svg"><use xlink:href="#email"></use></svg>
-                        </a>
-                    </div>
-                    <!--  End of Quick Contact  -->
-
-                </div>
-            </div>
-
-            <!--  Expand Buttons  -->
-            <a class="nav-button" title="Navigation" data-jb-action="OpenNavigation">
-                <ul>
-                    <li class="nav-button-bar"></li>
-                    <li class="nav-button-bar"></li>
-                    <li class="nav-button-bar"></li>
-                </ul>
-            </a>
-            <!--  End of Expand Buttons  -->
+        <div id="Rings" class="rings" data-ng-rings>
+            <div class="ident ring-4" data-transition="EndOfRings"><svg class="ident-svg"><use xlink:href="#ident"></use></svg></div>
+            <div class="ident ring-3"><svg class="ident-svg"><use xlink:href="#ident"></use></svg></div>
+            <div class="ident ring-2"><svg class="ident-svg"><use xlink:href="#ident"></use></svg></div>
+            <div class="ident ring-1" data-transition="StartOfPulse"><svg class="ident-svg"><use xlink:href="#ident"></use></svg></div>
         </div>
         <!--  End of Navigation  -->
 
-        <div id="Body" class="theme">
+        <div id="Body">
 
 
             <!--  Header  -->
             <div id="Header" class="section">
 
-                <!--  Quick Contact  -->
-                <div class="quick-contact">
-                    <a class="icon twitter" href="https://twitter.com/jebrannon" title="Twitter" target="_blank">
-                       <svg class="icon-svg"><use xlink:href="#twitter"></use></svg>
-                    </a>
-                    <a class="icon email" href="mailto:me@jamesbrannon.co.uk" title="Email" target="_blank">
-                       <svg class="icon-svg"><use xlink:href="#email"></use></svg>
-                    </a>
-                </div>
-                <!--  End of Quick Contact  -->
-
                 <!--  Intro  -->
-                <div class="ident"><div class="ident-inner"></div></div>
                 <h1 class="james"><svg class="logo-svg"><use xlink:href="#james"></use></svg></h1>
-                <h2>Draw . Design . Code</h2>
-                <p>Hello, I'm a Digital Creative based in Brighton, working at product startup <a title="StoryStream" target="_blank" href="http://storystream.it">StoryStream</a> and this is my home in the Digital World.<br>Please take a look around.</p>
+                <h2>Digital Creative</h2>
                 <!--  End of Intro  -->
 
-                <!--  Social Media  -->
-                <ul class="social-media-list">
-                    <li class="social-media-item">
-                        <a class="disc-icon blogger" href="http://blog.jamesbrannon.co.uk/" title="Blogger" target="_blank">
-                            <svg class="disc-icon-svg"><use xlink:href="#blogger"></use></svg>
-                        </a>
-                    </li>
-                    <li class="social-media-item">
-                        <a class="disc-icon github" href="https://github.com/jebrannon" title="GitHub" target="_blank">
-                            <svg class="disc-icon-svg"><use xlink:href="#github"></use></svg>
-                        </a>
-                    </li>
-                    <li class="social-media-item">
-                        <a class="disc-icon linkedin" href="https://www.linkedin.com/in/jebrannon" title="LinkedIn" target="_blank">
-                            <svg class="disc-icon-svg"><use xlink:href="#linkedin"></use></svg>
-                        </a>
-                    </li>
+                <ul id="Nav">
+                    <li class="nav-item"><a href="#"><svg class="icon-svg"><use xlink:href="#about-idle"></use></svg></a></li>
+                    <li class="nav-item"><a href="#"><svg class="icon-svg"><use xlink:href="#work-idle"></use></svg></a></li>
                 </ul>
-                <!--  End of Social Media  -->
+
+                <span class="hint-arrow"><svg class="icon-svg"><use xlink:href="#arrow"></span>
+
             </div>
             <!--  End of Header  -->
 
-
-            <!--  Case Studies  -->
-            <div id="CaseStudies" class="invert">
-                
-                <ul class="grid-table row-1">
-                    <li class="grid-cell">
-                        <a class="grid-link" href="#" title=""><svg class="icon-svg apple"><use xlink:href="#apple"></use></svg><span>Case Study</span></a>
-                    </li>
-                    <li class="grid-cell"><a class="grid-link" href="#" title=""><svg class="icon-svg british-airways"><use xlink:href="#british-airways"></use></svg><span>Case Study</span></a></li>
-                </ul>
-                <ul class="grid-table row-2">
-                    <li class="grid-cell"><a class="grid-link" href="#" title=""><span>Case Study</span></a></li>
-                    <li class="grid-cell"><a class="grid-link" href="#" title=""><span>Case Study</span></a></li>
-                    <li class="grid-cell"><a class="grid-link" href="#" title=""><span>Case Study</span></a></li>
-                </ul>
-                <ul class="grid-table row-3">
-                    <li class="grid-cell"><a class="grid-link" href="#" title=""><span>Case Study</span></a></li>
-                    <li class="grid-cell"><a class="grid-link" href="#" title=""><span>Case Study</span></a></li>
-                    <li class="grid-cell"><a class="grid-link" href="#" title=""><span>Case Study</span></a></li>
-                    <li class="grid-cell"><a class="grid-link" href="#" title=""><span>Case Study</span></a></li>
-                </ul>
-
-            </div>
-            <!--  End of Case Studies  -->
-
-
-            <!--  About  -->
-            <div id="About" class="section"></div>
-            <!--  End of About  -->
 
 
             <!--  Overlay  -->

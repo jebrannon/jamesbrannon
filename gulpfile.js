@@ -13,6 +13,7 @@ var Libs = require('./gulp/tasks/LibsTask');
 var Lint = require('./gulp/tasks/LintTask');
 var Angular = require('./gulp/tasks/AngularTask');
 var Server = require('./gulp/tasks/ServerTask');
+var Deployment = require('./gulp/tasks/DeploymentTask');
 
 
 /*
@@ -28,6 +29,7 @@ gulp.task('angular', Angular);
 gulp.task('run-dev-server', Server.develop);
 gulp.task('run-release-server', Server.release);
 gulp.task('reload', Server.reload);
+gulp.task('release', Deployment);
 
 
 /*
@@ -35,9 +37,9 @@ gulp.task('reload', Server.reload);
 */
 gulp.task('compile', ['markup', 'less', 'libs', 'lint', 'angular']);
 gulp.task('default', ['images', 'fonts', 'compile', 'run-dev-server'], function () {
-  gulp.watch(config.markup.watch, ['markup', 'reload']);
-  gulp.watch(config.less.watch, ['less', 'reload']);
-  gulp.watch(config.libs.watch, ['libs', 'reload']);
-  gulp.watch(config.angular.watch, ['angular', 'lint', 'reload']);
+	gulp.watch(config.markup.watch, ['markup', 'reload']);
+	gulp.watch(config.less.watch, ['less', 'reload']);
+	gulp.watch(config.libs.watch, ['libs', 'reload']);
+	gulp.watch(config.angular.watch, ['angular', 'lint', 'reload']);
 });
 gulp.task('check-release', ['run-release-server']);

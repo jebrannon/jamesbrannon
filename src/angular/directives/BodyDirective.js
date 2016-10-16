@@ -1,27 +1,24 @@
 'use strict';
 
-var BodyDirective = function ($window, $sce) {
+var BodyDirective = function ($window, $sce, $timeout) {
 	return {
 		restrict: 'AE',
 		link: function(scope, elem, attrs) {
-			var transitionEnd = 'webkitTransitionEnd transitionend msTransitionEnd oTransitionEnd';
 
-			var handleEvent = function (e, data) {
+
+			var handleEvent = function (e) {
 				var eventType = e.type ? e.type : e.name;
 				switch(eventType) {
 					case 'click':
-						handleClickEvents(e);
+						scope.$broadcast('onClick', e);
 						break;
-					case 'webkitTransitionEnd':
-					case 'transitionend':
-					case 'msTransitionEnd':
-					case 'oTransitionEnd':
-						handleAnimationEvents(e);
+					case 'scroll':
+						scope.$broadcast('onScroll', e);
 						break;
 				}
 			};
 			var handleClickEvents = function(e) {
-				var action = $(e.target).attr('data-jb-action');
+				var action = angular.element(e.target).attr('data-jb-action');
 				switch(action) {
 					case 'OpenNavigation':
 						if (!elem.hasClass('nav-open')) {
@@ -31,24 +28,15 @@ var BodyDirective = function ($window, $sce) {
 						break;
 				}
 			}
-			var handleAnimationEvents = function (e) {
-				var transition = $(e.target).attr('data-jb-transition');
-				switch(transition) {
-					case 'Navigation':
-						if (!elem.hasClass('nav-open')) {
-							elem.removeClass('prevent-scroll');
-						}
-						break;
-				}
-			}
 
 			
 			var init = function () {
+
 				elem.on('click', handleEvent);
-				elem.on(transitionEnd, handleEvent);
+				$window.addEventListener('scroll', handleEvent);
 			}
 
-			init();
+			$timeout(init);
 		}
 	};
 };

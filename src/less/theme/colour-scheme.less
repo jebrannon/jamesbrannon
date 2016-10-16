@@ -8,23 +8,23 @@
 @colour-light: rgb(251, 251, 251);
 @colour-dark: rgb(36, 40, 46);
 @colour-copy: rgb(100, 100, 107);
-@colour-accent: rgb(210, 70, 60);
+@colour-accent: rgb(229, 79, 48);
 @colour-opaque: rgba(0, 0, 0, .8);
 
 
 .theme {
 
-	background-color: @colour-light;
-	color: @colour-copy;
+	background-color: @colour-dark;
+	color: @colour-light;
 
 	h1,
 	h2 {
-		color: @colour-dark;
+		color: @colour-light;
 	}
 
 	a {
 		.transition(color .15s ease);
-		color: @colour-dark;
+		color: @colour-light;
 
 		&:hover {
 			color: @colour-accent;
@@ -32,57 +32,43 @@
 	}
 
 	.ident {
-		background-color: @colour-dark;
 
-		.ident-inner {
-			
-			background-color: @colour-light;
-		}
-	}
-
-	.james {
-
-		.logo-svg {
-
-			fill: @colour-dark;
-		}
-	}
-
-	.icon {
-
-		.icon-svg {
-
-			fill: currentColor;
-		}
-	}
-
-	.disc-icon {
-
-		.transition(background-color .15s ease);
-		background-color: @colour-dark;
-
-		.disc-icon-svg {
+		.ident-svg {
 
 			fill: @colour-light;
 		}
+	}
 
-		&:hover {
+	.nav-item {
 
-			background-color: @colour-accent;
+		a {
+			color: @colour-light;
+
+			&:hover {
+
+				color: @colour-accent;
+			}
 		}
 	}
 
-	.nav-button {
+	&.about {
 
-		&:hover {
-			
-			ul {
-				.nav-button-bar {
-					background-color: @colour-accent;
-				}
-			}
+		background-color: @colour-accent;
+	}
 
-		}
+
+	// .james {
+
+	// 	.logo-svg {
+
+	// 		fill: @colour-dark;
+	// 	}
+	// }
+
+
+	.icon-svg {
+
+		fill: currentColor;
 	}
 
 	

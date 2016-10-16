@@ -58,12 +58,23 @@
 
 
 /*
+ *  .horizontal-center();
+ */
+.horizontal-center() {
+
+	.transform(translateX(-50%));
+	left: 50%;
+	position: absolute;
+}
+
+
+/*
  *  .transition('params');
  */
 .transition(...) {
-  -webkit-transition: @arguments;   
-  -moz-transition: @arguments;   
-  -ms-transition: @arguments;   
-  -o-transition: @arguments;   
-  transition: @arguments; 
+	-webkit-transition: @arguments;   
+	-moz-transition: @arguments;   
+	-ms-transition: @arguments;   
+	-o-transition: @arguments;   
+	transition: @arguments; 
 }

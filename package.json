@@ -20,6 +20,7 @@
     "gulp-ng-annotate": "^0.3.3",
     "gulp-rename": "~1.1.0",
     "gulp-sourcemaps": "^1.2.2",
+    "gulp-ssh": "^0.5.3",
     "gulp-svg-sprites": "^3.0.0",
     "gulp-svgmin": "^1.1.2",
     "gulp-svgstore": "^5.0.2",
