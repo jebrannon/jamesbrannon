@@ -7,36 +7,74 @@
 .header {
 
 	height: 100%;
-	position: fixed;
+	position: relative;
 	text-align: center;
 	top: 0px;
 	width: 100%;
 
 	.position-control {
 
-		.horizontal-center();
-		background-color: transparent;
+		.vertical-center();
 		display: block;
-		height: 100%;
-		width: 2px;
+		position: absolute;
+		width: 100%;
+    line-height: 0;
+    font-size: 0;
 	}
 
-	.james {
+	.ident {
 
-		display: block;
-		height: 25px;
-		left: -119px;
-		line-height: 0px;
-		position: relative;
-		top: 19px;
-		width: 78px;
+        background-color: @colour-accent;
+        border-radius: 50%;
+        border: 22px solid @colour-light;
+        display: inline-block;
+        height: 80px;
+        width: 80px;
+        position: absolute;
+        .horizontal-center();
+        top: -120px
+	}
 
-		.logo-svg {
+    .james {
 
-			height: 25px;
-			width: 78px;
+        display: inline-block;
+        height: 45px;
+
+        .icon-svg {
+
+            height: 100%;
+        }
+    }
+
+    .title {
+
+        padding-top: 40px;
+    }
+
+
+		.ident-svg {
+
+			fill: @colour-light;
+			height: 100%;
+			width: 100%;
 		}
-	}
+
+	// .james {
+
+	// 	display: block;
+	// 	height: 25px;
+	// 	left: -119px;
+	// 	line-height: 0px;
+	// 	position: relative;
+	// 	top: 19px;
+	// 	width: 78px;
+
+	// 	.logo-svg {
+
+	// 		height: 25px;
+	// 		width: 78px;
+	// 	}
+	// }
 
 	.digital-creative {
 
