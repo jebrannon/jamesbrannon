@@ -3,39 +3,28 @@ var release = './release/';
 var src = './src/';
 
 module.exports = {
+	aws: {
+		path: '//jamesbrannon.co.uk.s3-website.eu-west-2.amazonaws.com',
+		bucket: 'jamesbrannon.co.uk',
+		region: 'eu-west-2'
+	},
+	build: {
+		develop: develop,
+		release: release,
+	},
 	markup: {
-		index: {
-			dev: develop,
-			release: release,
-			src: src + 'html/*.html'
-		},
-		views: {
-			dev: develop + 'html/views/',
-			release: release + 'html/views/',
-			src: src + 'html/views/**/*'
-		},
-		directives: {
-			dev: develop + 'html/directives/',
-			release: release + 'html/directives/',
-			src: src + 'html/directives/**/*'
-		},
-		watch: src + 'html/**/*.html'
+		src: src + 'markup/html/**/*',
+		watch: src + 'markup/**/*.html'
 	},
 	less: {
-		dev: develop + '/css',
-		release: release + '/css',
 		src: src + 'less/*.less',
 		watch: src + 'less/**/*.less'
 	},
 	libs: {
-		dev: develop + '/js',
-		release: release + '/js',
 		src: src + 'libs/**/*',
 		watch: src + 'libs/**/*.js'
 	},
 	angular: {
-		dev: develop + '/js',
-		release: release + '/js',
 		src: src + 'angular/app.js',
 		watch: src + 'angular/**/*.js'
 	},
@@ -45,23 +34,12 @@ module.exports = {
 		src: src + 'images/*'
 	},
 	svg: {
-		dev: develop + '/images/svg',
-		release: release + '/images/svg',
+		markup: src + 'markup/index.html',
 		src: src + 'images/svg/*.svg'
 	},
 	fonts: {
 		dev: develop + '/fonts',
 		release: release + '/fonts',
 		src: src + 'fonts/**'
-	},
-	server: {
-		dev: {
-			dir: develop,
-			port: 3000
-		},
-		release: {
-			dir: release,
-			port: 8080
-		}
 	}
 };

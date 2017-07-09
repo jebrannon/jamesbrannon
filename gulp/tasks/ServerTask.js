@@ -1,23 +1,20 @@
-var browserSync = require('browser-sync');
-var config = require('../config').server;
+var gulp = require('gulp');
+var config = require('../config');
+var bs1 = require('browser-sync').create('one');
 
 var ServerTask = {
 	reload: function () {
-		browserSync.reload();
+		bs1.reload();
 	},
 	develop: function () {
-		browserSync({
-			port: config.dev.port,
+		bs1.init({
+			port: 3000,
 			server: {
-				baseDir: config.dev.dir
-			}
-		});
-	},
-	release: function () {
-		browserSync({
-			port: config.release.port,
-			server: {
-				baseDir: config.release.dir
+				baseDir: config.build.develop,
+				middleware: function (req, res, next) {
+			        res.setHeader('Access-Control-Allow-Origin', '*');
+			        next();
+			    }
 			}
 		});
 	}

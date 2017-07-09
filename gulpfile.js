@@ -7,8 +7,8 @@ var watch = require('gulp-watch');
 		Import task modules
 */
 var config = require('./gulp/config');
-var Images = require('./gulp/tasks/ImagesTask');
-var Fonts = require('./gulp/tasks/FontsTask');
+var Clean = require('./gulp/tasks/CleanTask');
+var Index = require('./gulp/tasks/IndexTask');
 var Markup = require('./gulp/tasks/MarkupTask');
 var LessLint = require('./gulp/tasks/LessLintTask');
 var Less = require('./gulp/tasks/LessTask');
@@ -22,19 +22,27 @@ var Deployment = require('./gulp/tasks/DeploymentTask');
 /*
 		Define individual tasks
 */
-gulp.task('images', Images);
-gulp.task('fonts', Fonts);
-gulp.task('markup', Markup);
-gulp.task('lesslint', LessLint);
-gulp.task('less', Less);
-gulp.task('libs', Libs);
-gulp.task('lint', Lint);
-gulp.task('angular', Angular);
-gulp.task('run-dev-server', Server.develop);
-gulp.task('run-release-server', Server.release);
-gulp.task('reload', Server.reload);
-gulp.task('release', Deployment);
-
+// gulp.task('images', Images);
+// gulp.task('fonts', Fonts);
+gulp.task('clean:develop', Clean.develop);
+gulp.task('clean:release', Clean.release);
+gulp.task('index:develop', Index.develop);
+gulp.task('index:release', Index.release);
+gulp.task('markup:develop', Markup.develop);
+gulp.task('markup:release', Markup.release);
+gulp.task('lesslint:develop', LessLint.develop);
+gulp.task('lesslint:release', LessLint.release);
+gulp.task('less:develop', Less.develop);
+gulp.task('less:release', Less.release);
+gulp.task('lint:strict', Lint.strict);
+gulp.task('lint:watch', Lint.release);
+gulp.task('angular:develop', Angular.develop);
+gulp.task('angular:release', Angular.release);
+gulp.task('libs:develop', Libs.develop);
+gulp.task('libs:release', Libs.release);
+gulp.task('server:reload', Server.reload);
+gulp.task('server:develop', Server.develop);
+gulp.task('deploy', Deployment);
 
 /**
  *  Watcher function.
@@ -42,13 +50,16 @@ gulp.task('release', Deployment);
 var watcher = function (env) {
     
 	watch(config.markup.watch, function () {
-		Sequence('markup', 'server:reload');
+		Sequence('index:develop', 'markup:develop', 'server:reload');
     });
 	watch(config.less.watch, function () {
-		Sequence('lesslint', 'less', 'reload');
+		Sequence('lesslint:develop', 'less:develop', 'server:reload');
  	});
+    watch(config.libs.watch, function () {
+        Sequence('libs:develop', 'server:reload');
+    });
 	watch(config.angular.watch, function () {
-		Sequence('lint', 'angular', 'reload');
+		Sequence('lint:develop', 'angular:develop', 'server:reload');
  	});
 };
 
@@ -58,9 +69,18 @@ var watcher = function (env) {
  */
 gulp.task('default', function () {
 
-    Sequence('images', 'fonts', 'markup', 'lesslint', 'less', 'libs', 'lint', 'angular', 'run-dev-server', function () {
+    Sequence('clean:develop', 'index:develop', 'markup:develop', 'lesslint:develop', 'less:develop', 'libs:develop', 'lint:watch', 'angular:develop', 'server:develop', function () {
 
         //  Call watcher function.
         watcher();
+    });
+});
+
+gulp.task('release', function () {
+
+    Sequence('clean:release', 'index:release', 'markup:release', 'lesslint:release', 'less:release', 'libs:release', 'lint:strict', 'angular:release', 'deploy', function () {
+
+        //  Call watcher function.
+        // watcher();
     });
 });

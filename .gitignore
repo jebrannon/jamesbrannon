@@ -6,5 +6,8 @@ release/
 # ignore all node modules
 node_modules/
 
+# ignore logs
+.awspublish-jamesbrannon.co.uk
+
 # ignore all files ending with ~
 *~ 

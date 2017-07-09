@@ -1,25 +1,33 @@
 var gulp = require('gulp');
-var GulpSSH = require('gulp-ssh');
-var fs = require('fs');
-
-var config = {
-  host: 'jamesbrannon.co.uk',
-  port: 22,
-  username: 'jbrannon',
-  privateKey: fs.readFileSync('/Users/james/.ssh/arvixe_rsa'),
-  passphrase: "Valiant11"
-}
- 
-var SSH = new GulpSSH({
-  ignoreErrors: false,
-  sshConfig: config
+var awspublish = require('gulp-awspublish');
+var aws = require('../config').aws;
+var AWSSDK = require('aws-sdk');
+var publisher = awspublish.create({
+    params: {
+        Bucket: aws.bucket
+    },
+    region: aws.region,
+    credentials: new AWSSDK.SharedIniFileCredentials({profile: 'jamesbrannon.co.uk'})
 });
-
-
-var DeploymentTask = function () {
-
-	return gulp
-		.src('./release/**/*')
-		.pipe(SSH.dest('public_html/'))
+var headers = {
+  'Cache-Control': 'public, no-transform'
 };
-module.exports = DeploymentTask;
+
+
+var PublishTask = function () {
+    return gulp.src('./release/**/*')
+      
+      //  Gzip, Set Content-Encoding headers and add .gz extension 
+      .pipe(awspublish.gzip())
+     
+      //  Publisher will add Content-Length, Content-Type and headers specified above 
+      //  If not specified it will set x-amz-acl to public-read by default 
+      .pipe(publisher.publish(headers))
+     
+      //  Create a cache file to speed up consecutive uploads 
+      .pipe(publisher.cache())
+     
+      //  Print upload updates to console 
+      .pipe(awspublish.reporter());
+};
+module.exports = PublishTask;

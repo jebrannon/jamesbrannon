@@ -1,11 +1,21 @@
 var gulp = require('gulp');
 var lesshint = require('gulp-lesshint');
-var config = require('../config').less;
+var config = require('../config');
 
-var LessLintTask = function () {
+var LessLintTask = {
 
-	return gulp.src(config.watch)
-			.pipe(lesshint())
-			.pipe(lesshint.reporter());
+    develop: function () {
+
+        return gulp.src(config.less.src)
+            .pipe(lesshint())
+            .pipe(lesshint.reporter());
+	},
+	release: function () {
+
+        return gulp.src(config.less.src)
+            .pipe(lesshint())
+            .pipe(lesshint.reporter())
+            .pipe(lesshint.failOnError());
+	}
 };
 module.exports = LessLintTask;

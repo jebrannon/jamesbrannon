@@ -37,7 +37,6 @@ var RingsDirective = function ($timeout) {
 				switch(transition) {
 					case 'StartOfPulse':
 
-						// $timeout(function (){
 						//  Animate in outer rings
 						elem.addClass('animate');
 						break;
@@ -60,13 +59,13 @@ var RingsDirective = function ($timeout) {
 				if (ratio <= 1) {
 
 					//  Calculate top position
-					top = 10 - Math.round(22 * ratio);
+					top = 6.4 - Math.round(22 * ratio);
 
 					//  Calculate dynamic scales for rings
-					scale1 = ((1 - ratio) >= 0.2) ? (1 - ratio) : 0.2;
-					scale2 = ((2 - (ratio * 2)) >= 0.2) ? (2 - (ratio * 2)) : 0.2;
-					scale3 = ((4 - (ratio * 4)) >= 0.2) ? (4 - (ratio * 4)) : 0.2;
-					scale4 = ((6 - (ratio * 6)) >= 0.2) ? (6 - (ratio * 6)) : 0.2;
+					scale1 = ((1 - ratio) >= 0.15) ? (1 - ratio) : 0.15;
+					scale2 = ((2 - (ratio * 2)) >= 0.15) ? (2 - (ratio * 2)) : 0.15;
+					scale3 = ((4 - (ratio * 4)) >= 0.15) ? (4 - (ratio * 4)) : 0.15;
+					scale4 = ((6 - (ratio * 6)) >= 0.15) ? (6 - (ratio * 6)) : 0.15;
 
 					//  Add scale transforms
 					rings.one.style.transform = 'translateX(-50%) scale(' + scale1 + ')';
