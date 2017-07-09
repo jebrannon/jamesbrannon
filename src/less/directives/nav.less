@@ -1,0 +1,46 @@
+/*
+ *  Styling for the website navigation directive.
+ *  @import "directives/nav.less";
+ */
+
+
+.nav {
+
+    position: fixed;
+    right: 12px;
+    top: 12px;
+
+    .nav-list {
+
+        text-align: right;
+    }
+
+    .nav-item {
+
+        .user-select(none);
+        font-size: 1rem;
+        font-weight: 400;
+        letter-spacing: 0.25rem;
+        line-height: 1rem;
+        padding: 0 0 12px 0;
+        text-transform: uppercase;
+    }
+
+    @media @tiny {
+
+        right: 22px;
+        top: 22px;
+
+        .nav-item {
+
+            font-size: 1.2rem;
+            line-height: 1.2rem;
+        }
+    }
+
+    @media @small {
+
+        right: 44px;
+        top: 44px;
+    }
+}

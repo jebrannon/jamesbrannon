@@ -14,31 +14,38 @@
 
 	.position-control {
 
-		.vertical-center();
-		display: block;
-		position: absolute;
-		width: 100%;
-    line-height: 0;
-    font-size: 0;
+        .vertical-center();
+        display: block;
+        font-size: 0;
+        line-height: 0;
+        position: absolute;
+        width: 100%;
 	}
 
 	.ident {
 
+        .horizontal-center();
         background-color: @colour-accent;
         border-radius: 50%;
         border: 22px solid @colour-light;
         display: inline-block;
-        height: 80px;
-        width: 80px;
+        height: 88px;
         position: absolute;
-        .horizontal-center();
-        top: -120px
+        top: -176px;
+        width: 88px;
+
+        .ident-svg {
+
+            fill: @colour-light;
+            height: 100%;
+            width: 100%;
+        }
 	}
 
     .james {
 
         display: inline-block;
-        height: 45px;
+        height: 44px;
 
         .icon-svg {
 
@@ -48,55 +55,46 @@
 
     .title {
 
-        padding-top: 40px;
+        padding-top: 22px;
     }
 
+    .intro {
 
-		.ident-svg {
+        .horizontal-center();
+        padding: 44px 0 0 0;
+        position: absolute;
+        width: 220px;
 
-			fill: @colour-light;
-			height: 100%;
-			width: 100%;
-		}
+        .divide {
 
-	// .james {
+            background-color: @colour-light;
+            display: inline-block;
+            height: 1px;
+            width: 44px;
+        }
 
-	// 	display: block;
-	// 	height: 25px;
-	// 	left: -119px;
-	// 	line-height: 0px;
-	// 	position: relative;
-	// 	top: 19px;
-	// 	width: 78px;
-
-	// 	.logo-svg {
-
-	// 		height: 25px;
-	// 		width: 78px;
-	// 	}
-	// }
-
-	.digital-creative {
-
-		display: block;
-		font-size: 18px;
-		height: 25px;
-		left: 42px;
-		line-height: 18px;
-		position: relative;
-		text-align: left;
-		top: 2px;
-		width: 124px;
-	}
+        p {
+            font-size: 1.4rem;
+            font-weight: 300;
+            letter-spacing: 0.1rem;
+            line-height: 2.2rem;
+            padding: 44px 0 0 0;
+        }
+    }
 
 	.hint-arrow {
 
-		display: none;
+        .horizontal-center();
+        bottom: 22px;
+        display: block;
+        height: 12px;
+        position: absolute;
 
 		.icon-svg {
 
-			height: auto;
-			width: 20px;
+            fill: @colour-light;
+			height: 100%;
+			width: auto;
 		}
 	}
 
@@ -107,58 +105,16 @@
 		cursor: default;
 	}
 
-	// h1 {
+	@media @small {
 
-	// 	padding: 0px 0px 10px 0px;
-	// }
+        .intro {
 
-	// h2 {
-	// 	padding: 0px 0px 25px 0px;
-	// }
+            width: 440px;
+        }
 
-	.nav {
+		.hint-arrow {
 
-		display: none;
-		padding-top: 50px;
-		text-align: center;
-		width: 100%;
-
-		.nav-item {
-
-			display: inline-block;
-			height: 40px;
-			width: 40px;
-
-			.icon-svg {
-
-				fill: currentColor;
-				height: 100%;
-				width: 100%;
-			}
-
-			&:first-child {
-
-				margin-right: 30px;
-			}
-		}
-	}
-
-	p {
-
-		@media @small {
-
-			// padding: 0 10%;
-		}
-
-		@media @medium {
-
-			// padding: 0 15%;
-		}
-
-		@media @large {
-
-			// padding: 0 25%;
-		}
-
+            bottom: 44px;
+        }
 	}
 }
