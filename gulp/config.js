@@ -14,11 +14,11 @@ module.exports = {
 	},
 	markup: {
 		src: src + 'markup/html/**/*',
-		watch: src + 'markup/**/*.html'
+		watch: src + 'markup/**/*'
 	},
 	less: {
 		src: src + 'less/*.less',
-		watch: src + 'less/**/*.less'
+		watch: src + 'less/**/*'
 	},
 	libs: {
 		src: src + 'libs/**/*',
@@ -26,7 +26,7 @@ module.exports = {
 	},
 	angular: {
 		src: src + 'angular/app.js',
-		watch: src + 'angular/**/*.js'
+		watch: src + 'angular/directives/*.js'
 	},
 	images: {
 		dev: develop + '/images',

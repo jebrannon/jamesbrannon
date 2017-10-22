@@ -1,55 +1,70 @@
 'use strict';
 
-var PageController = function ($rootElement, $scope, $window, $location, FeedService) {
+var PageController = function ($rootScope, $scope, $timeout, $window, $location, FeedService) {
 
 	/*
-		Parameters
-	*/
+	 *	Parameters
+	 */
 	$scope.isIE = (navigator.userAgent.indexOf('MSIE') !== -1 || navigator.appVersion.indexOf('Trident/') > 0);
 	$scope.isFF = navigator.userAgent.toLowerCase().indexOf('firefox/') > -1;
-  $scope.blogger = [];
+    $scope.blogger = [];
+    $scope.theme = 'blue';
   
 
-  $scope.init = function () {
-
-    //  Blogger feed
-    FeedService.load({
-      type: 'blogger',
-      user: '5901719195104369005',
-      key: 'AIzaSyDovySMd-tp2QpSKmQQDf3j43GbS5Pjip4',
-      limit: 6
-    })
-    .then(_handleDataResponse)
-    .catch (function (response) {
-      console.log('CATCH: ', response);
+    $scope.$on('$locationChangeSuccess', function (event, next, current) {
+        var arr = $location.path().split('/');
+        arr.shift();
+        // console.log(arr);
     });
-  };
-
-  $scope.$on('$locationChangeSuccess', function (event, next, current) {
-    var arr = $location.path().split('/');
-    arr.shift();
-    console.log(arr);
-  });
 
 
-  /*
-  		Event Handler
-  */
-  var _handleEvent = function (e, attr) {
-  	var eventType = e.type ? e.type : e.name;
-  	var _$el = attr && attr.item ? attr.item : attr;
-		switch(eventType) {
-			case 'ng_Story_ready':
-			break;
-		}
-  };
+    /*
+     *  Event Handler
+     */
+    var handleEvent = function (e, attr) {
+        var eventType = e.type ? e.type : e.name;
+
+        console.log('eventType', eventType);
+
+        switch(eventType) {
+            case 'header.on':
+                $scope.theme = 'blue';
+            break;
+            case 'work.on':
+                $scope.theme = 'white';
+            break;
+            case 'me.on':
+                $scope.theme = 'red';
+            break;
+        }
+
+        console.log('$scope.theme', $scope.theme);
+
+        $timeout(function () {
+            $scope.$apply();
+        });
+    };
 
 
-  /*
-  		Methods
-  */
-  var _handleDataResponse = function (data) {
-    $scope.blogger = data.items;
-  };
+    /*
+     *  Methods
+     */
+    var _handleDataResponse = function (data) {
+        $scope.blogger = data.items;
+    };
+
+
+    var init = function () {
+
+
+        $scope.$on('header.on', handleEvent);
+        // $scope.$on('header.off', handleEvent);
+        $scope.$on('work.on', handleEvent);
+        // $scope.$on('work.off', handleEvent);
+        $scope.$on('me.on', handleEvent);
+        // $scope.$on('me.off', handleEvent);
+    };
+
+    init();
 };
 module.exports = PageController;

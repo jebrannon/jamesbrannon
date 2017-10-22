@@ -11,7 +11,7 @@
 @colour-opaque: rgba(0, 0, 0, 0.8);
 
 
-.theme {
+.blue {
 
 	background-color: @colour-dark;
 	color: @colour-light;
@@ -50,113 +50,98 @@
 		}
 	}
 
-	&.about {
+	.icon-svg {
 
-		background-color: @colour-accent;
+		fill: currentColor;
+	}
+}
+
+.white {
+
+	background-color: @colour-light;
+	color: @colour-dark;
+
+	h1,
+	h2 {
+		color: @colour-dark;
+	}
+
+	a {
+		.transition(color .15s ease);
+		color: @colour-dark;
+
+		&:hover {
+			color: @colour-accent;
+		}
+	}
+
+	.ident {
+
+		.ident-svg {
+
+			fill: @colour-dark;
+		}
+	}
+
+	.nav-item {
+
+		a {
+			color: @colour-dark;
+
+			&:hover {
+
+				color: @colour-accent;
+			}
+		}
 	}
 
 	.icon-svg {
 
 		fill: currentColor;
 	}
+}
 
-	.invert {
+.red {
 
-		background-color: @colour-dark;
+	background-color: @colour-accent;
+	color: @colour-light;
+
+	h1,
+	h2 {
 		color: @colour-light;
+	}
+
+	a {
+		.transition(color .15s ease);
+		color: @colour-light;
+
+		&:hover {
+			color: @colour-dark;
+		}
+	}
+
+	.ident {
+
+		.ident-svg {
+
+			fill: @colour-light;
+		}
+	}
+
+	.nav-item {
 
 		a {
 			color: @colour-light;
 
 			&:hover {
-				color: @colour-accent;
+
+				color: @colour-dark;
 			}
 		}
+	}
 
-		.ident {
-			background-color: @colour-dark;
+	.icon-svg {
 
-			.ident-inner {
-				background-color: @colour-light;
-			}
-		}
-
-		.nav-button {
-
-			.nav-button-bar {
-				background-color: @colour-dark;
-			}
-		}
-
-		.grid-table {
-
-			.grid-link {
-
-				.transition(background-color .5s ease);
-
-				&:hover {
-
-					background-color: @colour-accent;
-					color: @colour-light;
-				}
-			}
-
-
-			&.row-1 {
-
-				.grid-cell {
-
-					&:nth-child(1) {
-						background-color: rgba(251, 251, 251, 0.02);
-					}
-
-					&:nth-child(2) {
-						background-color: rgba(251, 251, 251, 0.04);
-					}
-				}
-			}
-
-			&.row-2 {
-
-				.grid-cell {
-
-					&:nth-child(1) {
-						background-color: rgba(251, 251, 251, 0.06);
-					}
-
-					&:nth-child(2) {
-						background-color: rgba(251, 251, 251, 0.08);
-					}
-
-					&:nth-child(3) {
-						background-color: rgba(251, 251, 251, 0.1);
-					}
-				}
-			}
-
-			&.row-3 {
-
-				.grid-cell {
-
-					&:nth-child(1) {
-						background-color: rgba(251, 251, 251, 0.12);
-					}
-
-					&:nth-child(2) {
-						background-color: rgba(251, 251, 251, 0.14);
-					}
-
-					&:nth-child(3) {
-						background-color: rgba(251, 251, 251, 0.16);
-					}
-
-					&:nth-child(4) {
-						background-color: rgba(251, 251, 251, 0.18);
-					}
-				}
-			}
-
-
-		}
+		fill: currentColor;
 	}
 }

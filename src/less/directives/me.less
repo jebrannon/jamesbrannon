@@ -1,0 +1,206 @@
+
+.me {
+
+	position: relative;
+	text-align: center;
+	top: 0px;
+	width: 100%;
+
+
+	.timeline {
+
+        margin: 0 auto;
+        width: 480px;
+
+		.timeline-tree {
+
+			padding: 30px 0 0 0;
+
+			.col {
+
+				width: 50%;
+				padding: 30px 0 0 0;
+			}
+
+			.date {
+
+				font-size: 1.2rem;
+				font-weight: 700;
+				line-height: 1.8rem;
+
+				&.col-1 span {
+
+					padding: 0 15px 0 0;
+				}
+
+				&.col-2 span {
+
+					padding: 0 0 0 15px;
+				}
+			}
+
+			.job {
+
+				.job-title {
+
+					font-size: 1.6rem;
+					font-weight: 700;
+					line-height: 2rem;
+					position: relative;
+				}
+
+				.job-company,
+				.job-desc {
+
+					display: block;
+					line-height: 1.6rem;
+				}
+
+				.job-desc {
+
+                    font-size: 1.3rem;
+                    font-weight: 700;
+                    margin: 4px 0 0 0;
+				}
+
+				&.col-1 {
+
+					.job-title {
+
+						padding: 0 20px 8px 0;
+
+						&::after {
+
+							background-color: @colour-light;
+							content: '';
+							display: block;
+							height: 1px;
+							margin: 0 0 0 10px;
+							position: absolute;
+							top: 8px;
+							width: 10px;
+							right: 0;
+						}
+					}
+
+					.job-company,
+					.job-desc {
+
+						padding: 0 20px 0 0;
+					}
+				}
+				
+				&.col-2 {
+
+					.job-title {
+
+						padding: 0 0 8px 20px;
+
+						&::before {
+
+							background-color: @colour-light;
+							content: '';
+							display: block;
+							height: 1px;
+							margin: 0 10px 0 0;
+							position: absolute;
+							top: 8px;
+							width: 10px;
+							left: 0;
+						}
+					}
+
+					.job-company,
+					.job-desc {
+
+						padding: 0 0 0 20px;
+					}
+				}
+			}
+
+            .row:first-child {
+
+                .col {
+
+                    padding: 15px 0 0 0;
+                }
+            }
+
+            .row:last-child {
+
+                .col {
+
+                    padding: 30px 0 15px 0;
+                }
+            }
+
+            .skillset {
+
+                margin: 15px 0 0 0;
+
+                .row {
+
+                    font-size: 1.2rem;
+                    line-height: 1.2rem;
+                    padding: 5px 0 0 0;
+
+                    .col {
+
+                        padding: 0;
+                    }
+                }
+
+                .row:first-child {
+
+                    padding: 0;
+                }
+
+                .desc {
+
+                    line-height: 1.4rem;
+                    width: 80px;
+                }
+
+                .score {
+
+                    span {
+
+                        display: inline-block;
+                        width: 5px;
+                        height: 5px;
+                        border-radius: 50%;
+                        background-color: @colour-light;
+                        margin: 0 3px 0 0;
+                        opacity: 0.2;
+
+                        &.set {
+
+                            opacity: 1;
+                        }
+                    }
+                }
+            }
+
+            .col-1 {
+
+                border-right: 1px solid @colour-light;
+                text-align: right;
+
+                .skillset {
+
+                    padding: 0 20px 0 0;
+                }
+            }
+
+            .col-2 {
+
+                text-align: left;
+
+                .skillset {
+
+                    padding: 0 0 0 20px;
+                }
+            }
+		}
+	}
+}

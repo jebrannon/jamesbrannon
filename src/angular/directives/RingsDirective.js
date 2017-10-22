@@ -11,9 +11,9 @@ var RingsDirective = function ($timeout) {
 			var handleEvent = function (e, data) {
 				var eventType = e.type ? e.type : e.name;
 				switch(eventType) {
-					case 'onScroll':
+					case 'window.scroll':
 
-						willSizeRingsBasedOnScroll();
+						willSizeRingsBasedwindow.scroll();
 						break;
 					case 'animationstart':
 					case 'webkitAnimationStart':
@@ -43,7 +43,7 @@ var RingsDirective = function ($timeout) {
 				}
 			};
 
-			var willSizeRingsBasedOnScroll = function () {
+			var willSizeRingsBasedwindow.scroll = function () {
 				var limit = window.innerHeight / 2;
 				var ratio;
 				var scale1;
@@ -94,7 +94,7 @@ var RingsDirective = function ($timeout) {
 				elem.addClass('pulse');
 
 				//  Add listeners
-				scope.$on('onScroll', handleEvent);
+				scope.$on('window.scroll', handleEvent);
 				elem.on(AnimationEnd, handleEvent);
 				elem.on(AnimationStart, handleEvent);
 			};

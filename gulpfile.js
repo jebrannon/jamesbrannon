@@ -58,6 +58,9 @@ var watcher = function (env) {
     watch(config.libs.watch, function () {
         Sequence('libs:develop', 'server:reload');
     });
+    watch(config.angular.watch, function () {
+        Sequence('angular:develop', 'server:reload');
+    });
 	watch(config.angular.watch, function () {
 		Sequence('lint:develop', 'angular:develop', 'server:reload');
  	});
