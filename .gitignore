@@ -1,10 +1,13 @@
-# ignore all compiled directories
-# matches "develop" and "release" in any subfolder
+# Dependencies
+node_modules/
+
+# Build output
+dist/
 develop/
 release/
 
-# ignore all node modules
-node_modules/
+# OS
+.DS_Store
 
-# ignore all files ending with ~
-*~ 
+# Editor
+*~
