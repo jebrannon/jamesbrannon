@@ -6,8 +6,25 @@ dist/
 develop/
 release/
 
+# Environment / secrets
+.env
+.env.*
+*.key
+*.pem
+*.p8
+*.p12
+*.pfx
+*.crt
+*.cer
+
 # OS
 .DS_Store
+Thumbs.db
 
 # Editor
 *~
+*.swp
+*.swo
+.idea/
+.vscode/
+*.sublime-*
