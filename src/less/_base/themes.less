@@ -1,0 +1,63 @@
+/*
+ *  File :    _themes.less
+ *  Info :    CMS-controlled theme system.
+ *            Two axes are applied as body classes by the client-side router:
+ *              Mode  — dark (default) | light
+ *              Style — professional (default) | thoughts
+ *
+ *            e.g. <body class="dark professional">
+ */
+
+
+// ── Mode tokens ───────────────────────────────────────────────────────────────
+
+body.dark {
+  --color-bg:      #1a1a1a;
+  --color-surface: #242424;
+  --color-text:    #f0ede8;
+  --color-muted:   #888888;
+  --color-accent:  #f0ede8;
+  --color-border:  rgba(255, 255, 255, 0.08);
+  --color-overlay: rgba(0, 0, 0, 0.6);
+}
+
+body.light {
+  --color-bg:      #f8f6f2;
+  --color-surface: #ffffff;
+  --color-text:    #1a1a1a;
+  --color-muted:   #666666;
+  --color-accent:  #1a1a1a;
+  --color-border:  rgba(0, 0, 0, 0.08);
+  --color-overlay: rgba(255, 255, 255, 0.6);
+}
+
+
+// ── Style tokens ──────────────────────────────────────────────────────────────
+
+body.professional {
+  --font-body:       'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-display:    'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --letter-spacing:  -0.01em;
+  --line-height:     1.5;
+  --heading-weight:  600;
+}
+
+body.thoughts {
+  --font-body:       'Georgia', 'Times New Roman', serif;
+  --font-display:    'Georgia', 'Times New Roman', serif;
+  --letter-spacing:  0.01em;
+  --line-height:     1.75;
+  --heading-weight:  400;
+}
+
+
+// ── Apply tokens to document ──────────────────────────────────────────────────
+
+body {
+  background-color: var(--color-bg);
+  color:            var(--color-text);
+  font-family:      var(--font-body);
+  letter-spacing:   var(--letter-spacing);
+  line-height:      var(--line-height);
+  transition:       background-color 0.2s ease, color 0.2s ease;
+}
