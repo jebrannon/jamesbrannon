@@ -1,5 +1,6 @@
 from enum import Enum
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from starlette.datastructures import UploadFile
@@ -79,6 +80,14 @@ def _unpack_file(field_value: Any) -> Tuple[Optional[UploadFile], bool]:
     return field_value, False
 
 
+def _as_obj(d: Optional[Dict]) -> Optional[SimpleNamespace]:
+    """
+    Wrap a plain dict in SimpleNamespace so starlette-admin can access fields
+    via getattr(obj, field_name) — required by parse_obj and get_pk_value.
+    """
+    return None if d is None else SimpleNamespace(**d)
+
+
 def _convert_favicon(svg_bytes: bytes, save_name: str) -> None:
     """Convert SVG bytes to PNG variants at standard favicon sizes."""
     if not _CAIROSVG:
@@ -124,13 +133,13 @@ class PostView(BaseModelView):
         self, request: Request, skip: int = 0, limit: int = 100,
         where=None, order_by=None
     ) -> Sequence[Any]:
-        return list_content("POST")[skip: skip + limit]
+        return [_as_obj(d) for d in list_content("POST")[skip: skip + limit]]
 
     async def find_by_pk(self, request: Request, pk: Any) -> Any:
         item = get_content("POST", str(pk))
         if not item:
             raise ValueError(f"Post '{pk}' not found")
-        return item
+        return _as_obj(item)
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
         put_content("POST", _normalize(data))
@@ -167,13 +176,13 @@ class PageView(BaseModelView):
         self, request: Request, skip: int = 0, limit: int = 100,
         where=None, order_by=None
     ) -> Sequence[Any]:
-        return list_content("PAGE")[skip: skip + limit]
+        return [_as_obj(d) for d in list_content("PAGE")[skip: skip + limit]]
 
     async def find_by_pk(self, request: Request, pk: Any) -> Any:
         item = get_content("PAGE", str(pk))
         if not item:
             raise ValueError(f"Page '{pk}' not found")
-        return item
+        return _as_obj(item)
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
         put_content("PAGE", _normalize(data))
@@ -214,13 +223,13 @@ class PortfolioView(BaseModelView):
         self, request: Request, skip: int = 0, limit: int = 100,
         where=None, order_by=None
     ) -> Sequence[Any]:
-        return list_content("PORTFOLIO")[skip: skip + limit]
+        return [_as_obj(d) for d in list_content("PORTFOLIO")[skip: skip + limit]]
 
     async def find_by_pk(self, request: Request, pk: Any) -> Any:
         item = get_content("PORTFOLIO", str(pk))
         if not item:
             raise ValueError(f"Portfolio item '{pk}' not found")
-        return item
+        return _as_obj(item)
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
         put_content("PORTFOLIO", _normalize(data))
@@ -333,11 +342,11 @@ class BrandView(BaseModelView):
         where=None, order_by=None
     ) -> Sequence[Any]:
         item = get_setting(self.SETTINGS_KEY) or {}
-        return [self._with_key({**self._defaults(), **item})]
+        return [_as_obj(self._with_key({**self._defaults(), **item}))]
 
     async def find_by_pk(self, request: Request, pk: Any) -> Any:
         item = get_setting(self.SETTINGS_KEY) or {}
-        return self._with_key({**self._defaults(), **item})
+        return _as_obj(self._with_key({**self._defaults(), **item}))
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
         existing = get_setting(self.SETTINGS_KEY) or {}
@@ -431,11 +440,11 @@ class HomepageView(BaseModelView):
         where=None, order_by=None
     ) -> Sequence[Any]:
         item = get_setting(self.SETTINGS_KEY) or {}
-        return [self._with_key({**self._defaults(), **item})]
+        return [_as_obj(self._with_key({**self._defaults(), **item}))]
 
     async def find_by_pk(self, request: Request, pk: Any) -> Any:
         item = get_setting(self.SETTINGS_KEY) or {}
-        return self._with_key({**self._defaults(), **item})
+        return _as_obj(self._with_key({**self._defaults(), **item}))
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
         data.pop("key", None)
