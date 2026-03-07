@@ -1,5 +1,6 @@
 import os
 from contextlib import asynccontextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
 from fastapi import FastAPI
@@ -9,6 +10,8 @@ from starlette_admin.base import BaseAdmin as Admin
 
 from .admin.auth import SimpleAuthProvider
 from .admin.views import BrandView, HomepageView, PageView, PortfolioView, PostView, STATIC_DIR
+
+ADMIN_TEMPLATES_DIR = Path(__file__).parent / "admin" / "templates"
 from .db import create_table_if_not_exists
 from .routers import pages, portfolio, posts, settings
 
@@ -47,6 +50,7 @@ app.include_router(settings.router, prefix="/api")
 admin = Admin(
     title="James Brannon CMS",
     auth_provider=SimpleAuthProvider(),
+    templates_dir=str(ADMIN_TEMPLATES_DIR),
 )
 admin.add_view(PostView())
 admin.add_view(PageView())

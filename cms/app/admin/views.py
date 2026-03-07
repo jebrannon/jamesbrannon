@@ -142,12 +142,15 @@ class PostView(BaseModelView):
         return _as_obj(item)
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
-        put_content("POST", _normalize(data))
-        return data
+        normalised = _normalize(data)
+        put_content("POST", normalised)
+        return _as_obj(normalised)
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
-        put_content("POST", _normalize(data))
-        return data
+        normalised = _normalize(data)
+        normalised.setdefault("slug", str(pk))
+        put_content("POST", normalised)
+        return _as_obj(normalised)
 
     async def delete(self, request: Request, pks: List[Any]) -> Optional[int]:
         for pk in pks:
@@ -185,12 +188,15 @@ class PageView(BaseModelView):
         return _as_obj(item)
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
-        put_content("PAGE", _normalize(data))
-        return data
+        normalised = _normalize(data)
+        put_content("PAGE", normalised)
+        return _as_obj(normalised)
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
-        put_content("PAGE", _normalize(data))
-        return data
+        normalised = _normalize(data)
+        normalised.setdefault("slug", str(pk))
+        put_content("PAGE", normalised)
+        return _as_obj(normalised)
 
     async def delete(self, request: Request, pks: List[Any]) -> Optional[int]:
         for pk in pks:
@@ -232,12 +238,15 @@ class PortfolioView(BaseModelView):
         return _as_obj(item)
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
-        put_content("PORTFOLIO", _normalize(data))
-        return data
+        normalised = _normalize(data)
+        put_content("PORTFOLIO", normalised)
+        return _as_obj(normalised)
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
-        put_content("PORTFOLIO", _normalize(data))
-        return data
+        normalised = _normalize(data)
+        normalised.setdefault("slug", str(pk))
+        put_content("PORTFOLIO", normalised)
+        return _as_obj(normalised)
 
     async def delete(self, request: Request, pks: List[Any]) -> Optional[int]:
         for pk in pks:
@@ -254,8 +263,9 @@ class BrandView(BaseModelView):
     """
     identity = "brand"
     name = "Brand"
-    label = "Brand Settings"
+    label = "Brand + Comms"
     pk_attr = "key"
+    list_template = "singleton_redirect.html"
 
     def can_create(self, request: Request) -> bool:
         return False
@@ -362,7 +372,8 @@ class BrandView(BaseModelView):
         )
         data.pop("key", None)
         put_setting(self.SETTINGS_KEY, data)
-        return data
+        data["key"] = self.SETTINGS_KEY  # restore for get_pk_value
+        return _as_obj(data)
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
         existing = get_setting(self.SETTINGS_KEY) or {}
@@ -378,7 +389,8 @@ class BrandView(BaseModelView):
         )
         data.pop("key", None)
         put_setting(self.SETTINGS_KEY, data)
-        return data
+        data["key"] = self.SETTINGS_KEY  # restore for get_pk_value
+        return _as_obj(data)
 
     async def delete(self, request: Request, pks: List[Any]) -> Optional[int]:
         return 0  # Deletion disabled
@@ -392,6 +404,7 @@ class HomepageView(BaseModelView):
     name = "Homepage"
     label = "Homepage Settings"
     pk_attr = "key"
+    list_template = "singleton_redirect.html"
 
     def can_create(self, request: Request) -> bool:
         return False
@@ -448,13 +461,17 @@ class HomepageView(BaseModelView):
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
         data.pop("key", None)
-        put_setting(self.SETTINGS_KEY, _normalize(data))
-        return data
+        normalised = _normalize(data)
+        put_setting(self.SETTINGS_KEY, normalised)
+        normalised["key"] = self.SETTINGS_KEY  # restore for get_pk_value
+        return _as_obj(normalised)
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
         data.pop("key", None)
-        put_setting(self.SETTINGS_KEY, _normalize(data))
-        return data
+        normalised = _normalize(data)
+        put_setting(self.SETTINGS_KEY, normalised)
+        normalised["key"] = self.SETTINGS_KEY  # restore for get_pk_value
+        return _as_obj(normalised)
 
     async def delete(self, request: Request, pks: List[Any]) -> Optional[int]:
         return 0
