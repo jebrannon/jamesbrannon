@@ -82,3 +82,21 @@ def delete_content(content_type: str, slug: str) -> None:
     table.delete_item(
         Key={"PK": f"CONTENT#{content_type}", "SK": f"SLUG#{slug}"}
     )
+
+
+# ── Settings (singleton records) ──────────────────────────────────────────────
+
+def get_setting(key: str) -> Optional[Dict]:
+    """Get a singleton settings record by key (e.g. 'BRAND', 'HOMEPAGE')."""
+    table = get_table()
+    response = table.get_item(Key={"PK": "SETTINGS", "SK": key})
+    item = response.get("Item")
+    return _strip_keys(item) if item else None
+
+
+def put_setting(key: str, data: Dict) -> Dict:
+    """Upsert a singleton settings record."""
+    table = get_table()
+    item = {"PK": "SETTINGS", "SK": key, **data}
+    table.put_item(Item=item)
+    return data

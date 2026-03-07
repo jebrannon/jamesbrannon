@@ -10,6 +10,51 @@ export function applyTheme(data) {
   );
 }
 
+// ── SEO / <head> ──────────────────────────────────────────────────────────────
+
+/**
+ * Update <title> and meta/og tags for the current page.
+ * Falls back to data.title when seo_title is absent.
+ */
+export function applyHead(data = {}) {
+  const title = data.seo_title || data.title;
+  if (title) document.title = title;
+
+  _setMeta('name', 'description', data.seo_description || '');
+  _setMeta('property', 'og:title', title || '');
+  _setMeta('property', 'og:description', data.seo_description || '');
+  _setMeta('property', 'og:image', data.og_image || '');
+  _setMeta('property', 'og:type', data.og_type || 'website');
+
+  // Canonical URL
+  if (data.canonical_url) {
+    _setCanonical(data.canonical_url);
+  }
+
+  // Robots directive
+  _setMeta('name', 'robots', data.no_index ? 'noindex,nofollow' : 'index,follow');
+}
+
+function _setMeta(attrName, attrValue, content) {
+  let el = document.querySelector(`meta[${attrName}="${attrValue}"]`);
+  if (!el) {
+    el = document.createElement('meta');
+    el.setAttribute(attrName, attrValue);
+    document.head.appendChild(el);
+  }
+  el.setAttribute('content', content);
+}
+
+function _setCanonical(href) {
+  let link = document.querySelector('link[rel="canonical"]');
+  if (!link) {
+    link = document.createElement('link');
+    link.rel = 'canonical';
+    document.head.appendChild(link);
+  }
+  link.href = href;
+}
+
 // ── Fetch helper ──────────────────────────────────────────────────────────────
 
 export async function fetchJSON(url) {
@@ -27,6 +72,7 @@ export async function fetchJSON(url) {
 async function renderPost(slug) {
   const data = await fetchJSON(`${BASE}/api/posts/${slug}`);
   applyTheme(data);
+  applyHead(data);
   const app = document.getElementById('App');
   if (app) {
     app.innerHTML = `
@@ -44,6 +90,7 @@ async function renderPost(slug) {
 async function renderPortfolioItem(slug) {
   const data = await fetchJSON(`${BASE}/api/portfolio/${slug}`);
   applyTheme(data);
+  applyHead(data);
   const app = document.getElementById('App');
   if (app) {
     app.innerHTML = `
@@ -59,6 +106,7 @@ async function renderPortfolioItem(slug) {
 async function renderCMSPage(slug) {
   const data = await fetchJSON(`${BASE}/api/pages/${slug}`);
   applyTheme(data);
+  applyHead(data);
   const app = document.getElementById('App');
   if (app) {
     app.innerHTML = `
