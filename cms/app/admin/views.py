@@ -241,14 +241,18 @@ class PortfolioView(BaseModelView):
 class BrandView(BaseModelView):
     """
     Singleton admin view for site-wide brand settings.
-    Always shows exactly one row; can_create and can_delete are disabled.
+    Always shows exactly one row; create and delete are disabled.
     """
     identity = "brand"
     name = "Brand"
     label = "Brand Settings"
     pk_attr = "key"
-    can_create = False
-    can_delete = False
+
+    def can_create(self, request: Request) -> bool:
+        return False
+
+    def can_delete(self, request: Request) -> bool:
+        return False
 
     SETTINGS_KEY = "BRAND"
 
@@ -379,8 +383,12 @@ class HomepageView(BaseModelView):
     name = "Homepage"
     label = "Homepage Settings"
     pk_attr = "key"
-    can_create = False
-    can_delete = False
+
+    def can_create(self, request: Request) -> bool:
+        return False
+
+    def can_delete(self, request: Request) -> bool:
+        return False
 
     SETTINGS_KEY = "HOMEPAGE"
 
