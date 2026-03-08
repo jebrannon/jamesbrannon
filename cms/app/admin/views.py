@@ -7,9 +7,12 @@ from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette_admin.fields import (
     BooleanField,
+    CollectionField,
     EmailField,
     EnumField,
     FileField,
+    IntegerField,
+    ListField,
     StringField,
     TagsField,
     TextAreaField,
@@ -425,18 +428,36 @@ class SeoView(SingletonView):
 
 
 class ProfileView(SingletonView):
-    """Singleton admin view for personal profile content (landing page)."""
+    """Singleton admin view for homepage overview content."""
     SETTINGS_KEY = SETTINGS_PROFILE
     identity = "profile"
-    name = "Profile"
-    label = "My Profile"
+    name = "Overview"
+    label = "Overview"
     fields = [
+        # ── Personal intro ────────────────────────────────────────────────
         StringField("headline", label="Headline", required=False,
                     help_text="e.g. Product designer & frontend developer"),
         StringField("tagline", label="Tagline", required=False,
                     help_text="Short strapline shown beneath the headline"),
         TextAreaField("summary", label="Summary", required=False,
                       help_text="A few sentences about you — shown on the landing page"),
+
+        # ── Blog fieldset ─────────────────────────────────────────────────
+        CollectionField("blog", fields=[
+            StringField("headline", label="Section Headline", required=False,
+                        help_text="Heading shown above the blog feed on the homepage"),
+            StringField("category", label="Category (tag filter)", required=False,
+                        help_text="Filter posts by tag e.g. 'thoughts'. Leave blank to show all."),
+            IntegerField("limit", label="Max Items", required=False,
+                         help_text="Maximum number of posts to display (default: 3)"),
+        ]),
+
+        # ── Strengths fieldset ────────────────────────────────────────────
+        StringField("strengths_headline", label="Strengths — Section Headline", required=False),
+        ListField(CollectionField("strengths", fields=[
+            StringField("name", label="Name", required=True),
+            TextAreaField("description", label="Description", required=False),
+        ])),
     ]
 
     def _defaults(self) -> Dict:
@@ -445,4 +466,7 @@ class ProfileView(SingletonView):
             "headline": "",
             "tagline": "",
             "summary": "",
+            "blog": {"headline": "", "category": "", "limit": 3},
+            "strengths_headline": "",
+            "strengths": [],
         }

@@ -249,11 +249,47 @@ def test_profile_edit_persists_to_dynamodb(admin_client, aws_mock):
             "headline": "Product designer",
             "tagline": "Making things",
             "summary": "Hi, I'm James.",
+            "blog.headline": "Latest writing",
+            "blog.category": "thoughts",
+            "blog.limit": "3",
+            "strengths_headline": "My Strengths",
         },
     )
     item = get_setting("PROFILE")
     assert item is not None
     assert item["headline"] == "Product designer"
+    assert item["blog"]["category"] == "thoughts"
+    assert item["strengths_headline"] == "My Strengths"
+
+
+def test_profile_strengths_list_persists(admin_client, aws_mock):
+    """Saving strength items via admin should persist as a list in DynamoDB."""
+    from app.db import get_setting
+    admin_client.post(
+        "/admin/profile/edit/PROFILE",
+        data={
+            "headline": "",
+            "tagline": "",
+            "summary": "",
+            "strengths_headline": "Strengths",
+            "strengths.0.name": "Product Design",
+            "strengths.0.description": "End-to-end design.",
+        },
+    )
+    item = get_setting("PROFILE")
+    assert isinstance(item["strengths"], list)
+    assert item["strengths"][0]["name"] == "Product Design"
+
+
+def test_profile_empty_strengths_list(admin_client, aws_mock):
+    """Submitting with no strength items should not error."""
+    from app.db import get_setting
+    admin_client.post(
+        "/admin/profile/edit/PROFILE",
+        data={"headline": "Hi", "tagline": "", "summary": ""},
+    )
+    item = get_setting("PROFILE")
+    assert item is not None
 
 
 def test_seo_edit_persists_to_dynamodb(admin_client, aws_mock):

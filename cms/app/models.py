@@ -107,8 +107,24 @@ class SeoSettings(SEOMixin):
     pass
 
 
+class BlogSettings(BaseModel):
+    """Blog feed settings for the homepage."""
+    headline: Optional[str] = None
+    category: Optional[str] = None  # maps to ?tag= filter on /api/posts
+    limit: int = 3
+
+
+class StrengthItem(BaseModel):
+    """A single professional strength entry."""
+    name: str
+    description: Optional[str] = None
+
+
 class ProfileSettings(BaseModel):
     """Personal profile content — powers the landing page."""
     headline: Optional[str] = None
     tagline: Optional[str] = None
     summary: Optional[str] = None
+    blog: Optional[BlogSettings] = None
+    strengths_headline: Optional[str] = None
+    strengths: List[StrengthItem] = Field(default_factory=list)
