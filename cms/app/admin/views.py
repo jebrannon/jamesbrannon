@@ -303,9 +303,16 @@ class BrandView(BaseModelView):
             exclude_from_create=True, exclude_from_edit=True, required=False,
         ),
         URLField("linkedin", label="LinkedIn URL", required=False),
+        StringField("linkedin_text", label="LinkedIn Display Text", required=False,
+                    help_text="Text shown as the clickable link, e.g. /in/jamesbrannon"),
         URLField("instagram", label="Instagram URL", required=False),
-        EmailField("email", label="Contact Email", required=False),
+        StringField("instagram_text", label="Instagram Display Text", required=False,
+                    help_text="Text shown as the clickable link, e.g. @jamesbrannon"),
+        EmailField("email", label="Email Address", required=False),
+        StringField("email_text", label="Email Display Text", required=False,
+                    help_text="Text shown as the clickable link, e.g. me@jamesbrannon.co.uk"),
     ]
+    edit_template = "brand_edit.html"
 
     # ── Helpers ──────────────────────────────────────────────────────────────
 
@@ -315,8 +322,11 @@ class BrandView(BaseModelView):
             "favicon_light_url": "",
             "favicon_dark_url": "",
             "linkedin": "",
+            "linkedin_text": "",
             "instagram": "",
+            "instagram_text": "",
             "email": "",
+            "email_text": "",
         }
 
     def _with_key(self, item: Dict) -> Dict:

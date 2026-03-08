@@ -1,0 +1,33 @@
+{% extends "@starlette-admin/edit.html" %}
+
+{% block edit_form %}
+    {%- set comms_fields = ['linkedin', 'linkedin_text', 'instagram', 'instagram_text', 'email', 'email_text'] -%}
+    {%- set all_fields = model.get_fields_list(request, 'EDIT' | ra) -%}
+
+    {# ── Favicon fields ───────────────────────────────────────────────────── #}
+    {% for field in all_fields %}
+        {% if field.name not in comms_fields %}
+            <div class="mb-3">
+                {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+                    {% include field.label_template %}
+                    {% include field.form_template %}
+                {% endwith %}
+            </div>
+        {% endif %}
+    {% endfor %}
+
+    {# ── Communications fieldset ──────────────────────────────────────────── #}
+    <fieldset class="border rounded p-3 mb-3">
+        <legend class="float-none w-auto px-2 fw-semibold text-muted" style="font-size: .8125rem; letter-spacing: .04em; text-transform: uppercase;">Communications</legend>
+        {% for field in all_fields %}
+            {% if field.name in comms_fields %}
+                <div class="mb-3">
+                    {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+                        {% include field.label_template %}
+                        {% include field.form_template %}
+                    {% endwith %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </fieldset>
+{% endblock %}

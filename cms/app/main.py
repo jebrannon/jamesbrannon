@@ -10,10 +10,10 @@ from starlette_admin.base import BaseAdmin as Admin
 
 from .admin.auth import SimpleAuthProvider
 from .admin.views import BrandView, HomepageView, PageView, PortfolioView, PostView, STATIC_DIR
-
-ADMIN_TEMPLATES_DIR = Path(__file__).parent / "admin" / "templates"
 from .db import create_table_if_not_exists
 from .routers import pages, portfolio, posts, settings
+
+ADMIN_TEMPLATES_DIR = Path(__file__).parent / "admin" / "templates"
 
 load_dotenv()
 
