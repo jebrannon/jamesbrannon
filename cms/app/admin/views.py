@@ -416,15 +416,14 @@ class BrandView(BaseModelView):
         return 0  # Deletion disabled
 
 
-class HomepageView(BaseModelView):
-    """
-    Singleton admin view for homepage content and SEO settings.
-    """
-    identity = "homepage"
-    name = "Homepage"
-    label = "Homepage Settings"
+class SeoView(BaseModelView):
+    """Singleton admin view for site-level SEO and Open Graph settings."""
+    identity = "seo"
+    name = "SEO"
+    label = "SEO Metadata"
     pk_attr = "key"
     list_template = "singleton_redirect.html"
+    edit_template = "singleton_edit.html"
 
     def can_create(self, request: Request) -> bool:
         return False
@@ -432,27 +431,13 @@ class HomepageView(BaseModelView):
     def can_delete(self, request: Request) -> bool:
         return False
 
-    SETTINGS_KEY = "HOMEPAGE"
+    SETTINGS_KEY = "SEO"
 
-    fields = [
-        TextAreaField("tagline", label="Tagline", required=False,
-                      help_text="Short headline shown on the homepage"),
-        TextAreaField("bio", label="Bio / About Text", required=False),
-        StringField("hero_image_url", label="Hero Image URL", required=False),
-        StringField("cta_text", label="CTA Button Text", required=False,
-                    help_text="e.g. View my work"),
-        URLField("cta_url", label="CTA Button URL", required=False),
-        *SEO_FIELDS,
-    ]
+    fields = [*SEO_FIELDS]
 
     def _defaults(self) -> Dict:
         return {
             "key": self.SETTINGS_KEY,
-            "tagline": "",
-            "bio": "",
-            "hero_image_url": "",
-            "cta_text": "",
-            "cta_url": "",
             "seo_title": "",
             "seo_description": "",
             "og_image": "",
@@ -483,14 +468,84 @@ class HomepageView(BaseModelView):
         data.pop("key", None)
         normalised = _normalize(data)
         put_setting(self.SETTINGS_KEY, normalised)
-        normalised["key"] = self.SETTINGS_KEY  # restore for get_pk_value
+        normalised["key"] = self.SETTINGS_KEY
         return _as_obj(normalised)
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
         data.pop("key", None)
         normalised = _normalize(data)
         put_setting(self.SETTINGS_KEY, normalised)
-        normalised["key"] = self.SETTINGS_KEY  # restore for get_pk_value
+        normalised["key"] = self.SETTINGS_KEY
+        return _as_obj(normalised)
+
+    async def delete(self, request: Request, pks: List[Any]) -> Optional[int]:
+        return 0
+
+
+class ProfileView(BaseModelView):
+    """Singleton admin view for personal profile content (landing page)."""
+    identity = "profile"
+    name = "Profile"
+    label = "My Profile"
+    pk_attr = "key"
+    list_template = "singleton_redirect.html"
+    edit_template = "singleton_edit.html"
+
+    def can_create(self, request: Request) -> bool:
+        return False
+
+    def can_delete(self, request: Request) -> bool:
+        return False
+
+    SETTINGS_KEY = "PROFILE"
+
+    fields = [
+        StringField("headline", label="Headline", required=False,
+                    help_text="e.g. Product designer & frontend developer"),
+        StringField("tagline", label="Tagline", required=False,
+                    help_text="Short strapline shown beneath the headline"),
+        TextAreaField("summary", label="Summary", required=False,
+                      help_text="A few sentences about you — shown on the landing page"),
+    ]
+
+    def _defaults(self) -> Dict:
+        return {
+            "key": self.SETTINGS_KEY,
+            "headline": "",
+            "tagline": "",
+            "summary": "",
+        }
+
+    def _with_key(self, item: Dict) -> Dict:
+        item["key"] = self.SETTINGS_KEY
+        return item
+
+    async def count(self, request: Request, where=None) -> int:
+        return 1
+
+    async def find_all(
+        self, request: Request, skip: int = 0, limit: int = 100,
+        where=None, order_by=None
+    ) -> Sequence[Any]:
+        item = get_setting(self.SETTINGS_KEY) or {}
+        return [_as_obj(self._with_key({**self._defaults(), **item}))]
+
+    async def find_by_pk(self, request: Request, pk: Any) -> Any:
+        item = get_setting(self.SETTINGS_KEY) or {}
+        return _as_obj(self._with_key({**self._defaults(), **item}))
+
+    async def create(self, request: Request, data: Dict[str, Any]) -> Any:
+        data.pop("key", None)
+        normalised = _normalize(data)
+        put_setting(self.SETTINGS_KEY, normalised)
+        normalised["key"] = self.SETTINGS_KEY
+        return _as_obj(normalised)
+
+    async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
+        data.pop("key", None)
+        normalised = _normalize(data)
+        put_setting(self.SETTINGS_KEY, normalised)
+        normalised["key"] = self.SETTINGS_KEY
         return _as_obj(normalised)
 
     async def delete(self, request: Request, pks: List[Any]) -> Optional[int]:

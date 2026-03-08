@@ -1,4 +1,4 @@
-"""Tests for /api/settings/brand and /api/settings/homepage endpoints."""
+"""Tests for /api/settings/brand, /api/settings/seo and /api/settings/profile."""
 
 
 # ── Brand settings ─────────────────────────────────────────────────────────────
@@ -50,39 +50,34 @@ def test_brand_overwrites_on_re_save(client):
     assert data["linkedin"] == "https://linkedin.com/in/jb"
 
 
-# ── Homepage settings ──────────────────────────────────────────────────────────
+# ── SEO Metadata settings ──────────────────────────────────────────────────────
 
-def test_homepage_returns_empty_when_not_set(client):
-    response = client.get("/api/settings/homepage")
+def test_seo_returns_empty_when_not_set(client):
+    response = client.get("/api/settings/seo")
     assert response.status_code == 200
     assert response.json() == {}
 
 
-def test_homepage_returns_settings_when_set(client):
+def test_seo_returns_settings_when_set(client):
     from app.db import put_setting
-    put_setting("HOMEPAGE", {
-        "tagline": "Design-led engineering",
-        "bio": "Hi, I'm James.",
-        "cta_text": "View my work",
-        "cta_url": "/work",
+    put_setting("SEO", {
         "seo_title": "James Brannon — Designer & Developer",
         "seo_description": "Portfolio of James Brannon.",
         "og_type": "website",
         "no_index": False,
     })
-    response = client.get("/api/settings/homepage")
+    response = client.get("/api/settings/seo")
     assert response.status_code == 200
     data = response.json()
-    assert data["tagline"] == "Design-led engineering"
-    assert data["cta_url"] == "/work"
     assert data["seo_title"] == "James Brannon — Designer & Developer"
+    assert data["seo_description"] == "Portfolio of James Brannon."
     assert data["og_type"] == "website"
 
 
-def test_homepage_seo_fields_stored(client):
-    """All SEO fields are correctly stored and retrieved."""
+def test_seo_all_fields_stored(client):
+    """All six SEO fields are correctly stored and retrieved."""
     from app.db import put_setting
-    put_setting("HOMEPAGE", {
+    put_setting("SEO", {
         "seo_title": "James Brannon",
         "seo_description": "Portfolio site",
         "og_image": "https://jamesbrannon.co.uk/og.jpg",
@@ -90,31 +85,74 @@ def test_homepage_seo_fields_stored(client):
         "canonical_url": "https://jamesbrannon.co.uk/",
         "no_index": False,
     })
-    response = client.get("/api/settings/homepage")
+    response = client.get("/api/settings/seo")
     data = response.json()
     assert data["og_image"] == "https://jamesbrannon.co.uk/og.jpg"
     assert data["canonical_url"] == "https://jamesbrannon.co.uk/"
     assert data["no_index"] is False
 
 
-def test_homepage_no_index_true(client):
+def test_seo_no_index_true(client):
     from app.db import put_setting
-    put_setting("HOMEPAGE", {"no_index": True})
-    response = client.get("/api/settings/homepage")
+    put_setting("SEO", {"no_index": True})
+    response = client.get("/api/settings/seo")
     assert response.json()["no_index"] is True
 
 
-# ── Settings are isolated between each other ───────────────────────────────────
+def test_homepage_endpoint_removed(client):
+    """The old /api/settings/homepage endpoint no longer exists."""
+    response = client.get("/api/settings/homepage")
+    assert response.status_code == 404
 
-def test_brand_and_homepage_are_independent(client):
+
+# ── My Profile settings ────────────────────────────────────────────────────────
+
+def test_profile_returns_empty_when_not_set(client):
+    response = client.get("/api/settings/profile")
+    assert response.status_code == 200
+    assert response.json() == {}
+
+
+def test_profile_returns_settings_when_set(client):
+    from app.db import put_setting
+    put_setting("PROFILE", {
+        "headline": "Product designer & frontend developer",
+        "tagline": "Making things people enjoy using",
+        "summary": "Hi, I'm James.",
+    })
+    response = client.get("/api/settings/profile")
+    assert response.status_code == 200
+    data = response.json()
+    assert data["headline"] == "Product designer & frontend developer"
+    assert data["tagline"] == "Making things people enjoy using"
+    assert data["summary"] == "Hi, I'm James."
+
+
+def test_profile_partial_settings(client):
+    """Partial profile data is returned as-is."""
+    from app.db import put_setting
+    put_setting("PROFILE", {"headline": "Designer"})
+    response = client.get("/api/settings/profile")
+    data = response.json()
+    assert data["headline"] == "Designer"
+    assert "tagline" not in data
+
+
+# ── Settings are isolated from each other ─────────────────────────────────────
+
+def test_all_settings_are_independent(client):
     from app.db import put_setting
     put_setting("BRAND", {"email": "me@jamesbrannon.co.uk"})
-    put_setting("HOMEPAGE", {"tagline": "Hello world"})
+    put_setting("SEO", {"seo_title": "James Brannon"})
+    put_setting("PROFILE", {"headline": "Designer"})
 
     brand = client.get("/api/settings/brand").json()
-    homepage = client.get("/api/settings/homepage").json()
+    seo = client.get("/api/settings/seo").json()
+    profile = client.get("/api/settings/profile").json()
 
     assert brand.get("email") == "me@jamesbrannon.co.uk"
-    assert homepage.get("tagline") == "Hello world"
-    assert "tagline" not in brand
-    assert "email" not in homepage
+    assert seo.get("seo_title") == "James Brannon"
+    assert profile.get("headline") == "Designer"
+    assert "seo_title" not in brand
+    assert "email" not in seo
+    assert "headline" not in brand

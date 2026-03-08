@@ -11,7 +11,13 @@ def get_brand_settings() -> dict:
     return get_setting("BRAND") or {}
 
 
-@router.get("/settings/homepage")
-def get_homepage_settings() -> dict:
-    """Return homepage-specific content and SEO settings."""
-    return get_setting("HOMEPAGE") or {}
+@router.get("/settings/seo")
+def get_seo_settings() -> dict:
+    """Return site-level SEO and Open Graph settings."""
+    return get_setting("SEO") or {}
+
+
+@router.get("/settings/profile")
+def get_profile_settings() -> dict:
+    """Return personal profile content (headline, tagline, summary)."""
+    return get_setting("PROFILE") or {}

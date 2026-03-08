@@ -73,10 +73,13 @@ class BrandSettings(BaseModel):
     email: Optional[str] = None
 
 
-class HomepageSettings(SEOMixin):
-    """Homepage-specific content and SEO settings."""
+class SeoSettings(SEOMixin):
+    """Site-level SEO and Open Graph settings."""
+    pass
+
+
+class ProfileSettings(BaseModel):
+    """Personal profile content — powers the landing page."""
+    headline: Optional[str] = None
     tagline: Optional[str] = None
-    bio: Optional[str] = None
-    hero_image_url: Optional[str] = None
-    cta_text: Optional[str] = None
-    cta_url: Optional[str] = None
+    summary: Optional[str] = None

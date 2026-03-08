@@ -9,7 +9,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.base import BaseAdmin as Admin
 
 from .admin.auth import SimpleAuthProvider
-from .admin.views import BrandView, HomepageView, PageView, PortfolioView, PostView, STATIC_DIR
+from .admin.views import BrandView, PageView, PortfolioView, PostView, ProfileView, SeoView, STATIC_DIR
 from .db import create_table_if_not_exists
 from .routers import pages, portfolio, posts, settings
 
@@ -56,7 +56,8 @@ admin.add_view(PostView())
 admin.add_view(PageView())
 admin.add_view(PortfolioView())
 admin.add_view(BrandView())
-admin.add_view(HomepageView())
+admin.add_view(SeoView())
+admin.add_view(ProfileView())
 admin.mount_to(app)
 
 

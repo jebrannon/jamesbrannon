@@ -1,14 +1,4 @@
-{% extends "@starlette-admin/edit.html" %}
-
-{% block head_css %}
-    {{ super() }}
-    <style>
-        /* Singleton edit page — card title and extra save buttons not needed */
-        .card-header { display: none !important; }
-        button[name="_add_another"],
-        button[name="_continue_editing"] { display: none !important; }
-    </style>
-{% endblock %}
+{% extends "singleton_edit.html" %}
 
 {% block edit_form %}
     {%- set comms_fields = ['linkedin', 'linkedin_text', 'instagram', 'instagram_text', 'email', 'email_text'] -%}
