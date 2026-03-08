@@ -88,11 +88,14 @@ def _as_obj(d: Optional[Dict]) -> Optional[SimpleNamespace]:
     return None if d is None else SimpleNamespace(**d)
 
 
+EXPECTED_FAVICON_SIZES = [16, 32, 192, 512]
+
+
 def _convert_favicon(svg_bytes: bytes, save_name: str) -> None:
     """Convert SVG bytes to PNG variants at standard favicon sizes."""
     if not _CAIROSVG:
         return
-    for size in [16, 32, 192, 512]:
+    for size in EXPECTED_FAVICON_SIZES:
         out = FAVICON_DIR / f"{save_name}-{size}.png"
         try:
             _cairosvg.svg2png(
@@ -279,17 +282,24 @@ class BrandView(BaseModelView):
         # Favicon uploads — SVG files are saved and converted to PNG variants
         FileField(
             "favicon_light",
-            label="Favicon (Light Mode) — Upload SVG",
+            label="Favicon — Light Mode",
             help_text=(
-                "Upload an SVG. PNGs at 16/32/192/512 px are generated automatically "
-                "(requires libcairo; run: brew install cairo on macOS)."
+                "Upload an SVG. PNGs are auto-generated at 16 × 16, 32 × 32, "
+                "192 × 192 and 512 × 512 px. "
+                "Requires libcairo — brew install cairo (macOS) or "
+                "apt install libcairo2 (Linux)."
             ),
             required=False,
             accept=".svg,image/svg+xml",
         ),
         FileField(
             "favicon_dark",
-            label="Favicon (Dark Mode) — Upload SVG",
+            label="Favicon — Dark Mode",
+            help_text=(
+                "Shown when the visitor's device is in dark mode. "
+                "Falls back to the light favicon if not set. "
+                "Same SVG → PNG conversion applies."
+            ),
             required=False,
             accept=".svg,image/svg+xml",
         ),

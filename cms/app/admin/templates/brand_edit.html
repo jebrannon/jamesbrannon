@@ -4,21 +4,90 @@
     {%- set comms_fields = ['linkedin', 'linkedin_text', 'instagram', 'instagram_text', 'email', 'email_text'] -%}
     {%- set all_fields = model.get_fields_list(request, 'EDIT' | ra) -%}
 
-    {# ── Favicon fields ───────────────────────────────────────────────────── #}
-    {% for field in all_fields %}
-        {% if field.name not in comms_fields %}
-            <div class="mb-3">
-                {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
-                    {% include field.label_template %}
-                    {% include field.form_template %}
-                {% endwith %}
-            </div>
-        {% endif %}
-    {% endfor %}
+    {# ── Brand fieldset (favicons) ────────────────────────────────────────── #}
+    <fieldset class="border rounded p-3 mb-3">
+        <legend class="float-none w-auto px-2 fw-semibold text-muted"
+                style="font-size:.8125rem;letter-spacing:.04em;text-transform:uppercase;">Brand</legend>
+
+        {% for field in all_fields %}
+            {% if field.name not in comms_fields %}
+                <div class="mb-3">
+                    {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+                        {% include field.label_template %}
+                        {% include field.form_template %}
+                    {% endwith %}
+                </div>
+
+                {# ── Light favicon preview row ────────────────────────── #}
+                {% if field.name == 'favicon_light' %}
+                    {% set svg_url = raw_obj.favicon_light_url %}
+                    {% if svg_url %}
+                    <div class="mb-4 p-3 rounded border d-flex flex-row align-items-end gap-4 flex-wrap"
+                         style="background:#f8f9fa;">
+                        {% for size in [16, 32, 192, 512] %}
+                            {% set display = size if size <= 64 else 64 %}
+                            {% set png_url = svg_url | replace('.svg', '-' ~ size ~ '.png') %}
+                            <div class="text-center">
+                                <div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
+                                    <img src="{{ png_url }}"
+                                         width="{{ display }}" height="{{ display }}"
+                                         alt="{{ size }}px"
+                                         style="image-rendering:pixelated;"
+                                         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'text-danger small',textContent:'not generated'}))">
+                                </div>
+                                <small class="text-muted d-block mt-1">{{ size }}px</small>
+                            </div>
+                        {% endfor %}
+                        <div class="text-center ms-2 ps-2 border-start">
+                            <div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
+                                <img src="{{ svg_url }}" width="64" height="64"
+                                     alt="SVG" style="object-fit:contain;">
+                            </div>
+                            <small class="text-muted d-block mt-1">SVG</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
+
+                {# ── Dark favicon preview row ─────────────────────────── #}
+                {% if field.name == 'favicon_dark' %}
+                    {% set svg_url = raw_obj.favicon_dark_url %}
+                    {% if svg_url %}
+                    <div class="mb-4 p-3 rounded border d-flex flex-row align-items-end gap-4 flex-wrap"
+                         style="background:#1e1e2d;">
+                        {% for size in [16, 32, 192, 512] %}
+                            {% set display = size if size <= 64 else 64 %}
+                            {% set png_url = svg_url | replace('.svg', '-' ~ size ~ '.png') %}
+                            <div class="text-center">
+                                <div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
+                                    <img src="{{ png_url }}"
+                                         width="{{ display }}" height="{{ display }}"
+                                         alt="{{ size }}px"
+                                         style="image-rendering:pixelated;"
+                                         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'text-light small',textContent:'not generated'}))">
+                                </div>
+                                <small class="text-light d-block mt-1">{{ size }}px</small>
+                            </div>
+                        {% endfor %}
+                        <div class="text-center ms-2 ps-2 border-start border-secondary">
+                            <div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
+                                <img src="{{ svg_url }}" width="64" height="64"
+                                     alt="SVG" style="object-fit:contain;">
+                            </div>
+                            <small class="text-light d-block mt-1">SVG</small>
+                        </div>
+                    </div>
+                    {% endif %}
+                {% endif %}
+
+            {% endif %}
+        {% endfor %}
+    </fieldset>
 
     {# ── Communications fieldset ──────────────────────────────────────────── #}
     <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2 fw-semibold text-muted" style="font-size: .8125rem; letter-spacing: .04em; text-transform: uppercase;">Communications</legend>
+        <legend class="float-none w-auto px-2 fw-semibold text-muted"
+                style="font-size:.8125rem;letter-spacing:.04em;text-transform:uppercase;">Communications</legend>
         {% for field in all_fields %}
             {% if field.name in comms_fields %}
                 <div class="mb-3">
