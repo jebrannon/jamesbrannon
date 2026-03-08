@@ -120,11 +120,16 @@ class StrengthItem(BaseModel):
     description: Optional[str] = None
 
 
+class StrengthsSection(BaseModel):
+    """Strengths fieldset — headline + list of items."""
+    headline: Optional[str] = None
+    items: List[StrengthItem] = Field(default_factory=list)
+
+
 class ProfileSettings(BaseModel):
     """Personal profile content — powers the landing page."""
     headline: Optional[str] = None
     tagline: Optional[str] = None
     summary: Optional[str] = None
     blog: Optional[BlogSettings] = None
-    strengths_headline: Optional[str] = None
-    strengths: List[StrengthItem] = Field(default_factory=list)
+    strengths: Optional[StrengthsSection] = None

@@ -89,15 +89,31 @@ def _unpack_file(field_value: Any) -> Tuple[Optional[UploadFile], bool]:
 
 def _as_obj(d: Optional[Dict]) -> Optional[SimpleNamespace]:
     """
-    Wrap a plain dict in SimpleNamespace so starlette-admin can access fields
-    via getattr(obj, field_name) — required by parse_obj and get_pk_value.
+    Recursively wrap a plain dict (and nested dicts/lists-of-dicts) in
+    SimpleNamespace so starlette-admin can access fields via getattr().
+
+    Deep wrapping is required for CollectionField: starlette-admin calls
+    getattr(value, field.name) on the value returned for each nested field.
+    A plain dict fails for keys that shadow built-in dict methods (e.g. "items"
+    returns dict.items rather than raising AttributeError). SimpleNamespace
+    ensures attribute access always reads the stored value.
 
     NOTE: This is a workaround for starlette-admin's internal use of getattr()
     on objects returned by find_by_pk, create, and edit. Test _as_obj_returns_
     namespace_with_attributes in test_admin_views.py guards against regressions
     if starlette-admin changes this behaviour in a future version.
     """
-    return None if d is None else SimpleNamespace(**d)
+    if d is None:
+        return None
+    wrapped = {}
+    for k, v in d.items():
+        if isinstance(v, dict):
+            wrapped[k] = _as_obj(v)
+        elif isinstance(v, list):
+            wrapped[k] = [_as_obj(i) if isinstance(i, dict) else i for i in v]
+        else:
+            wrapped[k] = v
+    return SimpleNamespace(**wrapped)
 
 
 EXPECTED_FAVICON_SIZES = [16, 32, 192, 512]
@@ -453,11 +469,13 @@ class ProfileView(SingletonView):
         ]),
 
         # ── Strengths fieldset ────────────────────────────────────────────
-        StringField("strengths_headline", label="Strengths — Section Headline", required=False),
-        ListField(CollectionField("strengths", fields=[
-            StringField("name", label="Name", required=True),
-            TextAreaField("description", label="Description", required=False),
-        ])),
+        CollectionField("strengths", fields=[
+            StringField("headline", label="Section Headline", required=False),
+            ListField(CollectionField("items", fields=[
+                StringField("name", label="Name", required=True),
+                TextAreaField("description", label="Description", required=False),
+            ])),
+        ]),
     ]
 
     def _defaults(self) -> Dict:
@@ -467,6 +485,5 @@ class ProfileView(SingletonView):
             "tagline": "",
             "summary": "",
             "blog": {"headline": "", "category": "", "limit": 3},
-            "strengths_headline": "",
-            "strengths": [],
+            "strengths": {"headline": "", "items": []},
         }

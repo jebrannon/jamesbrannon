@@ -188,6 +188,24 @@ def test_as_obj_returns_namespace_with_attributes():
     assert obj.title == "Test"
 
 
+def test_as_obj_deep_wraps_nested_dicts():
+    """Nested dicts must also be SimpleNamespace so CollectionField getattr works."""
+    from app.admin.views import _as_obj
+    obj = _as_obj({"blog": {"headline": "Hi", "limit": 3}})
+    # getattr must return the stored value, not a dict method
+    assert obj.blog.headline == "Hi"
+    assert obj.blog.limit == 3
+
+
+def test_as_obj_deep_wraps_list_of_dicts():
+    """Lists of dicts must have their items wrapped so nested CollectionField works."""
+    from app.admin.views import _as_obj
+    obj = _as_obj({"strengths": {"headline": "S", "items": [{"name": "X"}]}})
+    # The 'items' key must not resolve to dict.items() method
+    assert obj.strengths.headline == "S"
+    assert obj.strengths.items[0].name == "X"
+
+
 # ── Integration: admin CRUD persists to DynamoDB ──────────────────────────────
 
 def test_post_create_persists_to_dynamodb(admin_client, aws_mock):
@@ -252,14 +270,14 @@ def test_profile_edit_persists_to_dynamodb(admin_client, aws_mock):
             "blog.headline": "Latest writing",
             "blog.category": "thoughts",
             "blog.limit": "3",
-            "strengths_headline": "My Strengths",
+            "strengths.headline": "My Strengths",
         },
     )
     item = get_setting("PROFILE")
     assert item is not None
     assert item["headline"] == "Product designer"
     assert item["blog"]["category"] == "thoughts"
-    assert item["strengths_headline"] == "My Strengths"
+    assert item["strengths"]["headline"] == "My Strengths"
 
 
 def test_profile_strengths_list_persists(admin_client, aws_mock):
@@ -271,14 +289,14 @@ def test_profile_strengths_list_persists(admin_client, aws_mock):
             "headline": "",
             "tagline": "",
             "summary": "",
-            "strengths_headline": "Strengths",
-            "strengths.0.name": "Product Design",
-            "strengths.0.description": "End-to-end design.",
+            "strengths.headline": "Strengths",
+            "strengths.items.0.name": "Product Design",
+            "strengths.items.0.description": "End-to-end design.",
         },
     )
     item = get_setting("PROFILE")
-    assert isinstance(item["strengths"], list)
-    assert item["strengths"][0]["name"] == "Product Design"
+    assert isinstance(item["strengths"]["items"], list)
+    assert item["strengths"]["items"][0]["name"] == "Product Design"
 
 
 def test_profile_empty_strengths_list(admin_client, aws_mock):
