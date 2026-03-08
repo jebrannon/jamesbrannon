@@ -1,9 +1,12 @@
+import logging
 import os
 from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.base import BaseAdmin as Admin
@@ -13,9 +16,23 @@ from .admin.views import BrandView, PageView, PortfolioView, PostView, ProfileVi
 from .db import create_table_if_not_exists
 from .routers import pages, portfolio, posts, settings
 
+load_dotenv()
+
+logger = logging.getLogger(__name__)
+
 ADMIN_TEMPLATES_DIR = Path(__file__).parent / "admin" / "templates"
 
-load_dotenv()
+_DEFAULT_SECRET_KEY = "dev-secret-key-change-in-production"
+_SECRET_KEY = os.getenv("SECRET_KEY", _DEFAULT_SECRET_KEY)
+
+# Fail fast if running with the default insecure key outside of local dev.
+# Local dev is detected by the presence of DYNAMODB_ENDPOINT (points at moto).
+_IS_LOCAL_DEV = bool(os.getenv("DYNAMODB_ENDPOINT"))
+if not _IS_LOCAL_DEV and _SECRET_KEY == _DEFAULT_SECRET_KEY:
+    raise RuntimeError(
+        "SECRET_KEY is not set or is using the insecure default. "
+        "Set a strong SECRET_KEY in your environment before deploying."
+    )
 
 
 @asynccontextmanager
@@ -30,10 +47,32 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# ── CORS ──────────────────────────────────────────────────────────────────────
+# In production the frontend is served from the same CloudFront distribution,
+# so the origin will match. Add the production domain here when deploying.
+_ALLOWED_ORIGINS = [
+    o.strip() for o in os.getenv("CORS_ORIGINS", "http://localhost:3000,http://127.0.0.1:3000").split(",")
+    if o.strip()
+]
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=_ALLOWED_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET"],
+    allow_headers=["*"],
+)
+
 app.add_middleware(
     SessionMiddleware,
-    secret_key=os.getenv("SECRET_KEY", "dev-secret-key-change-in-production"),
+    secret_key=_SECRET_KEY,
 )
+
+# ── Global error handler ───────────────────────────────────────────────────────
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception) -> JSONResponse:
+    logger.exception("Unhandled exception on %s %s", request.method, request.url.path)
+    return JSONResponse(status_code=500, content={"detail": "Internal server error"})
 
 # ── Static files (favicons and other uploaded assets) ─────────────────────────
 STATIC_DIR.mkdir(parents=True, exist_ok=True)
@@ -62,5 +101,5 @@ admin.mount_to(app)
 
 
 @app.get("/health")
-def health() -> dict:
+async def health() -> dict:
     return {"status": "ok"}

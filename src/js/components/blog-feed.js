@@ -1,3 +1,5 @@
+import { escapeHtml, formatDate } from '../utils.js';
+
 const BASE = import.meta.env?.VITE_API_BASE ?? '';
 
 /**
@@ -22,10 +24,10 @@ export async function renderBlogFeed(container, options = {}) {
         (post) => `
       <article class="blog-feed__item">
         <h3 class="blog-feed__title">
-          <a href="/blog/${post.slug}">${post.title}</a>
+          <a href="/blog/${escapeHtml(post.slug)}">${escapeHtml(post.title)}</a>
         </h3>
-        ${post.date ? `<time class="blog-feed__date" datetime="${post.date}">${formatDate(post.date)}</time>` : ''}
-        ${post.excerpt ? `<p class="blog-feed__excerpt">${post.excerpt}</p>` : ''}
+        ${post.date ? `<time class="blog-feed__date" datetime="${escapeHtml(post.date)}">${escapeHtml(formatDate(post.date))}</time>` : ''}
+        ${post.excerpt ? `<p class="blog-feed__excerpt">${escapeHtml(post.excerpt)}</p>` : ''}
       </article>`
       )
       .join('');
@@ -44,12 +46,4 @@ export function initBlogFeeds() {
     const limit = parseInt(el.dataset.limit || '3', 10);
     renderBlogFeed(el, { limit });
   });
-}
-
-function formatDate(iso) {
-  try {
-    return new Date(iso).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'long', year: 'numeric',
-    });
-  } catch (_) { return iso; }
 }

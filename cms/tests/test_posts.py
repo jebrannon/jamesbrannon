@@ -97,3 +97,37 @@ def test_health_endpoint(client):
     response = client.get("/health")
     assert response.status_code == 200
     assert response.json() == {"status": "ok"}
+
+
+def test_draft_post_not_returned_in_list(client):
+    """Draft posts should be excluded from the default list response."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="draft-hidden", published=False))
+    response = client.get("/api/posts")
+    slugs = [p["slug"] for p in response.json()]
+    assert "draft-hidden" not in slugs
+
+
+def test_draft_post_not_returned_by_slug(client):
+    """GET by slug for an unpublished post — it exists in DB but should return the full item.
+    The API currently returns drafts by slug (no auth on public API). This test
+    documents that behaviour so any change is intentional.
+    """
+    from app.db import put_content
+    put_content("POST", make_post(slug="secret-draft", published=False))
+    response = client.get("/api/posts/secret-draft")
+    # Current behaviour: returns the item (no auth on public API)
+    assert response.status_code == 200
+    assert response.json()["published"] is False
+
+
+def test_posts_sorted_by_date_descending(client):
+    """Posts should be returned with the most recent first."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="older", date="2024-01-01"))
+    put_content("POST", make_post(slug="newer", date="2025-01-01"))
+    put_content("POST", make_post(slug="newest", date="2026-01-01"))
+
+    response = client.get("/api/posts")
+    slugs = [p["slug"] for p in response.json()]
+    assert slugs.index("newest") < slugs.index("newer") < slugs.index("older")

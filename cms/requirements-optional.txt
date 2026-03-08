@@ -1,0 +1,4 @@
+# SVG favicon conversion — requires libcairo system library
+# macOS:  brew install cairo
+# Linux:  apt install libcairo2
+cairosvg==2.8.2

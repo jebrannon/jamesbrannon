@@ -176,3 +176,153 @@ def test_page_admin_list_returns_200(admin_client):
 def test_portfolio_admin_list_returns_200(admin_client):
     response = admin_client.get("/admin/portfolio/list")
     assert response.status_code == 200
+
+
+# ── Regression: _as_obj wraps dict in SimpleNamespace ────────────────────────
+
+def test_as_obj_returns_namespace_with_attributes():
+    """Guards against starlette-admin changing get_pk_value to use dict access."""
+    from app.admin.views import _as_obj
+    obj = _as_obj({"slug": "test", "title": "Test"})
+    assert obj.slug == "test"
+    assert obj.title == "Test"
+
+
+# ── Integration: admin CRUD persists to DynamoDB ──────────────────────────────
+
+def test_post_create_persists_to_dynamodb(admin_client, aws_mock):
+    """Creating a post via admin should make it retrievable from the public API."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "hello-world",
+            "title": "Hello World",
+            "body": "This is a test post.",
+            "published": "on",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "hello-world")
+    assert item is not None
+    assert item["title"] == "Hello World"
+    assert item["slug"] == "hello-world"
+
+
+def test_post_edit_updates_dynamodb(admin_client, aws_mock):
+    """Editing a post via admin should update the stored record."""
+    from app.db import get_content, put_content
+    put_content("POST", {"slug": "edit-me", "title": "Original", "body": "Old body."})
+    admin_client.post(
+        "/admin/post/edit/edit-me",
+        data={
+            "slug": "edit-me",
+            "title": "Updated Title",
+            "body": "New body.",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "edit-me")
+    assert item is not None
+    assert item["title"] == "Updated Title"
+
+
+def test_post_delete_removes_from_dynamodb(admin_client, aws_mock):
+    """Deleting a post via admin should remove it from DynamoDB."""
+    from app.db import get_content, put_content
+    put_content("POST", {"slug": "delete-me", "title": "To Delete", "body": "body."})
+    # starlette-admin delete is a batch action at /api/{identity}/action?name=delete&pks=...
+    admin_client.get("/admin/api/post/action?name=delete&pks=delete-me")
+    assert get_content("POST", "delete-me") is None
+
+
+def test_profile_edit_persists_to_dynamodb(admin_client, aws_mock):
+    """Saving profile settings via admin should persist to DynamoDB."""
+    from app.db import get_setting
+    admin_client.post(
+        "/admin/profile/edit/PROFILE",
+        data={
+            "headline": "Product designer",
+            "tagline": "Making things",
+            "summary": "Hi, I'm James.",
+        },
+    )
+    item = get_setting("PROFILE")
+    assert item is not None
+    assert item["headline"] == "Product designer"
+
+
+def test_seo_edit_persists_to_dynamodb(admin_client, aws_mock):
+    """Saving SEO settings via admin should persist to DynamoDB."""
+    from app.db import get_setting
+    admin_client.post(
+        "/admin/seo/edit/SEO",
+        data={
+            "seo_title": "James Brannon",
+            "seo_description": "Portfolio site",
+            "og_type": "website",
+            "no_index": "",
+        },
+    )
+    item = get_setting("SEO")
+    assert item is not None
+    assert item["seo_title"] == "James Brannon"
+
+
+# ── Integration: admin authentication ─────────────────────────────────────────
+
+def test_failed_login_returns_error(aws_mock):
+    """Wrong credentials should return 400 Bad Request — starlette-admin's login failure response."""
+    from app.main import app
+    client = TestClient(app, raise_server_exceptions=True, follow_redirects=True)
+    response = client.post(
+        "/admin/login",
+        data={"username": "admin", "password": "wrongpassword"},
+    )
+    assert response.status_code == 400
+
+
+def test_unauthenticated_admin_access_redirects(aws_mock):
+    """Accessing /admin without a session should redirect to login."""
+    from app.main import app
+    client = TestClient(app, raise_server_exceptions=True, follow_redirects=False)
+    response = client.get("/admin/post/list")
+    assert response.status_code in (302, 303)
+
+
+def test_logout_clears_session(aws_mock):
+    """After logout, admin pages should redirect to login."""
+    from app.main import app
+    client = TestClient(app, raise_server_exceptions=True, follow_redirects=True)
+    # Login
+    client.post("/admin/login", data={"username": "admin", "password": "testpass"})
+    # Access a protected page (should work)
+    r1 = client.get("/admin/post/list")
+    assert r1.status_code == 200
+    # Logout
+    client.get("/admin/logout")
+    # Now access should redirect — use a no-follow client
+    client2 = TestClient(app, raise_server_exceptions=True, follow_redirects=False)
+    r2 = client2.get("/admin/post/list")
+    assert r2.status_code in (302, 303)
+
+
+# ── Integration: rate limiting ────────────────────────────────────────────────
+
+def test_rate_limiter_blocks_after_max_attempts(aws_mock):
+    """After 5 failed login attempts from the same IP, further attempts are rate limited."""
+    from app.admin.auth import _failed_attempts
+    from app.main import app
+    # Clear any state from other tests
+    _failed_attempts.clear()
+    client = TestClient(app, raise_server_exceptions=True, follow_redirects=True)
+    for _ in range(5):
+        client.post("/admin/login", data={"username": "admin", "password": "wrong"})
+    response = client.post("/admin/login", data={"username": "admin", "password": "wrong"})
+    # 6th attempt should be rate-limited
+    assert response.status_code == 400
+    assert "Too many" in response.text

@@ -1,7 +1,8 @@
+import re
 from enum import Enum
 from typing import Any, Dict, List, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
 
 
 class ThemeMode(str, Enum):
@@ -18,6 +19,9 @@ class OGType(str, Enum):
     website = "website"
     article = "article"
     profile = "profile"
+
+
+_SLUG_RE = re.compile(r'^[a-z0-9][a-z0-9-]*$')
 
 
 class SEOMixin(BaseModel):
@@ -37,25 +41,40 @@ class ContentBase(SEOMixin):
 
 
 class Post(ContentBase):
-    slug: str
-    title: str
+    og_type: OGType = OGType.article  # posts default to article, not website
+    slug: str = Field(min_length=1)
+    title: str = Field(min_length=1)
     body: str
     date: Optional[str] = None  # ISO 8601 string
     published: bool = False
     tags: List[str] = Field(default_factory=list)
     excerpt: Optional[str] = None
 
+    @field_validator("slug")
+    @classmethod
+    def slug_must_be_url_safe(cls, v: str) -> str:
+        if not _SLUG_RE.match(v):
+            raise ValueError("slug must contain only lowercase letters, digits, and hyphens")
+        return v
+
 
 class Page(ContentBase):
-    slug: str
-    title: str
+    slug: str = Field(min_length=1)
+    title: str = Field(min_length=1)
     body: Optional[str] = None
     sections: List[Dict[str, Any]] = Field(default_factory=list)
 
+    @field_validator("slug")
+    @classmethod
+    def slug_must_be_url_safe(cls, v: str) -> str:
+        if not _SLUG_RE.match(v):
+            raise ValueError("slug must contain only lowercase letters, digits, and hyphens")
+        return v
+
 
 class PortfolioItem(ContentBase):
-    slug: str
-    title: str
+    slug: str = Field(min_length=1)
+    title: str = Field(min_length=1)
     body: str
     tags: List[str] = Field(default_factory=list)
     featured: bool = False
@@ -63,14 +82,24 @@ class PortfolioItem(ContentBase):
     date: Optional[str] = None
     excerpt: Optional[str] = None
 
+    @field_validator("slug")
+    @classmethod
+    def slug_must_be_url_safe(cls, v: str) -> str:
+        if not _SLUG_RE.match(v):
+            raise ValueError("slug must contain only lowercase letters, digits, and hyphens")
+        return v
+
 
 class BrandSettings(BaseModel):
-    """Site-wide brand identity — favicon URLs, social links."""
+    """Site-wide brand identity — favicon URLs, social links and display text."""
     favicon_light_url: str = ""
     favicon_dark_url: str = ""
     linkedin: Optional[str] = None
+    linkedin_text: Optional[str] = None
     instagram: Optional[str] = None
+    instagram_text: Optional[str] = None
     email: Optional[str] = None
+    email_text: Optional[str] = None
 
 
 class SeoSettings(SEOMixin):

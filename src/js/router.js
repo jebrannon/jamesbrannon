@@ -1,3 +1,5 @@
+import { escapeHtml, formatDate } from './utils.js';
+
 const BASE = import.meta.env?.VITE_API_BASE ?? '';
 
 // ── Theme ─────────────────────────────────────────────────────────────────────
@@ -75,12 +77,14 @@ async function renderPost(slug) {
   applyHead(data);
   const app = document.getElementById('App');
   if (app) {
+    // data.body is CMS-authored HTML — intentionally rendered as markup.
+    // All other interpolated values are escaped to prevent XSS.
     app.innerHTML = `
       <article class="post">
         <header class="post__header">
-          <h1 class="post__title">${data.title}</h1>
-          ${data.date ? `<time class="post__date" datetime="${data.date}">${formatDate(data.date)}</time>` : ''}
-          ${data.tags?.length ? `<ul class="post__tags">${data.tags.map(t => `<li>${t}</li>`).join('')}</ul>` : ''}
+          <h1 class="post__title">${escapeHtml(data.title)}</h1>
+          ${data.date ? `<time class="post__date" datetime="${escapeHtml(data.date)}">${escapeHtml(formatDate(data.date))}</time>` : ''}
+          ${data.tags?.length ? `<ul class="post__tags">${data.tags.map(t => `<li>${escapeHtml(t)}</li>`).join('')}</ul>` : ''}
         </header>
         <div class="post__body">${data.body}</div>
       </article>`;
@@ -93,10 +97,11 @@ async function renderPortfolioItem(slug) {
   applyHead(data);
   const app = document.getElementById('App');
   if (app) {
+    // data.body is CMS-authored HTML — intentionally rendered as markup.
     app.innerHTML = `
       <article class="portfolio-item">
         <header class="portfolio-item__header">
-          <h1 class="portfolio-item__title">${data.title}</h1>
+          <h1 class="portfolio-item__title">${escapeHtml(data.title)}</h1>
         </header>
         <div class="portfolio-item__body">${data.body}</div>
       </article>`;
@@ -109,9 +114,10 @@ async function renderCMSPage(slug) {
   applyHead(data);
   const app = document.getElementById('App');
   if (app) {
+    // data.body is CMS-authored HTML — intentionally rendered as markup.
     app.innerHTML = `
       <section class="cms-page">
-        <h1 class="cms-page__title">${data.title}</h1>
+        <h1 class="cms-page__title">${escapeHtml(data.title)}</h1>
         <div class="cms-page__body">${data.body || ''}</div>
       </section>`;
   }
@@ -168,14 +174,4 @@ export function initRouter() {
 
   // Initial route on page load
   route(location.pathname);
-}
-
-// ── Utilities ─────────────────────────────────────────────────────────────────
-
-function formatDate(iso) {
-  try {
-    return new Date(iso).toLocaleDateString('en-GB', {
-      day: 'numeric', month: 'long', year: 'numeric',
-    });
-  } catch (_) { return iso; }
 }

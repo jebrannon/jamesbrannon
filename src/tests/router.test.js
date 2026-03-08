@@ -72,3 +72,94 @@ describe('Router > applyTheme', () => {
     expect(document.body.classList.contains('professional')).toBe(true);
   });
 });
+
+
+// ── applyHead ─────────────────────────────────────────────────────────────────
+
+import { applyHead, fetchJSON } from '../js/router.js';
+
+describe('Router > applyHead', () => {
+  beforeEach(() => {
+    document.title = '';
+    // Remove any meta/link tags added by previous tests
+    document.querySelectorAll('meta[name="description"], meta[property^="og:"], meta[name="robots"], link[rel="canonical"]')
+      .forEach(el => el.remove());
+  });
+
+  it('sets document.title from seo_title', () => {
+    applyHead({ seo_title: 'My SEO Title' });
+    expect(document.title).toBe('My SEO Title');
+  });
+
+  it('falls back to title when seo_title absent', () => {
+    applyHead({ title: 'Page Title' });
+    expect(document.title).toBe('Page Title');
+  });
+
+  it('sets meta description', () => {
+    applyHead({ seo_description: 'A page description.' });
+    const el = document.querySelector('meta[name="description"]');
+    expect(el?.getAttribute('content')).toBe('A page description.');
+  });
+
+  it('sets og:title', () => {
+    applyHead({ seo_title: 'OG Title' });
+    const el = document.querySelector('meta[property="og:title"]');
+    expect(el?.getAttribute('content')).toBe('OG Title');
+  });
+
+  it('sets og:type', () => {
+    applyHead({ og_type: 'article' });
+    const el = document.querySelector('meta[property="og:type"]');
+    expect(el?.getAttribute('content')).toBe('article');
+  });
+
+  it('sets robots to noindex when no_index is true', () => {
+    applyHead({ no_index: true });
+    const el = document.querySelector('meta[name="robots"]');
+    expect(el?.getAttribute('content')).toBe('noindex,nofollow');
+  });
+
+  it('sets robots to index,follow when no_index is false', () => {
+    applyHead({ no_index: false });
+    const el = document.querySelector('meta[name="robots"]');
+    expect(el?.getAttribute('content')).toBe('index,follow');
+  });
+
+  it('adds canonical link when canonical_url provided', () => {
+    applyHead({ canonical_url: 'https://jamesbrannon.co.uk/about' });
+    const el = document.querySelector('link[rel="canonical"]');
+    expect(el?.href).toBe('https://jamesbrannon.co.uk/about');
+  });
+
+  it('handles empty data object without throwing', () => {
+    expect(() => applyHead({})).not.toThrow();
+  });
+});
+
+// ── fetchJSON ─────────────────────────────────────────────────────────────────
+
+describe('Router > fetchJSON', () => {
+  beforeEach(() => {
+    global.fetch = vi.fn();
+  });
+
+  it('returns parsed JSON on 200 response', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'Hello' }),
+    });
+    const data = await fetchJSON('/api/posts/hello');
+    expect(data.title).toBe('Hello');
+  });
+
+  it('throws with status on non-ok response', async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 404 });
+    await expect(fetchJSON('/api/posts/missing')).rejects.toMatchObject({ status: 404 });
+  });
+
+  it('throws on 500', async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 500 });
+    await expect(fetchJSON('/api/posts/error')).rejects.toMatchObject({ status: 500 });
+  });
+});

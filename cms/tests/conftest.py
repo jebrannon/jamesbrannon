@@ -21,6 +21,8 @@ TABLE_NAME = "test-jamesbrannon-content"
 @pytest.fixture()
 def aws_mock():
     """Start moto DynamoDB mock and create the table."""
+    from app.db import _reset_connection_cache
+    _reset_connection_cache()
     with mock_aws():
         dynamodb = boto3.resource("dynamodb", region_name="eu-west-2")
         dynamodb.create_table(

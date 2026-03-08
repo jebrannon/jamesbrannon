@@ -41,3 +41,22 @@ def test_page_body_content(client):
 
     response = client.get("/api/pages/about")
     assert "Hello world." in response.json()["body"]
+
+
+def test_list_pages(client):
+    """GET /api/pages should return all pages."""
+    from app.db import put_content
+    put_content("PAGE", make_page(slug="about"))
+    put_content("PAGE", make_page(slug="contact", title="Contact"))
+
+    response = client.get("/api/pages")
+    assert response.status_code == 200
+    slugs = [p["slug"] for p in response.json()]
+    assert "about" in slugs
+    assert "contact" in slugs
+
+
+def test_list_pages_empty(client):
+    response = client.get("/api/pages")
+    assert response.status_code == 200
+    assert response.json() == []

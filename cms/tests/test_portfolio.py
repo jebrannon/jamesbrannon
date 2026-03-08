@@ -61,3 +61,14 @@ def test_portfolio_item_defaults_dark_professional(client):
     data = response.json()
     assert data["theme_mode"] == "dark"
     assert data["theme_style"] == "professional"
+
+
+def test_portfolio_sorted_by_date_descending(client):
+    """Portfolio items should be returned with the most recent first."""
+    from app.db import put_content
+    put_content("PORTFOLIO", make_portfolio_item(slug="older", date="2024-01-01"))
+    put_content("PORTFOLIO", make_portfolio_item(slug="newer", date="2025-06-01"))
+
+    response = client.get("/api/portfolio")
+    slugs = [p["slug"] for p in response.json()]
+    assert slugs.index("newer") < slugs.index("older")
