@@ -1,0 +1,36 @@
+{% set fid = field.id %}
+{% set current = data or "" %}
+<input id="{{ fid }}" name="{{ fid }}"
+       class="form-control {% if error %}is-invalid{% endif %}"
+       type="text" value="{{ current }}"
+       {% if field.required %}required{% endif %} />
+{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+{% if error %}<div class="invalid-feedback">{{ error }}</div>{% endif %}
+<script>
+(function() {
+  var slugInput = document.getElementById("{{ fid }}");
+  if (!slugInput) return;
+  // In edit mode the slug is already set — don't auto-fill.
+  if (slugInput.value) return;
+  // Source field: posts use 'title', categories use 'name'.
+  var source = document.getElementById("title") || document.getElementById("name");
+  if (!source) return;
+  var autoFilled = false;
+  function slugify(s) {
+    return s.toLowerCase()
+            .replace(/[^\w\s-]/g, "")
+            .trim()
+            .replace(/[\s_]+/g, "-")
+            .replace(/-+/g, "-");
+  }
+  source.addEventListener("input", function() {
+    if (!autoFilled && slugInput.value) return; // user typed their own slug
+    slugInput.value = slugify(this.value);
+    autoFilled = true;
+  });
+  slugInput.addEventListener("input", function() {
+    // User edited the slug manually — stop auto-filling.
+    autoFilled = false;
+  });
+})();
+</script>

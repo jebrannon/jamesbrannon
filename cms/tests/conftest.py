@@ -67,20 +67,20 @@ def make_page(**kwargs) -> dict:
         "slug": "about",
         "title": "About",
         "body": "About page content.",
+        "published": True,
         "theme_mode": "dark",
         "theme_style": "professional",
     }
     return {**defaults, **kwargs}
 
 
-def make_portfolio_item(**kwargs) -> dict:
+def make_category(**kwargs) -> dict:
     defaults = {
-        "slug": "storystream",
-        "title": "StoryStream",
-        "body": "Portfolio body.",
-        "featured": False,
-        "tags": [],
-        "theme_mode": "dark",
-        "theme_style": "professional",
+        "slug": "design",
+        "name": "Design",
+        "page_headline": "Design articles",
+        "max_items": 10,
     }
     return {**defaults, **kwargs}
+
+

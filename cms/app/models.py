@@ -29,7 +29,7 @@ class SEOMixin(BaseModel):
     seo_title: Optional[str] = None
     seo_description: Optional[str] = None
     og_image: Optional[str] = None
-    og_type: OGType = OGType.website
+    og_type: Optional[OGType] = OGType.website
     canonical_url: Optional[str] = None
     no_index: bool = False
 
@@ -47,8 +47,24 @@ class Post(ContentBase):
     body: str
     date: Optional[str] = None  # ISO 8601 string
     published: bool = False
+    category: Optional[str] = None  # stores category slug
     tags: List[str] = Field(default_factory=list)
     excerpt: Optional[str] = None
+
+    @field_validator("slug")
+    @classmethod
+    def slug_must_be_url_safe(cls, v: str) -> str:
+        if not _SLUG_RE.match(v):
+            raise ValueError("slug must contain only lowercase letters, digits, and hyphens")
+        return v
+
+
+class Category(ContentBase):
+    """A blog category — powers future category landing pages."""
+    slug: str = Field(min_length=1)
+    name: str = Field(min_length=1)
+    page_headline: Optional[str] = None
+    max_items: int = 10  # pagination limit for the category landing page
 
     @field_validator("slug")
     @classmethod
@@ -63,6 +79,7 @@ class Page(ContentBase):
     title: str = Field(min_length=1)
     body: Optional[str] = None
     sections: List[Dict[str, Any]] = Field(default_factory=list)
+    published: bool = False
 
     @field_validator("slug")
     @classmethod
@@ -72,22 +89,9 @@ class Page(ContentBase):
         return v
 
 
-class PortfolioItem(ContentBase):
-    slug: str = Field(min_length=1)
-    title: str = Field(min_length=1)
-    body: str
-    tags: List[str] = Field(default_factory=list)
-    featured: bool = False
-    thumbnail_url: str = ""
-    date: Optional[str] = None
-    excerpt: Optional[str] = None
-
-    @field_validator("slug")
-    @classmethod
-    def slug_must_be_url_safe(cls, v: str) -> str:
-        if not _SLUG_RE.match(v):
-            raise ValueError("slug must contain only lowercase letters, digits, and hyphens")
-        return v
+class BlogPageSettings(BaseModel):
+    """Settings for the blog landing page (/blog)."""
+    page_headline: Optional[str] = None
 
 
 class BrandSettings(BaseModel):
@@ -126,6 +130,21 @@ class StrengthsSection(BaseModel):
     items: List[StrengthItem] = Field(default_factory=list)
 
 
+class ExperienceItem(BaseModel):
+    """A single work experience entry."""
+    job_title: str
+    page_link: Optional[str] = None   # stores page slug
+    company: Optional[str] = None
+    dates: Optional[str] = None       # free text e.g. "2011–2014"
+    summary: Optional[str] = None     # HTML from TinyMCE
+
+
+class ExperienceSection(BaseModel):
+    """Experience fieldset — headline + list of items."""
+    headline: Optional[str] = None
+    items: List[ExperienceItem] = Field(default_factory=list)
+
+
 class ProfileSettings(BaseModel):
     """Personal profile content — powers the landing page."""
     headline: Optional[str] = None
@@ -133,3 +152,4 @@ class ProfileSettings(BaseModel):
     summary: Optional[str] = None
     blog: Optional[BlogSettings] = None
     strengths: Optional[StrengthsSection] = None
+    experience: Optional[ExperienceSection] = None

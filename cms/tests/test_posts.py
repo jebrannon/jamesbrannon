@@ -109,16 +109,11 @@ def test_draft_post_not_returned_in_list(client):
 
 
 def test_draft_post_not_returned_by_slug(client):
-    """GET by slug for an unpublished post — it exists in DB but should return the full item.
-    The API currently returns drafts by slug (no auth on public API). This test
-    documents that behaviour so any change is intentional.
-    """
+    """Draft posts must return 404 when fetched by slug — they are invisible on the public API."""
     from app.db import put_content
     put_content("POST", make_post(slug="secret-draft", published=False))
     response = client.get("/api/posts/secret-draft")
-    # Current behaviour: returns the item (no auth on public API)
-    assert response.status_code == 200
-    assert response.json()["published"] is False
+    assert response.status_code == 404
 
 
 def test_posts_sorted_by_date_descending(client):
@@ -131,3 +126,23 @@ def test_posts_sorted_by_date_descending(client):
     response = client.get("/api/posts")
     slugs = [p["slug"] for p in response.json()]
     assert slugs.index("newest") < slugs.index("newer") < slugs.index("older")
+
+
+def test_post_has_category_field(client):
+    """Creating a post with a category slug stores and returns it."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="categorised", category="design"))
+
+    response = client.get("/api/posts/categorised")
+    assert response.status_code == 200
+    assert response.json()["category"] == "design"
+
+
+def test_post_category_defaults_to_none(client):
+    """Posts created without a category should return null/absent category."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="no-category"))
+
+    response = client.get("/api/posts/no-category")
+    data = response.json()
+    assert data.get("category") is None

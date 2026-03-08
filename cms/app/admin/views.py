@@ -5,6 +5,9 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 from starlette.datastructures import UploadFile
 from starlette.requests import Request
+from starlette.responses import Response
+from starlette.templating import Jinja2Templates
+from starlette_admin.views import CustomView
 from starlette_admin.fields import (
     BooleanField,
     CollectionField,
@@ -16,15 +19,16 @@ from starlette_admin.fields import (
     StringField,
     TagsField,
     TextAreaField,
+    TinyMCEEditorField,
     URLField,
 )
 from starlette_admin.base import BaseModelView
 
 from ..constants import (
-    CONTENT_PAGE, CONTENT_PORTFOLIO, CONTENT_POST,
-    SETTINGS_BRAND, SETTINGS_PROFILE, SETTINGS_SEO,
+    CONTENT_CATEGORY, CONTENT_PAGE, CONTENT_POST,
+    SETTINGS_BLOG, SETTINGS_BRAND, SETTINGS_LAST_UPDATED, SETTINGS_PROFILE, SETTINGS_SEO,
 )
-from ..db import delete_content, get_content, get_setting, list_content, put_content, put_setting
+from ..db import delete_content, get_content, get_setting, list_content, put_content, put_setting, touch_last_updated
 from ..models import OGType, ThemeMode, ThemeStyle
 
 # ── Static file storage for favicons ──────────────────────────────────────────
@@ -136,6 +140,41 @@ def _convert_favicon(svg_bytes: bytes, save_name: str) -> None:
             pass  # Skip silently if conversion fails for a particular size
 
 
+# ── Dashboard ──────────────────────────────────────────────────────────────────
+
+class DashboardView(CustomView):
+    """Custom admin home page — last-updated timestamp + dashboard modules."""
+
+    def __init__(self):
+        super().__init__(
+            label="Dashboard",
+            icon="fa fa-home",
+            path="/",
+            template_path="dashboard.html",
+            name="dashboard",
+            add_to_menu=False,
+        )
+
+    async def render(self, request: Request, templates: Jinja2Templates) -> Response:
+        posts = list_content(CONTENT_POST)
+        published = sorted(
+            [p for p in posts if p.get("published")],
+            key=lambda x: x.get("date", ""),
+            reverse=True,
+        )
+        latest_post = published[0] if published else None
+        last_updated = (get_setting(SETTINGS_LAST_UPDATED) or {}).get("updated_at")
+        return templates.TemplateResponse(
+            request=request,
+            name="dashboard.html",
+            context={
+                "title": "Dashboard",
+                "latest_post": latest_post,
+                "last_updated": last_updated,
+            },
+        )
+
+
 # ── Content base view ──────────────────────────────────────────────────────────
 
 class ContentView(BaseModelView):
@@ -168,17 +207,20 @@ class ContentView(BaseModelView):
             data[self.pk_attr] = str(form.get(self.pk_attr, ""))
         normalised = _normalize(data)
         put_content(self.CONTENT_TYPE, normalised)
+        touch_last_updated()
         return _as_obj(normalised)
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
         normalised = _normalize(data)
         normalised.setdefault("slug", str(pk))
         put_content(self.CONTENT_TYPE, normalised)
+        touch_last_updated()
         return _as_obj(normalised)
 
     async def delete(self, request: Request, pks: List[Any]) -> Optional[int]:
         for pk in pks:
             delete_content(self.CONTENT_TYPE, str(pk))
+        touch_last_updated()
         return len(pks)
 
 
@@ -225,6 +267,7 @@ class SingletonView(BaseModelView):
         data.pop("key", None)
         normalised = _normalize(data)
         put_setting(self.SETTINGS_KEY, normalised)
+        touch_last_updated()
         normalised["key"] = self.SETTINGS_KEY
         return _as_obj(normalised)
 
@@ -232,6 +275,7 @@ class SingletonView(BaseModelView):
         data.pop("key", None)
         normalised = _normalize(data)
         put_setting(self.SETTINGS_KEY, normalised)
+        touch_last_updated()
         normalised["key"] = self.SETTINGS_KEY
         return _as_obj(normalised)
 
@@ -241,20 +285,44 @@ class SingletonView(BaseModelView):
 
 # ── Content type views ─────────────────────────────────────────────────────────
 
+class PageSelectField(StringField):
+    """StringField rendered as a dynamic <select> populated from /api/pages."""
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.form_template = "forms/page_select.html"
+
+
+class CategorySelectField(StringField):
+    """StringField rendered as a dynamic <select> populated from /api/categories."""
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.form_template = "forms/category_select.html"
+
+
+class SlugAutoFillField(StringField):
+    """Slug field that auto-fills from the title (posts) or name (categories) on create."""
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.form_template = "forms/slug_autofill.html"
+
+
 class PostView(ContentView):
     CONTENT_TYPE = CONTENT_POST
     identity = "post"
     name = "Post"
-    label = "Blog Posts"
+    label = "Posts"
     pk_attr = "slug"
+    form_include_pk = True
     fields = [
-        StringField("slug", label="Slug", required=True,
-                    help_text="URL-friendly, e.g. my-first-post"),
         StringField("title", label="Title", required=True),
+        SlugAutoFillField("slug", label="Slug", required=True,
+                          help_text="Auto-filled from title — override to set a custom URL"),
         TextAreaField("body", label="Body (Markdown)", required=True),
         StringField("date", label="Date (ISO 8601)", required=False,
                     help_text="e.g. 2026-03-07T09:00:00"),
         BooleanField("published", label="Published"),
+        CategorySelectField("category", label="Category", required=False,
+                            help_text="Assign this post to a category"),
         TagsField("tags", label="Tags"),
         StringField("excerpt", label="Excerpt", required=False),
         *THEME_FIELDS,
@@ -268,37 +336,55 @@ class PageView(ContentView):
     name = "Page"
     label = "Pages"
     pk_attr = "slug"
+    form_include_pk = True
     fields = [
         StringField("slug", label="Slug", required=True,
                     help_text="e.g. about"),
         StringField("title", label="Title", required=True),
         TextAreaField("body", label="Body (Markdown)", required=False),
+        BooleanField("published", label="Published"),
         *THEME_FIELDS,
         *SEO_FIELDS,
     ]
 
 
-class PortfolioView(ContentView):
-    CONTENT_TYPE = CONTENT_PORTFOLIO
-    identity = "portfolio"
-    name = "Portfolio Item"
-    label = "Portfolio"
+class CategoryView(ContentView):
+    """CRUD view for blog categories."""
+    CONTENT_TYPE = CONTENT_CATEGORY
+    identity = "category"
+    name = "Category"
+    label = "Categories"
     pk_attr = "slug"
+    form_include_pk = True
     fields = [
-        StringField("slug", label="Slug", required=True),
-        StringField("title", label="Title", required=True),
-        TextAreaField("body", label="Body (Markdown)", required=True),
-        StringField("date", label="Date (ISO 8601)", required=False),
-        BooleanField("featured", label="Featured on home page"),
-        StringField("thumbnail_url", label="Thumbnail URL", required=False),
-        TagsField("tags", label="Tags"),
-        StringField("excerpt", label="Excerpt", required=False),
+        StringField("name", label="Name", required=True),
+        SlugAutoFillField("slug", label="Slug", required=True,
+                          help_text="Auto-filled from name — override to set a custom URL"),
+        StringField("page_headline", label="Landing Page Headline", required=False,
+                    help_text="Displayed at the top of the category listing page"),
+        IntegerField("max_items", label="Max Items Per Page", required=False,
+                     help_text="Pagination limit for the category landing page (default: 10)"),
         *THEME_FIELDS,
         *SEO_FIELDS,
     ]
 
 
 # ── Singleton settings views ───────────────────────────────────────────────────
+
+class BlogSettingsView(SingletonView):
+    """Singleton admin view for blog landing page settings."""
+    SETTINGS_KEY = SETTINGS_BLOG
+    identity = "blog-settings"
+    name = "Blog Settings"
+    label = "Settings"
+    fields = [
+        StringField("page_headline", label="Blog Page Headline", required=False,
+                    help_text="Heading shown at the top of the /blog landing page"),
+    ]
+
+    def _defaults(self) -> Dict:
+        return {"key": self.SETTINGS_KEY, "page_headline": ""}
+
 
 class BrandView(SingletonView):
     """
@@ -402,6 +488,7 @@ class BrandView(SingletonView):
         )
         data.pop("key", None)
         put_setting(self.SETTINGS_KEY, data)
+        touch_last_updated()
         data["key"] = self.SETTINGS_KEY
         return _as_obj(data)
 
@@ -419,6 +506,7 @@ class BrandView(SingletonView):
         )
         data.pop("key", None)
         put_setting(self.SETTINGS_KEY, data)
+        touch_last_updated()
         data["key"] = self.SETTINGS_KEY
         return _as_obj(data)
 
@@ -476,6 +564,20 @@ class ProfileView(SingletonView):
                 TextAreaField("description", label="Description", required=False),
             ])),
         ]),
+
+        # ── Experience fieldset ───────────────────────────────────────────
+        CollectionField("experience", fields=[
+            StringField("headline", label="Section Headline", required=False),
+            ListField(CollectionField("items", fields=[
+                StringField("job_title", label="Job Title", required=True),
+                PageSelectField("page_link", label="Page Link", required=False,
+                                help_text="Link to a page in this CMS"),
+                StringField("company", label="Company", required=False),
+                StringField("dates", label="Dates", required=False,
+                            help_text="e.g. 2011\u20132014"),
+                TinyMCEEditorField("summary", label="Summary", required=False),
+            ])),
+        ]),
     ]
 
     def _defaults(self) -> Dict:
@@ -486,4 +588,5 @@ class ProfileView(SingletonView):
             "summary": "",
             "blog": {"headline": "", "category": "", "limit": 3},
             "strengths": {"headline": "", "items": []},
+            "experience": {"headline": "", "items": []},
         }

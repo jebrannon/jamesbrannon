@@ -1,3 +1,4 @@
+import datetime
 import logging
 import os
 from typing import Any, Dict, List, Optional
@@ -151,3 +152,12 @@ def put_setting(key: str, data: Dict) -> Dict:
     except (BotoCoreError, ClientError) as exc:
         logger.error("put_setting(%s) failed: %s", key, exc)
         raise
+
+
+def touch_last_updated() -> None:
+    """Record the current UTC timestamp as the last CMS update time."""
+    from .constants import SETTINGS_LAST_UPDATED
+    try:
+        put_setting(SETTINGS_LAST_UPDATED, {"updated_at": datetime.datetime.utcnow().isoformat() + "Z"})
+    except (BotoCoreError, ClientError) as exc:
+        logger.warning("touch_last_updated failed: %s", exc)

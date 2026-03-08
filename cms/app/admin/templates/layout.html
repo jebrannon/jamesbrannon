@@ -1,0 +1,17 @@
+{% extends "@starlette-admin/layout.html" %}
+{% block navbar %}{% endblock %}
+{% block script %}
+{{ super() }}
+{% if current_user %}
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var nav = document.querySelector('#sidebar-menu .navbar-nav');
+    if (!nav) return;
+    var li = document.createElement('li');
+    li.className = 'nav-item mt-3';
+    li.innerHTML = '<a class="nav-link" href="{{ request.url_for(__name__ ~ ":logout") | safe }}"><i class="fa fa-sign-out me-2"></i>{{ _("Logout") }}</a>';
+    nav.appendChild(li);
+});
+</script>
+{% endif %}
+{% endblock %}

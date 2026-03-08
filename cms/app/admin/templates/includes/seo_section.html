@@ -1,0 +1,86 @@
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  var SEO_IDS = ['seo_title', 'seo_description', 'og_image', 'og_type', 'canonical_url', 'no_index'];
+
+  // ── Collect SEO field containers ──────────────────────────────────────────
+  var seoContainers = [];
+  for (var i = 0; i < SEO_IDS.length; i++) {
+    var el = document.getElementById(SEO_IDS[i]);
+    if (el) {
+      var container = el.closest('.mb-3');
+      if (container) seoContainers.push(container);
+    }
+  }
+  if (seoContainers.length === 0) return;
+
+  // ── Build collapsible <details> wrapper ───────────────────────────────────
+  var details = document.createElement('details');
+  details.className = 'mb-3';
+  var summary = document.createElement('summary');
+  summary.className = 'fw-semibold text-muted py-2';
+  summary.style.cursor = 'pointer';
+  summary.textContent = 'SEO Settings';
+  var inner = document.createElement('div');
+  inner.className = 'border rounded p-3 mt-2';
+  details.appendChild(summary);
+  details.appendChild(inner);
+
+  var parent = seoContainers[0].parentNode;
+  parent.insertBefore(details, seoContainers[0]);
+  for (var j = 0; j < seoContainers.length; j++) {
+    inner.appendChild(seoContainers[j]);
+  }
+
+  // ── Auto-fill helpers ─────────────────────────────────────────────────────
+  function stripTags(s) {
+    return s.replace(/<[^>]+>/g, ' ').replace(/\s+/g, ' ').trim();
+  }
+
+  function makeAutoFill(targetId, getSrc) {
+    var target = document.getElementById(targetId);
+    if (!target) return;
+    // auto-fill while target is empty or still matches the auto value
+    var lastAuto = target.value ? null : '';
+    function fill() {
+      var proposed = getSrc();
+      if (lastAuto !== null) {
+        target.value = proposed;
+        lastAuto = proposed;
+      }
+    }
+    target.addEventListener('input', function () {
+      // User cleared the field — re-enable auto-fill
+      lastAuto = this.value === '' ? '' : null;
+    });
+    return fill;
+  }
+
+  // ── seo_title ← title | name ─────────────────────────────────────────────
+  var titleSrc = document.getElementById('title') || document.getElementById('name');
+  if (titleSrc) {
+    var fillTitle = makeAutoFill('seo_title', function () {
+      return titleSrc.value.slice(0, 60);
+    });
+    if (fillTitle) titleSrc.addEventListener('input', fillTitle);
+  }
+
+  // ── seo_description ← excerpt | page_headline | body ─────────────────────
+  var fillDesc = makeAutoFill('seo_description', function () {
+    var excerpt   = document.getElementById('excerpt');
+    var headline  = document.getElementById('page_headline');
+    var body      = document.getElementById('body');
+    var src = (excerpt && excerpt.value)
+      ? excerpt.value
+      : (headline && headline.value)
+        ? headline.value
+        : (body ? body.value : '');
+    return stripTags(src).slice(0, 155);
+  });
+  if (fillDesc) {
+    ['excerpt', 'page_headline', 'body'].forEach(function (id) {
+      var el = document.getElementById(id);
+      if (el) el.addEventListener('input', fillDesc);
+    });
+  }
+});
+</script>

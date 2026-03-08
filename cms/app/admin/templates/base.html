@@ -1,0 +1,102 @@
+{% extends "@starlette-admin/base.html" %}
+{% block head_meta %}
+<link rel="icon" type="image/svg+xml" href="/static/admin-favicon.svg">
+<link rel="stylesheet" href="/static/brand-colours.css">
+{% endblock %}
+{% block head_css %}
+<script>document.documentElement.setAttribute('data-bs-theme', 'dark');</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Barlow+Semi+Condensed:ital,wght@0,100;0,200;0,300;0,400;0,500;0,600;0,700;0,800;0,900;1,100;1,200;1,300;1,400;1,500;1,600;1,700;1,800;1,900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --tblr-font-sans-serif: 'Barlow Semi Condensed', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  /* Brand logo: fixed 72×96 px, left-aligned in sidebar */
+  .navbar-logo {
+    width: 72px;
+    height: 96px;
+    display: block;
+    margin: 0;
+  }
+  /* Tabler uses .navbar-vertical.navbar-expand-lg .navbar-brand (3-class specificity)
+     for padding and centering — match it exactly to override */
+  .navbar-vertical.navbar-expand-lg .navbar-brand {
+    align-self: flex-start;
+    justify-content: flex-start;
+    padding: 2rem 1rem 1rem 1rem;
+  }
+  /* Hide mobile user-icon dropdown — logout is in the sidebar nav instead */
+  .navbar-vertical .navbar-nav.flex-row.d-lg-none {
+    display: none !important;
+  }
+  /* Unified top spacing now the top navbar is removed — 2rem above the page title */
+  .page-wrapper .page-header {
+    margin-top: 2rem;
+  }
+  /* Brand colour overrides — map jb palette to Tabler design tokens */
+  [data-bs-theme=dark] {
+    --tblr-body-bg:           var(--jb-dark);
+    --tblr-bg-surface:        var(--jb-dark);
+    --tblr-navbar-bg:         var(--jb-dark);
+    --tblr-body-color:        var(--jb-light);
+    --tblr-body-color-rgb:    251, 251, 251;
+    --tblr-emphasis-color:    var(--jb-light);
+    --tblr-link-color:        var(--jb-professional);
+    --tblr-link-hover-color:  var(--jb-professional);
+    --tblr-primary:           var(--jb-professional);
+    --tblr-primary-rgb:       15, 206, 143;
+    --tblr-primary-lt:        rgba(15, 206, 143, .1);
+    --tblr-danger:                        var(--jb-thoughts);
+    --tblr-danger-rgb:                    255, 110, 112;
+    --tblr-danger-lt:                     rgba(255, 110, 112, .1);
+    --tblr-border-color:                  var(--jb-dark-grey);
+    --tblr-border-color-translucent:      var(--jb-dark-grey);
+    --tblr-border-active-color:           var(--jb-light-grey);
+    --tblr-border-dark-color:             var(--jb-light-grey);
+  }
+  /* Primary button — dark text, light hover */
+  .btn-primary {
+    --tblr-btn-color:         var(--jb-dark);
+    --tblr-btn-hover-color:   var(--jb-dark);
+    --tblr-btn-active-color:  var(--jb-dark);
+    --tblr-btn-disabled-color: var(--jb-dark);
+    --tblr-btn-hover-bg:      var(--jb-light);
+    --tblr-btn-active-bg:     var(--jb-light);
+  }
+  /* Form inputs and textareas — brand colour styling */
+  .form-control,
+  .form-select {
+    background-color: var(--jb-dark-grey);
+    border-color: var(--jb-light-grey);
+    color: var(--jb-light);
+  }
+  .form-control:focus,
+  .form-select:focus {
+    background-color: var(--jb-dark-grey);
+    border-color: var(--jb-light);
+    color: var(--jb-light);
+    box-shadow: none;
+  }
+  .form-control:-webkit-autofill {
+    -webkit-text-fill-color: var(--jb-light);
+    box-shadow: 0 0 0 1000px var(--jb-dark-grey) inset;
+  }
+  /* Custom sidebar icons — replace FontAwesome glyphs with brand SVGs */
+  .fa-home::before,
+  .fa-pencil::before,
+  .fa-sign-out::before { content: '' !important; }
+  .fa-home,
+  .fa-pencil,
+  .fa-sign-out {
+    display: inline-block !important;
+    width: 16px;
+    height: 16px;
+    background: center / contain no-repeat;
+    vertical-align: -3px;
+  }
+  .fa-home     { background-image: url('/static/icons/home.svg'); }
+  .fa-pencil   { background-image: url('/static/icons/message.svg'); }
+  .fa-sign-out { background-image: url('/static/icons/logout.svg'); }
+</style>
+{% endblock %}

@@ -26,6 +26,6 @@ def get_posts(
 @router.get("/posts/{slug}", response_model=Post)
 def get_post(slug: str) -> dict:
     item = get_content(CONTENT_POST, slug)
-    if not item:
+    if not item or not item.get("published"):
         raise HTTPException(status_code=404, detail="Post not found")
     return item

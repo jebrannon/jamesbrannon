@@ -1,0 +1,25 @@
+{% set fid = field.id %}
+{% set current = data or "" %}
+<select id="{{ fid }}" name="{{ fid }}" class="form-select {% if error %}is-invalid{% endif %}">
+  <option value="">— None —</option>
+</select>
+{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+{% if error %}<div class="invalid-feedback">{{ error }}</div>{% endif %}
+<script>
+(function() {
+  const sel = document.getElementById("{{ fid }}");
+  const cur = "{{ current }}";
+  fetch("/api/categories")
+    .then(r => r.json())
+    .then(cats => {
+      cats.forEach(c => {
+        const opt = document.createElement("option");
+        opt.value = c.slug;
+        opt.textContent = c.name || c.slug;
+        if (c.slug === cur) opt.selected = true;
+        sel.appendChild(opt);
+      });
+    })
+    .catch(() => {});
+})();
+</script>

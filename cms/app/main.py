@@ -10,11 +10,15 @@ from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.base import BaseAdmin as Admin
+from starlette_admin.views import DropDown, Link
 
 from .admin.auth import SimpleAuthProvider
-from .admin.views import BrandView, PageView, PortfolioView, PostView, ProfileView, SeoView, STATIC_DIR
+from .admin.views import (
+    BlogSettingsView, BrandView, CategoryView, DashboardView,
+    PageView, PostView, ProfileView, SeoView, STATIC_DIR,
+)
 from .db import create_table_if_not_exists
-from .routers import pages, portfolio, posts, settings
+from .routers import categories, pages, posts, settings
 
 load_dotenv()
 
@@ -81,7 +85,7 @@ app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
 # ── Public content API ────────────────────────────────────────────────────────
 app.include_router(posts.router, prefix="/api")
 app.include_router(pages.router, prefix="/api")
-app.include_router(portfolio.router, prefix="/api")
+app.include_router(categories.router, prefix="/api")
 app.include_router(settings.router, prefix="/api")
 
 
@@ -90,13 +94,20 @@ admin = Admin(
     title="James Brannon CMS",
     auth_provider=SimpleAuthProvider(),
     templates_dir=str(ADMIN_TEMPLATES_DIR),
+    index_view=DashboardView(),
+    logo_url="/static/admin-logo.svg",
+    login_logo_url="/static/admin-logo.svg",
 )
-admin.add_view(PostView())
-admin.add_view(PageView())
-admin.add_view(PortfolioView())
-admin.add_view(BrandView())
-admin.add_view(SeoView())
+admin.add_view(Link(label="Dashboard", icon="fa fa-home", url="/admin/", target="_self"))
+admin.add_view(DropDown(
+    "Blog",
+    icon="fa fa-pencil",
+    views=[PostView(), CategoryView(), BlogSettingsView()],
+))
 admin.add_view(ProfileView())
+admin.add_view(PageView())
+admin.add_view(SeoView())
+admin.add_view(BrandView())
 admin.mount_to(app)
 
 
