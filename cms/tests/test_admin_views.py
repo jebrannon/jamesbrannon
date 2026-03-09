@@ -172,6 +172,65 @@ def test_page_admin_list_returns_200(admin_client):
     assert response.status_code == 200
 
 
+# ── List view column restrictions ─────────────────────────────────────────────
+
+def test_post_list_shows_only_expected_columns(admin_client):
+    """Post list must show title, published, category, date, slug — nothing else."""
+    response = admin_client.get("/admin/post/list")
+    text = response.text
+    # Expected column headers present (starlette-admin uses field labels)
+    for label in ("Title", "Published", "Category", "Date", "Slug"):
+        assert label in text, f"Expected column '{label}' missing from post list"
+
+
+def test_post_list_excludes_noisy_columns(admin_client):
+    """Post list table must not render body, SEO, or theme as <th> column headers."""
+    import re
+    response = admin_client.get("/admin/post/list")
+    text = response.text
+    for label in ("Body", "SEO Title", "Meta Description", "Mode", "Style",
+                  "Hero Image URL", "Hero Thumbnail URL", "Summary / Excerpt"):
+        # Labels appear in embedded JSON field config — only check actual <th> headers
+        assert not re.search(rf"<th[^>]*>\s*{re.escape(label)}\s*</th>", text), \
+            f"Column '{label}' should not appear as a table header in post list"
+
+
+def test_page_list_shows_only_expected_columns(admin_client):
+    """Page list must show title, published, slug only."""
+    response = admin_client.get("/admin/page/list")
+    text = response.text
+    for label in ("Title", "Published", "Slug"):
+        assert label in text, f"Expected column '{label}' missing from page list"
+
+
+def test_page_list_excludes_noisy_columns(admin_client):
+    """Page list table must not render body, SEO, or theme as <th> column headers."""
+    import re
+    response = admin_client.get("/admin/page/list")
+    text = response.text
+    for label in ("Body (Markdown)", "SEO Title", "Meta Description", "Mode", "Style"):
+        assert not re.search(rf"<th[^>]*>\s*{re.escape(label)}\s*</th>", text), \
+            f"Column '{label}' should not appear as a table header in page list"
+
+
+def test_category_list_shows_name_and_slug(admin_client):
+    """Category list must show name and slug only."""
+    response = admin_client.get("/admin/category/list")
+    text = response.text
+    assert "Name" in text
+    assert "Slug" in text
+
+
+def test_category_list_excludes_noisy_columns(admin_client):
+    """Category list table must not render SEO or theme fields as <th> column headers."""
+    import re
+    response = admin_client.get("/admin/category/list")
+    text = response.text
+    for label in ("SEO Title", "Meta Description", "Mode", "Style"):
+        assert not re.search(rf"<th[^>]*>\s*{re.escape(label)}\s*</th>", text), \
+            f"Column '{label}' should not appear as a table header in category list"
+
+
 # ── Regression: _as_obj wraps dict in SimpleNamespace ────────────────────────
 
 def test_as_obj_returns_namespace_with_attributes():

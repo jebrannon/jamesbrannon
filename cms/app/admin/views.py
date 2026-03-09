@@ -324,6 +324,7 @@ class PostView(ContentView):
     label = "Posts"
     pk_attr = "slug"
     form_include_pk = True
+    column_list = ["title", "published", "category", "date", "slug"]
     fields = [
         StringField("title", label="Title", required=True),
         SlugAutoFillField("slug", label="Slug", required=True,
@@ -438,6 +439,7 @@ class PageView(ContentView):
     label = "Pages"
     pk_attr = "slug"
     form_include_pk = True
+    column_list = ["title", "published", "slug"]
     fields = [
         StringField("slug", label="Slug", required=True,
                     help_text="e.g. about"),
@@ -457,6 +459,7 @@ class CategoryView(ContentView):
     label = "Categories"
     pk_attr = "slug"
     form_include_pk = True
+    column_list = ["name", "slug"]
     fields = [
         StringField("name", label="Name", required=True),
         SlugAutoFillField("slug", label="Slug", required=True,
