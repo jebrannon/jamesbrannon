@@ -722,6 +722,164 @@ def test_page_edit_can_publish_draft(admin_client, aws_mock):
     assert item["published"] is True
 
 
+# ── Integration: post publish/draft admin ─────────────────────────────────────
+
+def test_post_create_persists_published_flag(admin_client, aws_mock):
+    """Creating a post with Published checked should store published=True."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "pub-post",
+            "title": "Published Post",
+            "body": "Content.",
+            "published": "on",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "pub-post")
+    assert item is not None
+    assert item["published"] is True
+
+
+def test_post_create_without_published_stores_draft(admin_client, aws_mock):
+    """Creating a post without Published checked should store published=False."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "draft-post",
+            "title": "Draft Post",
+            "body": "Content.",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "draft-post")
+    assert item is not None
+    assert item.get("published") in (False, None)
+
+
+def test_post_edit_can_publish_draft(admin_client, aws_mock):
+    """Editing a draft post with Published checked should update the stored value."""
+    from app.db import get_content, put_content
+    from .conftest import make_post
+    put_content("POST", make_post(slug="upgrade-me", published=False))
+    admin_client.post(
+        "/admin/post/edit/upgrade-me",
+        data={
+            "slug": "upgrade-me",
+            "title": "Upgraded Post",
+            "body": "Content.",
+            "published": "on",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "upgrade-me")
+    assert item["published"] is True
+
+
+def test_post_edit_can_unpublish(admin_client, aws_mock):
+    """Editing a published post without Published checked should set published=False."""
+    from app.db import get_content, put_content
+    from .conftest import make_post
+    put_content("POST", make_post(slug="demote-me", published=True))
+    admin_client.post(
+        "/admin/post/edit/demote-me",
+        data={
+            "slug": "demote-me",
+            "title": "Demoted Post",
+            "body": "Content.",
+            # no "published": "on" — unchecked checkbox sends nothing
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "demote-me")
+    assert item.get("published") in (False, None)
+
+
+def test_page_edit_can_unpublish(admin_client, aws_mock):
+    """Editing a published page without Published checked should set published=False."""
+    from app.db import get_content, put_content
+    from .conftest import make_page
+    put_content("PAGE", make_page(slug="live-page", published=True))
+    admin_client.post(
+        "/admin/page/edit/live-page",
+        data={
+            "slug": "live-page",
+            "title": "Live Page",
+            "body": "Content.",
+            # no "published": "on" — unpublish
+            "theme_mode": "dark",
+            "theme_style": "professional",
+        },
+    )
+    item = get_content("PAGE", "live-page")
+    assert item.get("published") in (False, None)
+
+
+# ── UI: publish controls HTML markers ─────────────────────────────────────────
+
+def test_post_create_form_has_published_checkbox(admin_client):
+    """Post create form must include the published checkbox (used by publish controls JS)."""
+    response = admin_client.get("/admin/post/create")
+    assert response.status_code == 200
+    assert 'name="published"' in response.text
+
+
+def test_page_create_form_has_published_checkbox(admin_client):
+    """Page create form must include the published checkbox."""
+    response = admin_client.get("/admin/page/create")
+    assert response.status_code == 200
+    assert 'name="published"' in response.text
+
+
+def test_post_create_form_has_publish_controls_script(admin_client):
+    """Post create form must embed the publish controls JS (Save Draft / Publish text)."""
+    response = admin_client.get("/admin/post/create")
+    assert response.status_code == 200
+    assert "Save Draft" in response.text
+    assert "Publish" in response.text
+
+
+def test_post_edit_form_has_publish_controls_script(admin_client, aws_mock):
+    """Post edit form must embed the publish controls JS."""
+    from app.db import put_content
+    from .conftest import make_post
+    put_content("POST", make_post(slug="ctrl-test"))
+    response = admin_client.get("/admin/post/edit/ctrl-test")
+    assert response.status_code == 200
+    # Published post shows Unpublish/Update; draft shows Save Draft/Publish
+    assert ("Unpublish" in response.text or "Save Draft" in response.text)
+
+
+def test_post_list_has_status_column_script(admin_client):
+    """Post list page must embed the badge JS that renames the Published column to Status."""
+    response = admin_client.get("/admin/post/list")
+    assert response.status_code == 200
+    # The JS that renames "Published" → "Status" must be present in the page source
+    assert "Status" in response.text
+
+
+def test_category_form_has_no_published_checkbox(admin_client):
+    """Category create form must NOT have a published checkbox — only posts/pages are publishable.
+
+    Note: the publish_controls.html JS contains the string 'name="published"' as part of a
+    querySelector call, so we check for the rendered HTML input id instead.
+    """
+    response = admin_client.get("/admin/category/create")
+    assert response.status_code == 200
+    # The actual rendered boolean checkbox has id="published" — categories don't have this field
+    assert 'id="published"' not in response.text
+
+
 # ── Integration: rate limiting ────────────────────────────────────────────────
 
 def test_rate_limiter_blocks_after_max_attempts(aws_mock):

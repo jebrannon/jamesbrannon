@@ -1,0 +1,74 @@
+<script>
+(function () {
+    /* Publish controls — only activates on forms that contain a published checkbox */
+    var cb = document.querySelector('input[name="published"][type="checkbox"]');
+    if (!cb) return;
+
+    /* ── 1. Hide the default published toggle row ────────────────────── */
+    var row = cb.closest('.mb-3');
+    if (row) row.style.display = 'none';
+
+    /* ── 2. Status badge in card header ─────────────────────────────── */
+    var isPublished = cb.checked;
+
+    function badgeClass(published) {
+        return 'ms-3 badge ' + (published ? 'bg-success' : 'bg-warning text-dark');
+    }
+
+    var cardTitle = document.querySelector('.card-header .card-title');
+    if (cardTitle) {
+        var badge = document.createElement('span');
+        badge.id = 'jb-status-badge';
+        badge.className = badgeClass(isPublished);
+        badge.textContent = isPublished ? 'Published' : 'Draft';
+        cardTitle.appendChild(badge);
+    }
+
+    function updateBadge(published) {
+        var b = document.getElementById('jb-status-badge');
+        if (b) {
+            b.className = badgeClass(published);
+            b.textContent = published ? 'Published' : 'Draft';
+        }
+    }
+
+    /* ── 3. Replace footer submit buttons ────────────────────────────── */
+    var footer = document.querySelector('.card-footer .btn-list');
+    if (!footer) return;
+
+    /* Hide all existing <button type="submit"> — keep Cancel <a> link */
+    footer.querySelectorAll('button[type="submit"]').forEach(function (b) {
+        b.style.display = 'none';
+    });
+
+    function makeBtn(label, isPrimary, publishedValue) {
+        var btn = document.createElement('button');
+        btn.type = 'button';
+        btn.className = 'btn' + (isPrimary ? ' btn-primary' : '');
+        btn.textContent = label;
+        btn.addEventListener('click', function () {
+            cb.checked = publishedValue;
+            updateBadge(publishedValue);
+            /* Submit with _continue_editing so we stay on the edit form */
+            var form = cb.closest('form');
+            var hidden = document.createElement('button');
+            hidden.type = 'submit';
+            hidden.name = '_continue_editing';
+            hidden.style.display = 'none';
+            form.appendChild(hidden);
+            hidden.click();
+        });
+        return btn;
+    }
+
+    if (!isPublished) {
+        /* Draft / new record: Save Draft | Publish */
+        footer.appendChild(makeBtn('Save Draft', false, false));
+        footer.appendChild(makeBtn('Publish',    true,  true));
+    } else {
+        /* Published record: Unpublish | Update */
+        footer.appendChild(makeBtn('Unpublish', false, false));
+        footer.appendChild(makeBtn('Update',    true,  true));
+    }
+})();
+</script>

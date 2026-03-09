@@ -7,11 +7,54 @@
 document.addEventListener('DOMContentLoaded', function () {
     var nav = document.querySelector('#sidebar-menu .navbar-nav');
     if (!nav) return;
+
+    // Append logout link
     var li = document.createElement('li');
     li.className = 'nav-item mt-3';
     li.innerHTML = '<a class="nav-link" href="{{ request.url_for(__name__ ~ ":logout") | safe }}"><i class="fa fa-sign-out me-2"></i>{{ _("Logout") }}</a>';
     nav.appendChild(li);
+
+    // Mark Dashboard link active when on /admin or /admin/
+    var path = window.location.pathname.replace(/\/$/, '') || '/';
+    var adminRoot = '/admin';
+    var links = nav.querySelectorAll('a.nav-link');
+    links.forEach(function (a) {
+        var href = a.getAttribute('href').replace(/\/$/, '') || '/';
+        if (href === adminRoot && (path === adminRoot || path === '')) {
+            a.classList.add('active');
+        }
+    });
 });
 </script>
 {% endif %}
+<script>
+/* List view — replace Published boolean icons with styled Status badges */
+document.addEventListener('DOMContentLoaded', function () {
+    var table = document.querySelector('table.table');
+    if (!table) return;
+
+    /* Find the "Published" column and rename header to "Status" */
+    var ths = table.querySelectorAll('thead th');
+    var colIdx = -1;
+    ths.forEach(function (th, i) {
+        if (th.textContent.trim() === 'Published') {
+            th.textContent = 'Status';
+            colIdx = i;
+        }
+    });
+    if (colIdx < 0) return;
+
+    /* Replace each row's boolean icon with a badge; dim draft rows */
+    table.querySelectorAll('tbody tr').forEach(function (row) {
+        var cells = row.querySelectorAll('td');
+        if (cells.length <= colIdx) return;
+        var cell = cells[colIdx];
+        var isPublished = !!cell.querySelector('.text-success');
+        cell.innerHTML = isPublished
+            ? '<span class="badge bg-success">Published</span>'
+            : '<span class="badge bg-warning text-dark">Draft</span>';
+        if (!isPublished) row.style.opacity = '0.55';
+    });
+});
+</script>
 {% endblock %}
