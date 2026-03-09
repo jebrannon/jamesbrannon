@@ -381,14 +381,34 @@ def test_sidebar_blog_appears_before_overview(admin_client):
 
 
 def test_sidebar_blog_submenu_order(admin_client):
-    """Blog submenu must be ordered: Posts → Categories → Settings."""
+    """Blog submenu must be ordered: New Post → Posts → Categories → Settings.
+
+    Uses href positions to avoid false matches against the page <title> and
+    breadcrumb which also contain the word 'Posts'.
+    """
     response = admin_client.get("/admin/post/list")
     text = response.text
-    idx_posts = text.index("Posts")
-    idx_cats = text.index("Categories")
-    idx_settings = text.rindex("Settings")  # rindex: last occurrence avoids page <title> "Settings"
+    # href values are unique to nav items — not present in page title/breadcrumbs
+    idx_new_post = text.index("/admin/post/create")   # New Post link
+    idx_posts    = text.index("/admin/post/list")     # Posts list link
+    idx_cats     = text.index("/admin/category/list") # Categories list link
+    idx_settings = text.rindex("Settings")            # rindex: last "Settings" is in sidebar
+    assert idx_new_post < idx_posts, "New Post link should appear before Posts in Blog submenu"
     assert idx_posts < idx_cats, "Posts should appear before Categories in Blog submenu"
     assert idx_cats < idx_settings, "Categories should appear before Settings in Blog submenu"
+
+
+def test_sidebar_blog_new_post_link_present(admin_client):
+    """New Post quick link must appear in the Blog sidebar submenu."""
+    response = admin_client.get("/admin/post/list")
+    assert response.status_code == 200
+    assert "New Post" in response.text
+
+
+def test_sidebar_blog_new_post_link_points_to_create(admin_client):
+    """New Post quick link must href to the post create form."""
+    response = admin_client.get("/admin/post/list")
+    assert "/admin/post/create" in response.text
 
 
 def test_post_create_form_has_slug_autofill(admin_client):
