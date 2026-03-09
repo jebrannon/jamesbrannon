@@ -34,6 +34,13 @@
   .page-wrapper .page-header {
     margin-top: 2rem;
   }
+  /* Sidebar nav — hover and active states darkened 80% from --jb-dark */
+  .navbar-vertical .nav-link:hover,
+  .navbar-vertical .nav-link.active,
+  .navbar-vertical .dropdown-item:hover,
+  .navbar-vertical .dropdown-item.active {
+    background-color: color-mix(in srgb, var(--jb-dark) 80%, black);
+  }
   /* Brand colour overrides — map jb palette to Tabler design tokens */
   [data-bs-theme=dark] {
     --tblr-body-bg:           var(--jb-dark);
@@ -68,8 +75,12 @@
   .form-control,
   .form-select {
     background-color: var(--jb-dark-grey);
-    border-color: var(--jb-light-grey);
+    border-color: var(--jb-dark-grey);
     color: var(--jb-light);
+  }
+  .form-control::placeholder {
+    color: var(--jb-light-grey);
+    opacity: 1;
   }
   .form-control:focus,
   .form-select:focus {
@@ -81,6 +92,37 @@
   .form-control:-webkit-autofill {
     -webkit-text-fill-color: var(--jb-light);
     box-shadow: 0 0 0 1000px var(--jb-dark-grey) inset;
+  }
+  /* Form page card — no border, no padding on the card body */
+  .card:has(> form) {
+    border: none;
+    box-shadow: none;
+  }
+  .card > form > .card-body {
+    padding: 0;
+    border: none !important;
+  }
+  /* Form page card footer — strip all chrome */
+  .card > form > .card-footer {
+    padding: 0;
+    margin: 0;
+    background: none;
+    border: none !important;
+  }
+  /* Fieldset legends — shared across Brand + Comms and all FieldsetCollectionFields */
+  .jb-fieldset-legend {
+    color: var(--jb-light);
+    font-size: .8125rem;
+    font-weight: 600;
+    letter-spacing: .04em;
+    text-transform: uppercase;
+  }
+  /* Labels and descriptions */
+  .form-label,
+  .form-hint,
+  .form-text,
+  label {
+    color: var(--jb-light) !important;
   }
   /* Custom sidebar icons — replace FontAwesome glyphs with brand SVGs */
   .fa-home::before,

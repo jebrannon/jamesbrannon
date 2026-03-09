@@ -6,8 +6,7 @@
 
     {# ── Brand fieldset (favicons) ────────────────────────────────────────── #}
     <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2 fw-semibold text-muted"
-                style="font-size:.8125rem;letter-spacing:.04em;text-transform:uppercase;">Brand</legend>
+        <legend class="float-none w-auto px-2 jb-fieldset-legend">Brand</legend>
 
         {% for field in all_fields %}
             {% if field.name not in comms_fields %}
@@ -86,8 +85,7 @@
 
     {# ── Communications fieldset ──────────────────────────────────────────── #}
     <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2 fw-semibold text-muted"
-                style="font-size:.8125rem;letter-spacing:.04em;text-transform:uppercase;">Communications</legend>
+        <legend class="float-none w-auto px-2 jb-fieldset-legend">Communications</legend>
         {% for field in all_fields %}
             {% if field.name in comms_fields %}
                 <div class="mb-3">
