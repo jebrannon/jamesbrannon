@@ -435,7 +435,7 @@ def test_dashboard_returns_200(admin_client):
 
 
 def test_page_titles_prefixed_with_site_name(admin_client):
-    """Every admin page title must start with 'JUSTJAM.ES Admin /'."""
+    """Every admin page title must start with 'JJ Admin /'."""
     pages = [
         "/admin/",
         "/admin/post/list",
@@ -445,8 +445,8 @@ def test_page_titles_prefixed_with_site_name(admin_client):
     for path in pages:
         response = admin_client.get(path)
         assert response.status_code == 200, f"{path} returned {response.status_code}"
-        assert "<title>JUSTJAM.ES Admin /" in response.text, \
-            f"Browser tab title on {path} does not start with 'JUSTJAM.ES Admin /'"
+        assert "<title>JJ Admin /" in response.text, \
+            f"Browser tab title on {path} does not start with 'JJ Admin /'"
 
 
 # ── Integration: sidebar navigation ───────────────────────────────────────────
