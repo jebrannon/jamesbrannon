@@ -4,6 +4,9 @@ from contextlib import asynccontextmanager
 from pathlib import Path
 
 from dotenv import load_dotenv
+
+load_dotenv()  # Must run before any app-module imports that read os.getenv at module level
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -19,8 +22,6 @@ from .admin.views import (
 )
 from .db import create_table_if_not_exists
 from .routers import categories, pages, posts, settings
-
-load_dotenv()
 
 logger = logging.getLogger(__name__)
 
