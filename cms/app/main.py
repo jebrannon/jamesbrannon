@@ -103,7 +103,12 @@ admin.add_view(Link(label="Dashboard", icon="fa fa-home", url="/admin/", target=
 admin.add_view(DropDown(
     "Blog",
     icon="fa fa-pencil",
-    views=[PostView(), CategoryView(), BlogSettingsView()],
+    views=[
+        Link(label="New Post", icon="fa fa-plus", url="/admin/post/create", target="_self"),
+        PostView(),
+        CategoryView(),
+        BlogSettingsView(),
+    ],
 ))
 admin.add_view(ProfileView())
 admin.add_view(PageView())
