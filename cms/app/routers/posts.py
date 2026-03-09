@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List
 
 from fastapi import APIRouter, HTTPException, Query
 
@@ -13,12 +13,9 @@ router = APIRouter(tags=["posts"])
 def get_posts(
     limit: int = Query(default=10, le=100),
     published: bool = True,
-    tag: Optional[str] = None,
 ) -> List[dict]:
     items = list_content(CONTENT_POST)
     items = [i for i in items if i.get("published") == published]
-    if tag:
-        items = [i for i in items if tag in i.get("tags", [])]
     items.sort(key=lambda x: x.get("date", ""), reverse=True)
     return items[:limit]
 

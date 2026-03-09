@@ -55,7 +55,6 @@ def make_post(**kwargs) -> dict:
         "title": "Test Post",
         "body": "# Hello\n\nBody text.",
         "published": True,
-        "tags": [],
         "theme_mode": "dark",
         "theme_style": "professional",
     }

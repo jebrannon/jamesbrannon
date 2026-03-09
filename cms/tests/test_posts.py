@@ -39,17 +39,6 @@ def test_list_unpublished_posts(client):
     assert data[0]["slug"] == "draft"
 
 
-def test_list_posts_by_tag(client):
-    from app.db import put_content
-    put_content("POST", make_post(slug="tagged", tags=["python", "aws"]))
-    put_content("POST", make_post(slug="untagged", tags=[]))
-
-    response = client.get("/api/posts?tag=python")
-    data = response.json()
-    assert len(data) == 1
-    assert data[0]["slug"] == "tagged"
-
-
 def test_list_posts_limit(client):
     from app.db import put_content
     for i in range(5):
@@ -146,3 +135,55 @@ def test_post_category_defaults_to_none(client):
     response = client.get("/api/posts/no-category")
     data = response.json()
     assert data.get("category") is None
+
+
+# ── Tags removed ──────────────────────────────────────────────────────────────
+
+def test_post_model_has_no_tags_field(client):
+    """The Post API response must not include a tags key."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="no-tags"))
+    data = client.get("/api/posts/no-tags").json()
+    assert "tags" not in data
+
+
+# ── Excerpt field ─────────────────────────────────────────────────────────────
+
+def test_post_has_excerpt_field(client):
+    """Posts can store and return an excerpt."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="summed", excerpt="Short preview."))
+    data = client.get("/api/posts/summed").json()
+    assert data["excerpt"] == "Short preview."
+
+
+def test_post_excerpt_defaults_to_none(client):
+    """Posts without an excerpt return null."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="no-excerpt"))
+    data = client.get("/api/posts/no-excerpt").json()
+    assert data.get("excerpt") is None
+
+
+# ── Hero image fields ─────────────────────────────────────────────────────────
+
+def test_post_api_includes_hero_urls(client):
+    """GET /api/posts/{slug} must include hero_image_url and hero_thumbnail_url."""
+    from app.db import put_content
+    put_content("POST", make_post(
+        slug="hero-api",
+        hero_image_url="/static/post-images/hero-api-hero.jpg",
+        hero_thumbnail_url="/static/post-images/hero-api-thumb.jpg",
+    ))
+    data = client.get("/api/posts/hero-api").json()
+    assert data["hero_image_url"] == "/static/post-images/hero-api-hero.jpg"
+    assert data["hero_thumbnail_url"] == "/static/post-images/hero-api-thumb.jpg"
+
+
+def test_post_hero_urls_default_to_none(client):
+    """Posts without hero images should return null for both URL fields."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="plain-post"))
+    data = client.get("/api/posts/plain-post").json()
+    assert data.get("hero_image_url") is None
+    assert data.get("hero_thumbnail_url") is None

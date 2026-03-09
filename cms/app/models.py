@@ -48,8 +48,9 @@ class Post(ContentBase):
     date: Optional[str] = None  # ISO 8601 string
     published: bool = False
     category: Optional[str] = None  # stores category slug
-    tags: List[str] = Field(default_factory=list)
     excerpt: Optional[str] = None
+    hero_image_url: Optional[str] = None     # original upload URL
+    hero_thumbnail_url: Optional[str] = None  # 1200×630 JPEG thumbnail URL
 
     @field_validator("slug")
     @classmethod

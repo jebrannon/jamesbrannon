@@ -17,12 +17,23 @@ from starlette_admin.fields import (
     IntegerField,
     ListField,
     StringField,
-    TagsField,
     TextAreaField,
     TinyMCEEditorField,
     URLField,
 )
 from starlette_admin.base import BaseModelView
+
+
+class FieldsetCollectionField(CollectionField):
+    """CollectionField that renders its label as a <legend> inside the <fieldset>."""
+    label_template: str = "forms/_empty_label.html"
+    form_template: str = "forms/collection_fieldset.html"
+
+    def __init__(self, name: str, fields, label: str = "", required: bool = False) -> None:
+        super().__init__(name=name, fields=fields, required=required)
+        if label:
+            self.label = label
+
 
 from ..constants import (
     CONTENT_CATEGORY, CONTENT_PAGE, CONTENT_POST,
@@ -317,17 +328,107 @@ class PostView(ContentView):
         StringField("title", label="Title", required=True),
         SlugAutoFillField("slug", label="Slug", required=True,
                           help_text="Auto-filled from title — override to set a custom URL"),
-        TextAreaField("body", label="Body (Markdown)", required=True),
+        TinyMCEEditorField("body", label="Body", required=True),
         StringField("date", label="Date (ISO 8601)", required=False,
                     help_text="e.g. 2026-03-07T09:00:00"),
+        TextAreaField("excerpt", label="Summary / Excerpt", required=False,
+                      help_text="Leave blank to auto-generate from content on save"),
+        FileField(
+            "hero_image",
+            label="Hero Image",
+            required=False,
+            help_text=(
+                "Uploaded image is saved as-is; a 1200×630 JPEG thumbnail is "
+                "auto-generated for SEO and feed display."
+            ),
+            accept="image/*",
+        ),
+        # URL display fields — read-only in list/detail, excluded from forms
+        StringField("hero_image_url", label="Hero Image URL",
+                    exclude_from_create=True, exclude_from_edit=True, required=False),
+        StringField("hero_thumbnail_url", label="Hero Thumbnail URL",
+                    exclude_from_create=True, exclude_from_edit=True, required=False),
         BooleanField("published", label="Published"),
         CategorySelectField("category", label="Category", required=False,
                             help_text="Assign this post to a category"),
-        TagsField("tags", label="Tags"),
-        StringField("excerpt", label="Excerpt", required=False),
         *THEME_FIELDS,
         *SEO_FIELDS,
     ]
+
+    async def _save_hero(
+        self, field_value: Any, slug: str, existing_hero_url: str, existing_thumb_url: str
+    ) -> Tuple[str, str]:
+        """
+        Process the hero_image FileField value.
+        Returns (hero_url, thumbnail_url) — unchanged if no new file was uploaded.
+        """
+        from ..services.image import save_hero_image
+
+        file, should_delete = _unpack_file(field_value)
+        if should_delete:
+            return "", ""
+        if file and hasattr(file, "read") and getattr(file, "filename", ""):
+            content = await file.read()
+            if content:
+                ext = Path(file.filename).suffix.lower() or ".jpg"
+                return save_hero_image(content, slug, ext)
+        return existing_hero_url, existing_thumb_url
+
+    async def _enrich(self, data: Dict[str, Any], slug: str) -> Dict[str, Any]:
+        """
+        1. Process hero image upload → set hero_image_url + hero_thumbnail_url
+        2. Auto-generate excerpt via Ollama if blank
+        3. Pre-fill seo_description from excerpt, seo_title from title, og_image from thumbnail
+           — only when those fields are currently empty so manual overrides are preserved
+        """
+        from ..services.llm import generate_excerpt as _gen
+
+        # ── Hero image ────────────────────────────────────────────────────────
+        existing = get_content(self.CONTENT_TYPE, slug) or {}
+        hero_url, thumb_url = await self._save_hero(
+            data.pop("hero_image", None),
+            slug,
+            existing.get("hero_image_url", ""),
+            existing.get("hero_thumbnail_url", ""),
+        )
+        data["hero_image_url"] = hero_url
+        data["hero_thumbnail_url"] = thumb_url
+
+        # ── Auto-excerpt ──────────────────────────────────────────────────────
+        if not data.get("excerpt"):
+            data["excerpt"] = await _gen(
+                title=data.get("title", ""),
+                body=data.get("body", ""),
+            )
+
+        # ── SEO pre-fills ─────────────────────────────────────────────────────
+        if not data.get("seo_description") and data.get("excerpt"):
+            data["seo_description"] = data["excerpt"]
+        if not data.get("seo_title") and data.get("title"):
+            data["seo_title"] = data["title"]
+        if not data.get("og_image") and thumb_url:
+            data["og_image"] = thumb_url
+
+        return data
+
+    async def create(self, request: Request, data: Dict[str, Any]) -> Any:
+        if self.pk_attr not in data:
+            form = await request.form()
+            data[self.pk_attr] = str(form.get(self.pk_attr, ""))
+        slug = data.get(self.pk_attr, "")
+        data = await self._enrich(data, slug)
+        normalised = _normalize(data)
+        put_content(self.CONTENT_TYPE, normalised)
+        touch_last_updated()
+        return _as_obj(normalised)
+
+    async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
+        data = await self._enrich(data, str(pk))
+        normalised = _normalize(data)
+        normalised.setdefault("slug", str(pk))
+        put_content(self.CONTENT_TYPE, normalised)
+        touch_last_updated()
+        return _as_obj(normalised)
 
 
 class PageView(ContentView):
@@ -547,7 +648,7 @@ class ProfileView(SingletonView):
                       help_text="A few sentences about you — shown on the landing page"),
 
         # ── Blog fieldset ─────────────────────────────────────────────────
-        CollectionField("blog", fields=[
+        FieldsetCollectionField("blog", label="Blog", fields=[
             StringField("headline", label="Section Headline", required=False,
                         help_text="Heading shown above the blog feed on the homepage"),
             StringField("category", label="Category (tag filter)", required=False,
@@ -557,7 +658,7 @@ class ProfileView(SingletonView):
         ]),
 
         # ── Strengths fieldset ────────────────────────────────────────────
-        CollectionField("strengths", fields=[
+        FieldsetCollectionField("strengths", label="Strengths", fields=[
             StringField("headline", label="Section Headline", required=False),
             ListField(CollectionField("items", fields=[
                 StringField("name", label="Name", required=True),
@@ -566,7 +667,7 @@ class ProfileView(SingletonView):
         ]),
 
         # ── Experience fieldset ───────────────────────────────────────────
-        CollectionField("experience", fields=[
+        FieldsetCollectionField("experience", label="Experience", fields=[
             StringField("headline", label="Section Headline", required=False),
             ListField(CollectionField("items", fields=[
                 StringField("job_title", label="Job Title", required=True),

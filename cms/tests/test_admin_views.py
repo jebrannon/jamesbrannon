@@ -7,8 +7,10 @@ methods — setting them as plain bool attributes caused:
 They must be proper method overrides that accept a Request argument.
 """
 
+import io
+
 import pytest
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 from fastapi.testclient import TestClient
 
 
@@ -102,7 +104,9 @@ def test_page_view_can_create_is_true():
 @pytest.fixture()
 def admin_client(aws_mock):
     """TestClient authenticated against the admin UI."""
+    from app.admin.auth import _failed_attempts
     from app.main import app
+    _failed_attempts.clear()  # Ensure rate limiter doesn't block fixture login
     client = TestClient(app, raise_server_exceptions=True, follow_redirects=True)
     client.post(
         "/admin/login",
@@ -915,3 +919,271 @@ def test_rate_limiter_blocks_after_max_attempts(aws_mock):
     # 6th attempt should be rate-limited
     assert response.status_code == 400
     assert "Too many" in response.text
+
+
+# ── TinyMCE body field ─────────────────────────────────────────────────────────
+
+def test_post_create_form_body_uses_tinymce(admin_client):
+    """Post create form must load the TinyMCE editor for the body field."""
+    response = admin_client.get("/admin/post/create")
+    assert response.status_code == 200
+    assert "tinymce" in response.text.lower()
+
+
+# ── Tags removed ───────────────────────────────────────────────────────────────
+
+def test_post_create_form_has_no_tags_field(admin_client):
+    """Post create form must not contain a tags input."""
+    response = admin_client.get("/admin/post/create")
+    assert response.status_code == 200
+    assert 'name="tags"' not in response.text
+
+
+# ── Hero image ─────────────────────────────────────────────────────────────────
+
+def _make_jpeg_bytes(width: int = 800, height: int = 600) -> bytes:
+    """Create a minimal valid JPEG in memory for testing."""
+    from PIL import Image
+    buf = io.BytesIO()
+    Image.new("RGB", (width, height), color=(100, 149, 237)).save(buf, "JPEG")
+    buf.seek(0)
+    return buf.read()
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_hero_image_stored_on_create(admin_client, aws_mock):
+    """Uploading a hero image on create should store hero_image_url and hero_thumbnail_url."""
+    from app.db import get_content
+    jpeg = _make_jpeg_bytes()
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "img-post",
+            "title": "Image Post",
+            "body": "<p>Hi.</p>",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+        files={"hero_image": ("hero.jpg", io.BytesIO(jpeg), "image/jpeg")},
+    )
+    item = get_content("POST", "img-post")
+    assert item is not None
+    assert item.get("hero_image_url", "").endswith("-hero.jpg")
+    assert item.get("hero_thumbnail_url", "").endswith("-thumb.jpg")
+
+
+def test_post_hero_thumbnail_is_1200x630(tmp_path):
+    """save_hero_image must produce a thumbnail at exactly 1200×630."""
+    from PIL import Image
+    import app.services.image as img_mod
+    original_dir = img_mod.POST_IMAGES_DIR
+    img_mod.POST_IMAGES_DIR = tmp_path
+    try:
+        img_mod.save_hero_image(_make_jpeg_bytes(2000, 1500), "test-slug", ".jpg")
+        thumb = Image.open(tmp_path / "test-slug-thumb.jpg")
+        assert thumb.size == (1200, 630)
+    finally:
+        img_mod.POST_IMAGES_DIR = original_dir
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_hero_prefills_og_image(admin_client, aws_mock):
+    """When a hero image is uploaded and og_image is blank, og_image is set to the thumbnail URL."""
+    from app.db import get_content
+    jpeg = _make_jpeg_bytes()
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "og-auto",
+            "title": "OG Test",
+            "body": "<p>Hi.</p>",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+        files={"hero_image": ("hero.jpg", io.BytesIO(jpeg), "image/jpeg")},
+    )
+    item = get_content("POST", "og-auto")
+    assert item.get("og_image") == item.get("hero_thumbnail_url")
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_hero_does_not_overwrite_manual_og_image(admin_client, aws_mock):
+    """If og_image is manually set, uploading a hero image must not overwrite it."""
+    from app.db import get_content
+    jpeg = _make_jpeg_bytes()
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "og-manual",
+            "title": "OG Manual",
+            "body": "<p>Hi.</p>",
+            "og_image": "https://example.com/my-og.jpg",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+        files={"hero_image": ("hero.jpg", io.BytesIO(jpeg), "image/jpeg")},
+    )
+    item = get_content("POST", "og-manual")
+    assert item.get("og_image") == "https://example.com/my-og.jpg"
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_without_hero_has_no_image_urls(admin_client, aws_mock):
+    """Posts saved without a hero image should have empty/null image URL fields."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "no-hero",
+            "title": "No Hero",
+            "body": "<p>Hi.</p>",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "no-hero")
+    assert item.get("hero_image_url") in (None, "")
+    assert item.get("hero_thumbnail_url") in (None, "")
+
+
+# ── Auto-excerpt ────────────────────────────────────────────────────────────────
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value="Auto summary."))
+def test_post_create_auto_generates_excerpt_when_empty(admin_client, aws_mock):
+    """Saving a post without an excerpt calls the LLM and stores the result."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "auto-excerpt",
+            "title": "Test",
+            "body": "<p>Body.</p>",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "auto-excerpt")
+    assert item["excerpt"] == "Auto summary."
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value="LLM text."))
+def test_post_create_keeps_manual_excerpt(admin_client, aws_mock):
+    """When excerpt is provided manually, the LLM result is ignored."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "manual-excerpt",
+            "title": "Test",
+            "body": "<p>Body.</p>",
+            "excerpt": "My own summary.",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "manual-excerpt")
+    assert item["excerpt"] == "My own summary."
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_create_llm_failure_does_not_block_save(admin_client, aws_mock):
+    """If Ollama is unavailable (returns None), the post still saves cleanly."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "llm-fail",
+            "title": "Test",
+            "body": "<p>Body.</p>",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    assert get_content("POST", "llm-fail") is not None
+
+
+# ── SEO pre-fills ───────────────────────────────────────────────────────────────
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value="Auto excerpt."))
+def test_post_create_prefills_seo_description_from_excerpt(admin_client, aws_mock):
+    """seo_description is pre-filled from the (auto-generated) excerpt when blank."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "seo-desc",
+            "title": "Test",
+            "body": "<p>Body.</p>",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "seo-desc")
+    assert item.get("seo_description") == "Auto excerpt."
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value="Auto excerpt."))
+def test_post_create_keeps_manual_seo_description(admin_client, aws_mock):
+    """A manually supplied seo_description is never overwritten."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "keep-seo",
+            "title": "Test",
+            "body": "<p>Body.</p>",
+            "seo_description": "My custom meta.",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "keep-seo")
+    assert item.get("seo_description") == "My custom meta."
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_create_prefills_seo_title_from_title(admin_client, aws_mock):
+    """seo_title is pre-filled from the post title when left blank."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "seo-title",
+            "title": "My Great Post",
+            "body": "<p>Body.</p>",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "seo-title")
+    assert item.get("seo_title") == "My Great Post"
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_create_preserves_manual_seo_title(admin_client, aws_mock):
+    """A manually supplied seo_title is never overwritten."""
+    from app.db import get_content
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "custom-seo-title",
+            "title": "My Post",
+            "body": "<p>Body.</p>",
+            "seo_title": "Custom SEO Title",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "custom-seo-title")
+    assert item.get("seo_title") == "Custom SEO Title"
