@@ -59,29 +59,37 @@ except (ImportError, OSError):
 # ── Shared field groups ────────────────────────────────────────────────────────
 
 THEME_FIELDS = [
-    EnumField("theme_mode", label="Mode", enum=ThemeMode, required=True),
-    EnumField("theme_style", label="Style", enum=ThemeStyle, required=True),
+    EnumField("theme_mode", label="Mode", enum=ThemeMode, required=True,
+              exclude_from_list=True),
+    EnumField("theme_style", label="Style", enum=ThemeStyle, required=True,
+              exclude_from_list=True),
 ]
 
 SEO_FIELDS = [
     StringField(
         "seo_title", label="SEO Title", required=False,
         help_text="Overrides page title in search results (~60 chars)",
+        exclude_from_list=True,
     ),
     TextAreaField(
         "seo_description", label="Meta Description", required=False,
         help_text="~155 chars — shown in search results and og:description",
+        exclude_from_list=True,
     ),
     StringField(
         "og_image", label="OG Image URL", required=False,
         help_text="Absolute URL for social sharing image (1200x630 px recommended)",
+        exclude_from_list=True,
     ),
-    EnumField("og_type", label="OG Type", enum=OGType, required=False),
+    EnumField("og_type", label="OG Type", enum=OGType, required=False,
+              exclude_from_list=True),
     StringField(
         "canonical_url", label="Canonical URL", required=False,
         help_text="Leave blank to use the page URL automatically",
+        exclude_from_list=True,
     ),
-    BooleanField("no_index", label="No Index (hide from search engines)"),
+    BooleanField("no_index", label="No Index (hide from search engines)",
+                 exclude_from_list=True),
 ]
 
 
@@ -324,16 +332,17 @@ class PostView(ContentView):
     label = "Posts"
     pk_attr = "slug"
     form_include_pk = True
-    column_list = ["title", "published", "category", "date", "slug"]
     fields = [
         StringField("title", label="Title", required=True),
         SlugAutoFillField("slug", label="Slug", required=True,
                           help_text="Auto-filled from title — override to set a custom URL"),
-        TinyMCEEditorField("body", label="Body", required=True),
+        TinyMCEEditorField("body", label="Body", required=True,
+                           exclude_from_list=True),
         StringField("date", label="Date (ISO 8601)", required=False,
                     help_text="e.g. 2026-03-07T09:00:00"),
         TextAreaField("excerpt", label="Summary / Excerpt", required=False,
-                      help_text="Leave blank to auto-generate from content on save"),
+                      help_text="Leave blank to auto-generate from content on save",
+                      exclude_from_list=True),
         FileField(
             "hero_image",
             label="Hero Image",
@@ -343,12 +352,15 @@ class PostView(ContentView):
                 "auto-generated for SEO and feed display."
             ),
             accept="image/*",
+            exclude_from_list=True,
         ),
-        # URL display fields — read-only in list/detail, excluded from forms
+        # URL display fields — excluded from forms and list view; visible in detail only
         StringField("hero_image_url", label="Hero Image URL",
-                    exclude_from_create=True, exclude_from_edit=True, required=False),
+                    exclude_from_create=True, exclude_from_edit=True,
+                    exclude_from_list=True, required=False),
         StringField("hero_thumbnail_url", label="Hero Thumbnail URL",
-                    exclude_from_create=True, exclude_from_edit=True, required=False),
+                    exclude_from_create=True, exclude_from_edit=True,
+                    exclude_from_list=True, required=False),
         BooleanField("published", label="Published"),
         CategorySelectField("category", label="Category", required=False,
                             help_text="Assign this post to a category"),
@@ -439,12 +451,12 @@ class PageView(ContentView):
     label = "Pages"
     pk_attr = "slug"
     form_include_pk = True
-    column_list = ["title", "published", "slug"]
     fields = [
         StringField("slug", label="Slug", required=True,
                     help_text="e.g. about"),
         StringField("title", label="Title", required=True),
-        TextAreaField("body", label="Body (Markdown)", required=False),
+        TextAreaField("body", label="Body (Markdown)", required=False,
+                      exclude_from_list=True),
         BooleanField("published", label="Published"),
         *THEME_FIELDS,
         *SEO_FIELDS,
@@ -459,15 +471,16 @@ class CategoryView(ContentView):
     label = "Categories"
     pk_attr = "slug"
     form_include_pk = True
-    column_list = ["name", "slug"]
     fields = [
         StringField("name", label="Name", required=True),
         SlugAutoFillField("slug", label="Slug", required=True,
                           help_text="Auto-filled from name — override to set a custom URL"),
         StringField("page_headline", label="Landing Page Headline", required=False,
-                    help_text="Displayed at the top of the category listing page"),
+                    help_text="Displayed at the top of the category listing page",
+                    exclude_from_list=True),
         IntegerField("max_items", label="Max Items Per Page", required=False,
-                     help_text="Pagination limit for the category landing page (default: 10)"),
+                     help_text="Pagination limit for the category landing page (default: 10)",
+                     exclude_from_list=True),
         *THEME_FIELDS,
         *SEO_FIELDS,
     ]

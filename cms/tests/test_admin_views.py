@@ -174,61 +174,84 @@ def test_page_admin_list_returns_200(admin_client):
 
 # ── List view column restrictions ─────────────────────────────────────────────
 
-def test_post_list_shows_only_expected_columns(admin_client):
-    """Post list must show title, published, category, date, slug — nothing else."""
-    response = admin_client.get("/admin/post/list")
+def _list_field_names(admin_client, path: str):
+    """
+    Return the list of field names embedded in the 'var model = {...}' JSON that
+    starlette-admin injects into every list page to drive DataTables.
+
+    This is the only reliable way to verify which columns are configured:
+    the table `<th>` elements are empty placeholders; the actual column
+    headers and data are generated client-side by DataTables from this JSON.
+    """
+    import json
+    response = admin_client.get(path)
+    assert response.status_code == 200, f"List page {path} returned {response.status_code}"
     text = response.text
-    # Expected column headers present (starlette-admin uses field labels)
-    for label in ("Title", "Published", "Category", "Date", "Slug"):
-        assert label in text, f"Expected column '{label}' missing from post list"
+    marker = "var model = "
+    start = text.find(marker)
+    assert start != -1, "Could not find 'var model = ' in list page — starlette-admin template changed?"
+    start += len(marker)
+    end = text.find(";</script>", start)
+    assert end != -1, "Could not find end of model JSON in list page"
+    model_data = json.loads(text[start:end])
+    return [f["name"] for f in model_data["fields"]]
+
+
+def test_post_list_shows_only_expected_columns(admin_client):
+    """Post list DataTable must include title, published, category, date and slug."""
+    names = _list_field_names(admin_client, "/admin/post/list")
+    for name in ("title", "published", "category", "date", "slug"):
+        assert name in names, f"Expected column '{name}' missing from post list model"
 
 
 def test_post_list_excludes_noisy_columns(admin_client):
-    """Post list table must not render body, SEO, or theme as <th> column headers."""
-    import re
-    response = admin_client.get("/admin/post/list")
-    text = response.text
-    for label in ("Body", "SEO Title", "Meta Description", "Mode", "Style",
-                  "Hero Image URL", "Hero Thumbnail URL", "Summary / Excerpt"):
-        # Labels appear in embedded JSON field config — only check actual <th> headers
-        assert not re.search(rf"<th[^>]*>\s*{re.escape(label)}\s*</th>", text), \
-            f"Column '{label}' should not appear as a table header in post list"
+    """Post list DataTable must not include body, excerpt, hero, theme or SEO fields."""
+    names = _list_field_names(admin_client, "/admin/post/list")
+    for name in (
+        "body", "excerpt", "hero_image", "hero_image_url", "hero_thumbnail_url",
+        "theme_mode", "theme_style",
+        "seo_title", "seo_description", "og_image", "og_type",
+        "canonical_url", "no_index",
+    ):
+        assert name not in names, f"Field '{name}' should be excluded from post list model"
 
 
 def test_page_list_shows_only_expected_columns(admin_client):
-    """Page list must show title, published, slug only."""
-    response = admin_client.get("/admin/page/list")
-    text = response.text
-    for label in ("Title", "Published", "Slug"):
-        assert label in text, f"Expected column '{label}' missing from page list"
+    """Page list DataTable must include title, published and slug."""
+    names = _list_field_names(admin_client, "/admin/page/list")
+    for name in ("title", "published", "slug"):
+        assert name in names, f"Expected column '{name}' missing from page list model"
 
 
 def test_page_list_excludes_noisy_columns(admin_client):
-    """Page list table must not render body, SEO, or theme as <th> column headers."""
-    import re
-    response = admin_client.get("/admin/page/list")
-    text = response.text
-    for label in ("Body (Markdown)", "SEO Title", "Meta Description", "Mode", "Style"):
-        assert not re.search(rf"<th[^>]*>\s*{re.escape(label)}\s*</th>", text), \
-            f"Column '{label}' should not appear as a table header in page list"
+    """Page list DataTable must not include body, theme or SEO fields."""
+    names = _list_field_names(admin_client, "/admin/page/list")
+    for name in (
+        "body",
+        "theme_mode", "theme_style",
+        "seo_title", "seo_description", "og_image", "og_type",
+        "canonical_url", "no_index",
+    ):
+        assert name not in names, f"Field '{name}' should be excluded from page list model"
 
 
 def test_category_list_shows_name_and_slug(admin_client):
-    """Category list must show name and slug only."""
-    response = admin_client.get("/admin/category/list")
-    text = response.text
-    assert "Name" in text
-    assert "Slug" in text
+    """Category list DataTable must include name and slug."""
+    names = _list_field_names(admin_client, "/admin/category/list")
+    assert "name" in names, "Expected column 'name' missing from category list model"
+    assert "slug" in names, "Expected column 'slug' missing from category list model"
 
 
 def test_category_list_excludes_noisy_columns(admin_client):
-    """Category list table must not render SEO or theme fields as <th> column headers."""
-    import re
-    response = admin_client.get("/admin/category/list")
-    text = response.text
-    for label in ("SEO Title", "Meta Description", "Mode", "Style"):
-        assert not re.search(rf"<th[^>]*>\s*{re.escape(label)}\s*</th>", text), \
-            f"Column '{label}' should not appear as a table header in category list"
+    """Category list DataTable must not include headline, max_items, theme or SEO fields."""
+    names = _list_field_names(admin_client, "/admin/category/list")
+    for name in (
+        "page_headline", "max_items",
+        "theme_mode", "theme_style",
+        "seo_title", "seo_description", "og_image", "og_type",
+        "canonical_url", "no_index",
+    ):
+        assert name not in names, f"Field '{name}' should be excluded from category list model"
 
 
 # ── Regression: _as_obj wraps dict in SimpleNamespace ────────────────────────
