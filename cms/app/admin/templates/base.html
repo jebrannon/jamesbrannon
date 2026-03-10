@@ -76,19 +76,34 @@
     --tblr-btn-hover-bg:      var(--jb-light);
     --tblr-btn-active-bg:     var(--jb-light);
   }
-  /* Cancel / danger buttons — light ghost style, hover fills dark-grey */
+  /* Cancel / danger buttons — light bg, dark text, no border; hover fills --jb-thoughts */
   .btn-danger {
-    --tblr-btn-color:              var(--jb-light);
-    --tblr-btn-bg:                 transparent;
-    --tblr-btn-border-color:       var(--jb-light);
-    --tblr-btn-hover-color:        var(--jb-light);
-    --tblr-btn-hover-bg:           var(--jb-dark-grey);
+    --tblr-btn-color:              var(--jb-dark);
+    --tblr-btn-bg:                 var(--jb-light);
+    --tblr-btn-border-color:       transparent;
+    --tblr-btn-hover-color:        var(--jb-dark);
+    --tblr-btn-hover-bg:           var(--jb-thoughts);
+    --tblr-btn-hover-border-color: transparent;
+    --tblr-btn-active-color:       var(--jb-dark);
+    --tblr-btn-active-bg:          var(--jb-thoughts);
+    background-color: var(--jb-light);
+    border-color: transparent;
+    color: var(--jb-dark);
+  }
+  /* Success buttons — identical styling to btn-primary */
+  .btn-success {
+    --tblr-btn-color:          var(--jb-dark);
+    --tblr-btn-bg:             var(--jb-professional);
+    --tblr-btn-border-color:   var(--jb-professional);
+    --tblr-btn-hover-color:    var(--jb-dark);
+    --tblr-btn-hover-bg:       var(--jb-light);
     --tblr-btn-hover-border-color: var(--jb-light);
-    --tblr-btn-active-color:       var(--jb-light);
-    --tblr-btn-active-bg:          var(--jb-dark-grey);
-    background-color: transparent;
-    border-color: var(--jb-light);
-    color: var(--jb-light);
+    --tblr-btn-active-color:   var(--jb-dark);
+    --tblr-btn-active-bg:      var(--jb-light);
+    --tblr-btn-disabled-color: var(--jb-dark);
+    background-color: var(--jb-professional);
+    border-color: var(--jb-professional);
+    color: var(--jb-dark);
   }
   /* Standard (non-primary/danger) buttons — dark-grey border, light text, light border on hover */
   .btn:not(.btn-primary):not(.btn-danger) {
