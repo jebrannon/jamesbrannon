@@ -28,6 +28,9 @@ release/
 *.crt
 *.cer
 
+# Uploaded content — generated at runtime, not source files
+cms/static/post-images/
+
 # OS
 .DS_Store
 Thumbs.db
