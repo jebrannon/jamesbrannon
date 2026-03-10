@@ -111,7 +111,6 @@ class RichTextField(StringField):
     def __post_init__(self) -> None:
         super().__post_init__()
         self.form_template = "forms/rich_text.html"
-        self.exclude_from_list = True
 
     async def parse_form_data(self, request: Request, form_data, action) -> str:
         # Use self.id (not self.name) — starlette-admin sets field.id to the
@@ -432,7 +431,7 @@ class PostView(ContentView):
     pk_attr = "slug"
     form_include_pk = True
     fields = [
-        StringField("title", label="Title", required=True),
+        RichTextField("title", label="Title", required=True),
         SlugAutoFillField("slug", label="Slug", required=True,
                           help_text="Auto-filled from title — override to set a custom URL"),
         BlocksField("blocks", label="Content Blocks", required=False),
@@ -552,7 +551,7 @@ class PageView(ContentView):
     fields = [
         StringField("slug", label="Slug", required=True,
                     help_text="e.g. about"),
-        StringField("title", label="Title", required=True),
+        RichTextField("title", label="Title", required=True),
         BlocksField("blocks", label="Content Blocks", required=False),
         BooleanField("published", label="Published"),
         *THEME_FIELDS,
