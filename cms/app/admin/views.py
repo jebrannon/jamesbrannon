@@ -1,5 +1,6 @@
 import json as _json
 import re as _re
+from datetime import datetime, timezone
 from enum import Enum
 from pathlib import Path
 from types import SimpleNamespace
@@ -456,6 +457,9 @@ class PostView(ContentView):
             accept="image/*",
             exclude_from_list=True,
         ),
+        # date is auto-set on publish/republish — display in list only, never in forms
+        StringField("date", label="Date", required=False,
+                    exclude_from_create=True, exclude_from_edit=True),
         # URL display fields — excluded from forms and list view; visible in detail only
         StringField("hero_image_url", label="Hero Image URL",
                     exclude_from_create=True, exclude_from_edit=True,
@@ -463,8 +467,6 @@ class PostView(ContentView):
         StringField("hero_thumbnail_url", label="Hero Thumbnail URL",
                     exclude_from_create=True, exclude_from_edit=True,
                     exclude_from_list=True, required=False),
-        StringField("date", label="Date (ISO 8601)", required=False,
-                    help_text="e.g. 2026-03-07T09:00:00"),
         BlocksField("blocks", label="Content Blocks", required=False),
         BooleanField("published", label="Published"),
         CategorySelectField("category", label="Category", required=False,
@@ -511,6 +513,14 @@ class PostView(ContentView):
         )
         data["hero_image_url"] = hero_url
         data["hero_thumbnail_url"] = thumb_url
+
+        # ── Auto-date on publish / republish ─────────────────────────────────
+        # Set date on first publish or when a post is republished after being
+        # taken down. Leave unchanged when editing an already-published post.
+        if data.get("published") is True and existing.get("published") is not True:
+            data["date"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S")
+        elif existing.get("date"):
+            data["date"] = existing["date"]
 
         # ── Auto-excerpt ──────────────────────────────────────────────────────
         if not data.get("excerpt"):
