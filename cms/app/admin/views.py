@@ -188,8 +188,8 @@ SEO_FIELDS = [
         help_text="Absolute URL for social sharing image (1200x630 px recommended)",
         exclude_from_list=True,
     ),
-    EnumField("og_type", label="OG Type", enum=OGType, required=False,
-              exclude_from_list=True),
+    EnumSelectField("og_type", label="OG Type", enum=OGType, required=False,
+                    exclude_from_list=True),
     StringField(
         "canonical_url", label="Canonical URL", required=False,
         help_text="Leave blank to use the page URL automatically",
