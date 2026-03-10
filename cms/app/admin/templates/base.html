@@ -237,6 +237,31 @@
     background-color: var(--jb-dark-grey) !important;
     color: var(--jb-light) !important;
   }
+  /* List page toolbar — search + new button, no page title or breadcrumb */
+  .jb-list-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .jb-list-toolbar-left {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    flex: 1;
+  }
+  .jb-list-toolbar-left .input-icon {
+    flex: 1;
+    max-width: 320px;
+  }
+  /* DataTables pagination — breathing room below the flat table */
+  .dataTables_wrapper .dataTables_paginate {
+    padding: .75rem 0;
+  }
+  .dataTables_wrapper .dataTables_info {
+    padding: .75rem 0;
+  }
   /* Custom sidebar icons — replace FontAwesome glyphs with brand SVGs */
   .fa-home::before,
   .fa-pencil::before,
