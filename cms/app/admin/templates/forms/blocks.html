@@ -46,29 +46,39 @@
       </div>
 
       <div class="jb-block-media">
-        <div class="jb-media-type-toggle">
-          <button type="button" class="jb-btn-sm" :class="{ active: !block.media }" @click="setMediaType(block, null)">None</button>
-          <button type="button" class="jb-btn-sm" :class="{ active: block.media && block.media.type === 'image' }" @click="setMediaType(block, 'image')">Image</button>
-          <button type="button" class="jb-btn-sm" :class="{ active: block.media && block.media.type === 'video' }" @click="setMediaType(block, 'video')">Video</button>
+
+        <template x-for="(mi, mIdx) in block.media" :key="mi.id">
+          <div class="jb-media-item">
+            <div class="jb-media-item-header">
+              <span class="jb-media-item-label" x-text="mi.type === 'image' ? '🖼 Image' : '▶ Video'"></span>
+              <button type="button" class="jb-btn-sm jb-btn-danger" @click="removeMedia(block, mi)">✕</button>
+            </div>
+
+            <template x-if="mi.type === 'image'">
+              <div class="jb-media-image">
+                <input type="file" accept="image/*" @change="uploadImage(mi, $event)" class="form-control mb-2">
+                <template x-if="mi.url">
+                  <img :src="mi.url" class="jb-image-preview mb-2">
+                </template>
+                <input type="text" placeholder="Alt text" x-model="mi.alt" class="form-control mb-1">
+                <input type="text" placeholder="Caption (optional)" x-model="mi.caption" class="form-control">
+              </div>
+            </template>
+
+            <template x-if="mi.type === 'video'">
+              <div class="jb-media-video">
+                <input type="text" placeholder="Video URL (YouTube, Vimeo…)" x-model="mi.url" class="form-control mb-1">
+                <input type="text" placeholder="Caption (optional)" x-model="mi.caption" class="form-control">
+              </div>
+            </template>
+          </div>
+        </template>
+
+        <div class="jb-add-media">
+          <button type="button" class="jb-btn-sm" @click="addMedia(block, 'image')">+ Image</button>
+          <button type="button" class="jb-btn-sm" @click="addMedia(block, 'video')">+ Video</button>
         </div>
 
-        <template x-if="block.media && block.media.type === 'image'">
-          <div class="jb-media-image">
-            <input type="file" accept="image/*" @change="uploadImage(block, $event)" class="form-control mb-2">
-            <template x-if="block.media.url">
-              <img :src="block.media.url" class="jb-image-preview mb-2">
-            </template>
-            <input type="text" placeholder="Alt text" x-model="block.media.alt" class="form-control mb-1">
-            <input type="text" placeholder="Caption (optional)" x-model="block.media.caption" class="form-control">
-          </div>
-        </template>
-
-        <template x-if="block.media && block.media.type === 'video'">
-          <div class="jb-media-video">
-            <input type="text" placeholder="Video URL (YouTube, Vimeo…)" x-model="block.media.url" class="form-control mb-1">
-            <input type="text" placeholder="Caption (optional)" x-model="block.media.caption" class="form-control">
-          </div>
-        </template>
       </div>
     </div>
   </template>
@@ -134,8 +144,22 @@
 .jb-text-body:focus { border-color: var(--jb-light, #fbfbfb); }
 .jb-text-body:empty:before { content: attr(placeholder); color: var(--jb-light-grey, #888); pointer-events: none; }
 .jb-block-media { margin-top: .5rem; }
-.jb-media-type-toggle { display: flex; gap: .25rem; margin-bottom: .5rem; }
+.jb-media-item {
+  border: 1px solid var(--tblr-border-color, #333);
+  border-radius: 4px;
+  padding: .5rem;
+  margin-bottom: .4rem;
+  background: var(--jb-dark, #0d0d1a);
+}
+.jb-media-item-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: .4rem;
+}
+.jb-media-item-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--tblr-muted, #888); }
 .jb-image-preview { max-width: 100%; max-height: 200px; border-radius: 4px; display: block; }
+.jb-add-media { display: flex; gap: .35rem; margin-top: .35rem; }
 .jb-add-block {
   width: 100%;
   padding: .5rem;
@@ -153,17 +177,28 @@
 <script>
 function blocksEditor(initial) {
   var parsed = Array.isArray(initial) ? initial : [];
+  // Normalise legacy blocks: media: null → [], media: {...} → [{...}]
+  parsed = parsed.map(function (b) {
+    var m = b.media;
+    var normMedia = !m ? [] : (Array.isArray(m) ? m : [m]);
+    // Ensure each media item has an id for Alpine :key
+    normMedia = normMedia.map(function (item) {
+      return item.id ? item : Object.assign({ id: Math.random().toString(36).slice(2, 8) }, item);
+    });
+    return Object.assign({}, b, { media: normMedia });
+  });
   return {
     blocks: parsed,
     dragIndex: null,
     focusedBlock: null,
 
     addBlock: function () {
-      this.blocks.push({ id: this._uid(), text: '', media: null });
+      this.blocks.push({ id: this._uid(), text: '', media: [] });
     },
 
     removeBlock: function (i) {
-      if (this.blocks[i].text || this.blocks[i].media) {
+      var b = this.blocks[i];
+      if (b.text || (b.media && b.media.length)) {
         if (!confirm('Delete this block?')) return;
       }
       this.blocks.splice(i, 1);
@@ -203,12 +238,16 @@ function blocksEditor(initial) {
       if (cmd === 'ol')     { document.execCommand('insertOrderedList');   return; }
     },
 
-    setMediaType: function (block, type) {
-      if (!type) { block.media = null; return; }
-      block.media = { type: type, url: '', alt: '', caption: '' };
+    addMedia: function (block, type) {
+      block.media.push({ id: this._uid(), type: type, url: '', alt: '', caption: '' });
     },
 
-    uploadImage: async function (block, evt) {
+    removeMedia: function (block, mi) {
+      var idx = block.media.indexOf(mi);
+      if (idx >= 0) block.media.splice(idx, 1);
+    },
+
+    uploadImage: async function (mi, evt) {
       var file = evt.target.files[0];
       if (!file) return;
       var fd = new FormData();
@@ -217,7 +256,7 @@ function blocksEditor(initial) {
         var res = await fetch('/api/upload-image', { method: 'POST', body: fd });
         if (res.ok) {
           var data = await res.json();
-          block.media = Object.assign({}, block.media, { type: 'image', url: data.url });
+          mi.url = data.url;
         }
       } catch (e) {
         console.error('Block image upload failed:', e);

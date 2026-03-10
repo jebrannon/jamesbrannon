@@ -1298,7 +1298,7 @@ def test_post_create_with_blocks_persists(admin_client, aws_mock):
     """Blocks JSON is stored on post create."""
     import json
     from app.db import get_content
-    blocks = [{"id": "abc123", "text": "<p>Test content.</p>", "media": None}]
+    blocks = [{"id": "abc123", "text": "<p>Test content.</p>", "media": []}]
     admin_client.post(
         "/admin/post/create",
         data={
@@ -1320,7 +1320,7 @@ def test_post_blocks_xss_stripped_on_save(admin_client, aws_mock):
     """<script> tags and on* attrs in block text are stripped on save."""
     import json
     from app.db import get_content
-    xss_blocks = [{"id": "xss1", "text": '<p>Safe</p><script>alert(1)</script>', "media": None}]
+    xss_blocks = [{"id": "xss1", "text": '<p>Safe</p><script>alert(1)</script>', "media": []}]
     admin_client.post(
         "/admin/post/create",
         data={
@@ -1343,7 +1343,7 @@ def test_page_create_with_blocks_persists(admin_client, aws_mock):
     """Blocks JSON is stored on page create."""
     import json
     from app.db import get_content
-    blocks = [{"id": "p1b2c3", "text": "<p>Page content.</p>", "media": None}]
+    blocks = [{"id": "p1b2c3", "text": "<p>Page content.</p>", "media": []}]
     admin_client.post(
         "/admin/page/create",
         data={
@@ -1365,7 +1365,7 @@ def test_page_blocks_xss_stripped_on_save(admin_client, aws_mock):
     """XSS is stripped from page block text on save."""
     import json
     from app.db import get_content
-    xss_blocks = [{"id": "xss2", "text": '<h2>Title</h2><script>evil()</script>', "media": None}]
+    xss_blocks = [{"id": "xss2", "text": '<h2>Title</h2><script>evil()</script>', "media": []}]
     admin_client.post(
         "/admin/page/create",
         data={
@@ -1414,3 +1414,139 @@ def test_upload_image_endpoint_stores_file(admin_client, aws_mock, tmp_path):
         assert data["url"].startswith("/static/post-images/")
     finally:
         img_mod.POST_IMAGES_DIR = original_dir
+
+
+# ── Multi-media per block ───────────────────────────────────────────────────────
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_block_can_have_multiple_media_items(admin_client, aws_mock):
+    """A single block can store and return multiple media items."""
+    import json
+    from app.db import get_content
+    blocks = [
+        {
+            "id": "multi1",
+            "text": "<p>Multi-media block.</p>",
+            "media": [
+                {"id": "m1", "type": "image", "url": "/static/post-images/a.jpg", "alt": "A", "caption": "First"},
+                {"id": "m2", "type": "video", "url": "https://youtube.com/watch?v=xyz", "alt": "", "caption": "Second"},
+            ],
+        }
+    ]
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "multi-media-post",
+            "title": "Multi Media",
+            "blocks": json.dumps(blocks),
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "multi-media-post")
+    assert item is not None
+    stored = json.loads(item["blocks"])
+    assert len(stored[0]["media"]) == 2
+    assert stored[0]["media"][0]["type"] == "image"
+    assert stored[0]["media"][1]["type"] == "video"
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_block_media_caption_xss_stripped(admin_client, aws_mock):
+    """HTML in media caption and alt fields is stripped on save."""
+    import json
+    from app.db import get_content
+    blocks = [
+        {
+            "id": "cap1",
+            "text": "<p>Hello.</p>",
+            "media": [
+                {
+                    "id": "m1",
+                    "type": "image",
+                    "url": "/static/post-images/a.jpg",
+                    "alt": '<script>evil()</script>plain alt',
+                    "caption": '<b>bold</b> caption',
+                }
+            ],
+        }
+    ]
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "media-caption-xss",
+            "title": "Media Caption XSS",
+            "blocks": json.dumps(blocks),
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "media-caption-xss")
+    assert item is not None
+    stored = json.loads(item["blocks"])
+    mi = stored[0]["media"][0]
+    assert "<script>" not in mi["alt"]
+    assert "<b>" not in mi["caption"]
+    assert "plain alt" in mi["alt"]
+    assert "bold" in mi["caption"]   # text content preserved, tags stripped
+
+
+def test_sanitize_blocks_normalizes_legacy_single_media():
+    """_sanitize_blocks upgrades old media:{...} to media:[{...}] on save."""
+    import json
+    from app.admin.views import _sanitize_blocks
+    legacy = json.dumps([
+        {
+            "id": "old1",
+            "text": "<p>Legacy.</p>",
+            "media": {"type": "image", "url": "/static/old.jpg", "alt": "Old", "caption": ""},
+        }
+    ])
+    result = json.loads(_sanitize_blocks(legacy))
+    assert isinstance(result[0]["media"], list)
+    assert result[0]["media"][0]["type"] == "image"
+    assert result[0]["media"][0]["url"] == "/static/old.jpg"
+
+
+def test_sanitize_blocks_normalizes_null_media():
+    """_sanitize_blocks converts media: null to media: []."""
+    import json
+    from app.admin.views import _sanitize_blocks
+    raw = json.dumps([{"id": "n1", "text": "<p>Hi.</p>", "media": None}])
+    result = json.loads(_sanitize_blocks(raw))
+    assert result[0]["media"] == []
+
+
+def test_page_block_can_have_multiple_media_items(admin_client, aws_mock):
+    """Pages also support multiple media items per block."""
+    import json
+    from app.db import get_content
+    blocks = [
+        {
+            "id": "pg1",
+            "text": "<p>Page with two images.</p>",
+            "media": [
+                {"id": "m1", "type": "image", "url": "/static/post-images/p1.jpg", "alt": "One", "caption": ""},
+                {"id": "m2", "type": "image", "url": "/static/post-images/p2.jpg", "alt": "Two", "caption": ""},
+            ],
+        }
+    ]
+    admin_client.post(
+        "/admin/page/create",
+        data={
+            "slug": "page-multi-media",
+            "title": "Page Multi Media",
+            "blocks": json.dumps(blocks),
+            "published": "on",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+        },
+    )
+    item = get_content("PAGE", "page-multi-media")
+    assert item is not None
+    stored = json.loads(item["blocks"])
+    assert len(stored[0]["media"]) == 2
+    assert stored[0]["media"][0]["url"] == "/static/post-images/p1.jpg"
+    assert stored[0]["media"][1]["url"] == "/static/post-images/p2.jpg"

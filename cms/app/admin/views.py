@@ -33,7 +33,7 @@ _ALLOWED_ATTRS: Dict[str, List[str]] = {"a": ["href", "title", "target"]}
 
 
 def _sanitize_blocks(raw_json: str) -> str:
-    """Parse a JSON blocks string, sanitise each block's text, return sanitised JSON."""
+    """Parse a JSON blocks string, sanitise each block's text and media, return sanitised JSON."""
     try:
         blocks = _json.loads(raw_json)
     except (_json.JSONDecodeError, ValueError):
@@ -41,11 +41,30 @@ def _sanitize_blocks(raw_json: str) -> str:
     if not isinstance(blocks, list):
         return "[]"
     for block in blocks:
+        # Sanitise block text
         if isinstance(block.get("text"), str):
             cleaned = _bleach.clean(
                 block["text"], tags=_ALLOWED_TAGS, attributes=_ALLOWED_ATTRS, strip=True
             )
             block["text"] = cleaned if cleaned.strip() else None
+
+        # Normalise media: null → [], dict (legacy) → [dict], list kept as-is
+        media = block.get("media")
+        if media is None:
+            media = []
+        elif isinstance(media, dict):
+            media = [media]  # backward-compat: upgrade single-object to array
+        elif not isinstance(media, list):
+            media = []
+        # Sanitise each media item's plain-text fields
+        for item in media:
+            if not isinstance(item, dict):
+                continue
+            for field in ("alt", "caption"):
+                if isinstance(item.get(field), str):
+                    item[field] = _bleach.clean(item[field], tags=[], attributes={}, strip=True)
+        block["media"] = media
+
     return _json.dumps(blocks)
 
 
