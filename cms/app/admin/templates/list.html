@@ -1,11 +1,21 @@
 {% extends "@starlette-admin/list.html" %}
 
-{# ── Remove page header entirely — sidebar provides context ───────────────── #}
-{% block header %}{% endblock %}
+{# ── Page header: "All [Label]" title + breadcrumb trail ─────────────────── #}
+{% block header %}
+<div class="d-flex justify-content-between align-items-center">
+  <h1 class="page-title">All {{ model.label }}</h1>
+  <ol class="breadcrumb">
+    <li class="breadcrumb-item">
+      <a href="{{ url_for(__name__ ~ ':index') }}">{{ _("Admin") }}</a>
+    </li>
+    <li class="breadcrumb-item active">All {{ model.label }}</li>
+  </ol>
+</div>
+{% endblock %}
 
 {# ── Lean layout: single toolbar row + flat table, no card chrome ─────────── #}
 {% block content %}
-<div class="container-fluid pt-4">
+<div class="container-fluid">
   <div class="row">
     <div class="col-12">
 
