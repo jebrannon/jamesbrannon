@@ -609,8 +609,8 @@ class BlogSettingsView(SingletonView):
     name = "Blog Settings"
     label = "Settings"
     fields = [
-        StringField("page_headline", label="Blog Page Headline", required=False,
-                    help_text="Heading shown at the top of the /blog landing page"),
+        RichTextField("page_headline", label="Page Headline", required=False,
+                      help_text="Heading shown at the top of the /blog landing page"),
     ]
 
     def _defaults(self) -> Dict:

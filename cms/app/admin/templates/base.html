@@ -131,17 +131,18 @@
   }
   input[type="file"]::file-selector-button:hover {
     background-color: var(--jb-light-grey);
+    color: var(--jb-dark);
   }
   /* Draft badge — jb-thoughts bg, dark text (list view + form header) */
   .badge.bg-warning {
     background-color: var(--jb-thoughts) !important;
     color: var(--jb-dark) !important;
   }
-  /* Card headers — no left padding or margin on header or its children */
-  .card-header,
-  .card-header > * {
-    padding-left: 0 !important;
-    margin-left: 0 !important;
+  /* Form card headers only — no left padding or margin (dashboard/list cards keep defaults) */
+  .card:has(> form) .card-header,
+  .card:has(> form) .card-header > * {
+    padding-left: 0;
+    margin-left: 0;
   }
   /* SEO Settings panel — summary label always light */
   details summary {
