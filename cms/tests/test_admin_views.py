@@ -1027,6 +1027,83 @@ def test_post_create_form_has_no_tags_field(admin_client):
     assert 'name="tags"' not in response.text
 
 
+# ── RichTextField — profile overview ─────────────────────────────────────────
+
+def test_profile_edit_form_has_rich_text_editor(admin_client):
+    """Profile edit form must include the richTextEditor Alpine component."""
+    response = admin_client.get("/admin/profile/edit/PROFILE")
+    assert response.status_code == 200
+    assert "richTextEditor" in response.text, (
+        "richTextEditor Alpine component missing from profile edit form"
+    )
+
+
+def test_profile_edit_form_has_rich_text_toolbar(admin_client):
+    """Profile edit form must include the 6-button rich-text toolbar."""
+    response = admin_client.get("/admin/profile/edit/PROFILE")
+    assert "jb-toolbar" in response.text
+    assert "jb-text-body" in response.text
+
+
+def test_profile_summary_xss_stripped_on_save(admin_client, aws_mock):
+    """<script> tags are stripped from the top-level profile summary field."""
+    from app.db import get_setting
+    admin_client.post(
+        "/admin/profile/edit/PROFILE",
+        data={
+            "headline": "Designer",
+            "tagline": "",
+            "summary": "<p>Hello.</p><script>alert(1)</script>",
+        },
+    )
+    item = get_setting("PROFILE")
+    assert item is not None
+    assert "<script>" not in item.get("summary", "")
+    assert "Hello." in item.get("summary", "")
+
+
+def test_profile_strength_description_xss_stripped_on_save(admin_client, aws_mock):
+    """<script> tags are stripped from strength item description fields."""
+    from app.db import get_setting
+    admin_client.post(
+        "/admin/profile/edit/PROFILE",
+        data={
+            "headline": "",
+            "tagline": "",
+            "summary": "",
+            "strengths.headline": "Skills",
+            "strengths.items.0.name": "Design",
+            "strengths.items.0.description": "<p>Good design.</p><script>evil()</script>",
+        },
+    )
+    item = get_setting("PROFILE")
+    desc = item["strengths"]["items"][0]["description"]
+    assert "<script>" not in desc
+    assert "Good design." in desc
+
+
+def test_profile_experience_summary_xss_stripped_on_save(admin_client, aws_mock):
+    """<script> tags are stripped from experience item summary fields."""
+    from app.db import get_setting
+    admin_client.post(
+        "/admin/profile/edit/PROFILE",
+        data={
+            "headline": "",
+            "tagline": "",
+            "summary": "",
+            "experience.headline": "Work",
+            "experience.items.0.job_title": "Designer",
+            "experience.items.0.company": "Acme",
+            "experience.items.0.dates": "2020–2024",
+            "experience.items.0.summary": "<p>Led design.</p><script>xss()</script>",
+        },
+    )
+    item = get_setting("PROFILE")
+    exp_summary = item["experience"]["items"][0]["summary"]
+    assert "<script>" not in exp_summary
+    assert "Led design." in exp_summary
+
+
 # ── Hero image ─────────────────────────────────────────────────────────────────
 
 def _make_jpeg_bytes(width: int = 800, height: int = 600) -> bytes:

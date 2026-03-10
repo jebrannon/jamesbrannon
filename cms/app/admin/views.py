@@ -21,7 +21,6 @@ from starlette_admin.fields import (
     ListField,
     StringField,
     TextAreaField,
-    TinyMCEEditorField,
     URLField,
 )
 from starlette_admin.base import BaseModelView
@@ -100,6 +99,28 @@ class BlocksField(StringField):
         if isinstance(value, list):
             return _json.dumps(value)
         return value or "[]"
+
+
+class RichTextField(StringField):
+    """Single contenteditable rich-text field with a 6-button formatting toolbar.
+
+    Renders the same toolbar/contenteditable UI as the block editor text area.
+    Sanitises HTML through bleach on save, keeping the same allowed-tag whitelist.
+    """
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.form_template = "forms/rich_text.html"
+        self.exclude_from_list = True
+
+    async def parse_form_data(self, request: Request, form_data, action) -> str:
+        # Use self.id (not self.name) — starlette-admin sets field.id to the
+        # full dotted path (e.g. "strengths.items.0.description") for nested fields.
+        raw = form_data.get(self.id, "") or ""
+        return _bleach.clean(raw, tags=_ALLOWED_TAGS, attributes=_ALLOWED_ATTRS, strip=True)
+
+    async def serialize_value(self, request: Request, value, action) -> str:
+        return value or ""
 
 
 class FieldsetCollectionField(CollectionField):
@@ -736,7 +757,7 @@ class ProfileView(SingletonView):
                     help_text="e.g. Product designer & frontend developer"),
         StringField("tagline", label="Tagline", required=False,
                     help_text="Short strapline shown beneath the headline"),
-        TextAreaField("summary", label="Summary", required=False,
+        RichTextField("summary", label="Summary", required=False,
                       help_text="A few sentences about you — shown on the landing page"),
 
         # ── Blog fieldset ─────────────────────────────────────────────────
@@ -754,7 +775,7 @@ class ProfileView(SingletonView):
             StringField("headline", label="Section Headline", required=False),
             ListField(CollectionField("items", fields=[
                 StringField("name", label="Name", required=True),
-                TextAreaField("description", label="Description", required=False),
+                RichTextField("description", label="Description", required=False),
             ])),
         ]),
 
@@ -768,7 +789,7 @@ class ProfileView(SingletonView):
                 StringField("company", label="Company", required=False),
                 StringField("dates", label="Dates", required=False,
                             help_text="e.g. 2011\u20132014"),
-                TinyMCEEditorField("summary", label="Summary", required=False),
+                RichTextField("summary", label="Summary", required=False),
             ])),
         ]),
     ]
