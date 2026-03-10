@@ -1,9 +1,15 @@
 {% set rid = field.id %}
-{% set init_html = data or "" %}
-{# data-init stores the initial HTML; browser decodes HTML entities before Alpine reads $el.dataset.init #}
+{% set current = data or "" %}
+{# Inject initial value into a namespaced global — same safe pattern as blocks.html #}
+<script>
+(function () {
+  if (!window.__jbRichInit) window.__jbRichInit = {};
+  window.__jbRichInit[{{ rid | tojson | safe }}] = {{ current | tojson | safe }};
+})();
+</script>
+
 <div class="jb-rich-text"
-     x-data="richTextEditor($el.dataset.init)"
-     data-init="{{ init_html | e }}">
+     x-data="richTextEditor(window.__jbRichInit[{{ rid | tojson }}])">
 
   <div class="jb-toolbar">
     <button type="button" class="jb-toolbar-btn" @click.prevent="format('bold')" title="Bold"><strong>B</strong></button>
@@ -43,7 +49,29 @@
 </script>
 
 <style>
-/* RichTextField editor — toolbar and contenteditable styles.
-   Classes match block editor (blocks.html) to share look-and-feel. */
 .jb-rich-text { margin-bottom: .5rem; }
+.jb-toolbar { display: flex; gap: .25rem; margin-bottom: .35rem; }
+.jb-toolbar-btn {
+  padding: .15rem .45rem;
+  font-size: .8rem;
+  border: 1px solid var(--tblr-border-color, #444);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  min-width: 2rem;
+}
+.jb-toolbar-btn:hover { background: var(--tblr-primary, #0fce8f); color: var(--jb-dark, #0d0d1a); border-color: var(--tblr-primary, #0fce8f); }
+.jb-text-body {
+  min-height: 80px;
+  padding: .5rem;
+  border: 1px solid var(--tblr-border-color, #444);
+  border-radius: 4px;
+  background: var(--jb-dark-grey, #1e1e2e);
+  color: var(--jb-light, #fbfbfb);
+  outline: none;
+  line-height: 1.5;
+}
+.jb-text-body:focus { border-color: var(--jb-light, #fbfbfb); }
+.jb-text-body:empty:before { content: attr(placeholder); color: var(--jb-light-grey, #888); pointer-events: none; }
 </style>
