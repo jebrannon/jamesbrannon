@@ -1,0 +1,9 @@
+{% set fid = field.id %}
+{% set current = data if data is not none else "" %}
+<select id="{{ fid }}" name="{{ fid }}" class="form-select {% if error %}is-invalid{% endif %}">
+  {% for value, label in field._get_choices(request) %}
+    <option value="{{ value }}" {{ 'selected' if value == current else '' }}>{{ label | title }}</option>
+  {% endfor %}
+</select>
+{% if field.help_text %}<div class="form-text">{{ field.help_text }}</div>{% endif %}
+{% if error %}<div class="invalid-feedback">{{ error }}</div>{% endif %}

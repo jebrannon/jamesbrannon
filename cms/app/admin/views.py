@@ -156,11 +156,19 @@ except (ImportError, OSError):
 
 # ── Shared field groups ────────────────────────────────────────────────────────
 
+class EnumSelectField(EnumField):
+    """EnumField rendered as a plain Bootstrap form-select, matching the category field style."""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.form_template = "forms/enum_select.html"
+
+
 THEME_FIELDS = [
-    EnumField("theme_mode", label="Mode", enum=ThemeMode, required=True,
-              exclude_from_list=True),
-    EnumField("theme_style", label="Style", enum=ThemeStyle, required=True,
-              exclude_from_list=True),
+    EnumSelectField("theme_mode", label="Mode", enum=ThemeMode, required=True,
+                    exclude_from_list=True),
+    EnumSelectField("theme_style", label="Style", enum=ThemeStyle, required=True,
+                    exclude_from_list=True),
 ]
 
 SEO_FIELDS = [
@@ -434,10 +442,7 @@ class PostView(ContentView):
         RichTextField("title", label="Title", required=True),
         SlugAutoFillField("slug", label="Slug", required=True,
                           help_text="Auto-filled from title — override to set a custom URL"),
-        BlocksField("blocks", label="Content Blocks", required=False),
-        StringField("date", label="Date (ISO 8601)", required=False,
-                    help_text="e.g. 2026-03-07T09:00:00"),
-        TextAreaField("excerpt", label="Summary / Excerpt", required=False,
+        RichTextField("excerpt", label="Excerpt", required=False,
                       help_text="Leave blank to auto-generate from content on save",
                       exclude_from_list=True),
         FileField(
@@ -458,6 +463,9 @@ class PostView(ContentView):
         StringField("hero_thumbnail_url", label="Hero Thumbnail URL",
                     exclude_from_create=True, exclude_from_edit=True,
                     exclude_from_list=True, required=False),
+        StringField("date", label="Date (ISO 8601)", required=False,
+                    help_text="e.g. 2026-03-07T09:00:00"),
+        BlocksField("blocks", label="Content Blocks", required=False),
         BooleanField("published", label="Published"),
         CategorySelectField("category", label="Category", required=False,
                             help_text="Assign this post to a category"),
