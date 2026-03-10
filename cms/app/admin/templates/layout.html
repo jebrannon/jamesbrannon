@@ -24,17 +24,6 @@ document.addEventListener('DOMContentLoaded', function () {
             a.classList.add('active');
         }
     });
-
-    // Fix: on the New Post create page, starlette-admin incorrectly marks
-    // the "Posts" list item active (same URL prefix). Remove it.
-    if (path === '/admin/post/create') {
-        nav.querySelectorAll('a').forEach(function (a) {
-            var href = (a.getAttribute('href') || '').replace(/\/$/, '');
-            if (href.indexOf('/admin/post/list') >= 0) {
-                a.classList.remove('active');
-            }
-        });
-    }
 });
 </script>
 {% endif %}
