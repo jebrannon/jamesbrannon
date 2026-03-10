@@ -1,5 +1,9 @@
 {% extends "@starlette-admin/base.html" %}
 {% block title %}<title>JJ Admin / {{ title or app_title }}</title>{% endblock %}
+{% block script %}
+{{ super() }}
+<script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
+{% endblock %}
 {% block head_meta %}
 <link rel="icon" type="image/svg+xml" href="/static/admin-favicon.svg">
 <link rel="stylesheet" href="/static/brand-colours.css">

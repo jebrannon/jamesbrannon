@@ -53,7 +53,7 @@ def make_post(**kwargs) -> dict:
     defaults = {
         "slug": "test-post",
         "title": "Test Post",
-        "body": "# Hello\n\nBody text.",
+        "blocks": "[]",
         "published": True,
         "theme_mode": "dark",
         "theme_style": "professional",
@@ -65,7 +65,7 @@ def make_page(**kwargs) -> dict:
     defaults = {
         "slug": "about",
         "title": "About",
-        "body": "About page content.",
+        "blocks": "[]",
         "published": True,
         "theme_mode": "dark",
         "theme_style": "professional",

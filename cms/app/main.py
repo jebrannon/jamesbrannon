@@ -1,5 +1,6 @@
 import logging
 import os
+import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
 
@@ -7,7 +8,7 @@ from dotenv import load_dotenv
 
 load_dotenv()  # Must run before any app-module imports that read os.getenv at module level
 
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
@@ -115,6 +116,21 @@ admin.add_view(PageView())
 admin.add_view(SeoView())
 admin.add_view(BrandView())
 admin.mount_to(app)
+
+
+@app.post("/api/upload-image")
+async def upload_block_image(request: Request, file: UploadFile = File(...)) -> JSONResponse:
+    """Auth-gated image upload for the block editor media slots."""
+    if not request.session.get("username"):
+        return JSONResponse({"error": "Unauthorized"}, status_code=401)
+
+    from app.services.image import save_block_image
+    content = await file.read()
+    ext = Path(file.filename).suffix.lower() if file.filename else ".jpg"
+    if not ext:
+        ext = ".jpg"
+    url = save_block_image(content, str(uuid.uuid4())[:8], ext)
+    return JSONResponse({"url": url})
 
 
 @app.get("/health")

@@ -1,3 +1,4 @@
+import json as _json
 import re
 from enum import Enum
 from typing import Any, Dict, List, Optional
@@ -44,7 +45,7 @@ class Post(ContentBase):
     og_type: OGType = OGType.article  # posts default to article, not website
     slug: str = Field(min_length=1)
     title: str = Field(min_length=1)
-    body: str
+    blocks: List[Dict[str, Any]] = Field(default_factory=list)
     date: Optional[str] = None  # ISO 8601 string
     published: bool = False
     category: Optional[str] = None  # stores category slug
@@ -58,6 +59,18 @@ class Post(ContentBase):
         if not _SLUG_RE.match(v):
             raise ValueError("slug must contain only lowercase letters, digits, and hyphens")
         return v
+
+    @field_validator("blocks", mode="before")
+    @classmethod
+    def _parse_blocks(cls, v: Any) -> List[Dict[str, Any]]:
+        if v is None:
+            return []
+        if isinstance(v, str):
+            try:
+                return _json.loads(v)
+            except (_json.JSONDecodeError, ValueError):
+                return []
+        return v if isinstance(v, list) else []
 
 
 class Category(ContentBase):
@@ -78,8 +91,7 @@ class Category(ContentBase):
 class Page(ContentBase):
     slug: str = Field(min_length=1)
     title: str = Field(min_length=1)
-    body: Optional[str] = None
-    sections: List[Dict[str, Any]] = Field(default_factory=list)
+    blocks: List[Dict[str, Any]] = Field(default_factory=list)
     published: bool = False
 
     @field_validator("slug")
@@ -88,6 +100,18 @@ class Page(ContentBase):
         if not _SLUG_RE.match(v):
             raise ValueError("slug must contain only lowercase letters, digits, and hyphens")
         return v
+
+    @field_validator("blocks", mode="before")
+    @classmethod
+    def _parse_blocks(cls, v: Any) -> List[Dict[str, Any]]:
+        if v is None:
+            return []
+        if isinstance(v, str):
+            try:
+                return _json.loads(v)
+            except (_json.JSONDecodeError, ValueError):
+                return []
+        return v if isinstance(v, list) else []
 
 
 class BlogPageSettings(BaseModel):

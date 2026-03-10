@@ -205,10 +205,10 @@ def test_post_list_shows_only_expected_columns(admin_client):
 
 
 def test_post_list_excludes_noisy_columns(admin_client):
-    """Post list DataTable must not include body, excerpt, hero, theme or SEO fields."""
+    """Post list DataTable must not include blocks, excerpt, hero, theme or SEO fields."""
     names = _list_field_names(admin_client, "/admin/post/list")
     for name in (
-        "body", "excerpt", "hero_image", "hero_image_url", "hero_thumbnail_url",
+        "blocks", "excerpt", "hero_image", "hero_image_url", "hero_thumbnail_url",
         "theme_mode", "theme_style",
         "seo_title", "seo_description", "og_image", "og_type",
         "canonical_url", "no_index",
@@ -224,10 +224,10 @@ def test_page_list_shows_only_expected_columns(admin_client):
 
 
 def test_page_list_excludes_noisy_columns(admin_client):
-    """Page list DataTable must not include body, theme or SEO fields."""
+    """Page list DataTable must not include blocks, theme or SEO fields."""
     names = _list_field_names(admin_client, "/admin/page/list")
     for name in (
-        "body",
+        "blocks",
         "theme_mode", "theme_style",
         "seo_title", "seo_description", "og_image", "og_type",
         "canonical_url", "no_index",
@@ -292,7 +292,7 @@ def test_post_create_persists_to_dynamodb(admin_client, aws_mock):
         data={
             "slug": "hello-world",
             "title": "Hello World",
-            "body": "This is a test post.",
+            "blocks": "[]",
             "published": "on",
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -310,13 +310,13 @@ def test_post_create_persists_to_dynamodb(admin_client, aws_mock):
 def test_post_edit_updates_dynamodb(admin_client, aws_mock):
     """Editing a post via admin should update the stored record."""
     from app.db import get_content, put_content
-    put_content("POST", {"slug": "edit-me", "title": "Original", "body": "Old body."})
+    put_content("POST", {"slug": "edit-me", "title": "Original", "blocks": "[]"})
     admin_client.post(
         "/admin/post/edit/edit-me",
         data={
             "slug": "edit-me",
             "title": "Updated Title",
-            "body": "New body.",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
             "og_type": "article",
@@ -330,7 +330,7 @@ def test_post_edit_updates_dynamodb(admin_client, aws_mock):
 def test_post_delete_removes_from_dynamodb(admin_client, aws_mock):
     """Deleting a post via admin should remove it from DynamoDB."""
     from app.db import get_content, put_content
-    put_content("POST", {"slug": "delete-me", "title": "To Delete", "body": "body."})
+    put_content("POST", {"slug": "delete-me", "title": "To Delete", "blocks": "[]"})
     # starlette-admin delete is a batch action at /api/{identity}/action?name=delete&pks=...
     admin_client.get("/admin/api/post/action?name=delete&pks=delete-me")
     assert get_content("POST", "delete-me") is None
@@ -540,7 +540,7 @@ def test_post_create_form_has_seo_section(admin_client):
 def test_post_edit_form_has_seo_section(admin_client, aws_mock):
     """Post edit form must include the SEO Settings collapsible section."""
     from app.db import put_content
-    put_content("POST", {"slug": "seo-test", "title": "SEO Test", "body": "body"})
+    put_content("POST", {"slug": "seo-test", "title": "SEO Test", "blocks": "[]"})
     response = admin_client.get("/admin/post/edit/seo-test")
     assert response.status_code == 200
     assert "SEO Settings" in response.text
@@ -794,7 +794,7 @@ def test_page_create_persists_published_flag(admin_client, aws_mock):
         data={
             "slug": "new-page",
             "title": "New Page",
-            "body": "Content.",
+            "blocks": "[]",
             "published": "on",
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -813,7 +813,7 @@ def test_page_create_without_published_stores_draft(admin_client, aws_mock):
         data={
             "slug": "draft-page",
             "title": "Draft Page",
-            "body": "Content.",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
         },
@@ -833,7 +833,7 @@ def test_page_edit_can_publish_draft(admin_client, aws_mock):
         data={
             "slug": "my-page",
             "title": "My Page",
-            "body": "Content.",
+            "blocks": "[]",
             "published": "on",
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -853,7 +853,7 @@ def test_post_create_persists_published_flag(admin_client, aws_mock):
         data={
             "slug": "pub-post",
             "title": "Published Post",
-            "body": "Content.",
+            "blocks": "[]",
             "published": "on",
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -873,7 +873,7 @@ def test_post_create_without_published_stores_draft(admin_client, aws_mock):
         data={
             "slug": "draft-post",
             "title": "Draft Post",
-            "body": "Content.",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
             "og_type": "article",
@@ -894,7 +894,7 @@ def test_post_edit_can_publish_draft(admin_client, aws_mock):
         data={
             "slug": "upgrade-me",
             "title": "Upgraded Post",
-            "body": "Content.",
+            "blocks": "[]",
             "published": "on",
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -915,7 +915,7 @@ def test_post_edit_can_unpublish(admin_client, aws_mock):
         data={
             "slug": "demote-me",
             "title": "Demoted Post",
-            "body": "Content.",
+            "blocks": "[]",
             # no "published": "on" — unchecked checkbox sends nothing
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -936,7 +936,7 @@ def test_page_edit_can_unpublish(admin_client, aws_mock):
         data={
             "slug": "live-page",
             "title": "Live Page",
-            "body": "Content.",
+            "blocks": "[]",
             # no "published": "on" — unpublish
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -1018,15 +1018,6 @@ def test_rate_limiter_blocks_after_max_attempts(aws_mock):
     assert "Too many" in response.text
 
 
-# ── TinyMCE body field ─────────────────────────────────────────────────────────
-
-def test_post_create_form_body_uses_tinymce(admin_client):
-    """Post create form must load the TinyMCE editor for the body field."""
-    response = admin_client.get("/admin/post/create")
-    assert response.status_code == 200
-    assert "tinymce" in response.text.lower()
-
-
 # ── Tags removed ───────────────────────────────────────────────────────────────
 
 def test_post_create_form_has_no_tags_field(admin_client):
@@ -1057,7 +1048,7 @@ def test_post_hero_image_stored_on_create(admin_client, aws_mock):
         data={
             "slug": "img-post",
             "title": "Image Post",
-            "body": "<p>Hi.</p>",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
             "og_type": "article",
@@ -1094,7 +1085,7 @@ def test_post_hero_prefills_og_image(admin_client, aws_mock):
         data={
             "slug": "og-auto",
             "title": "OG Test",
-            "body": "<p>Hi.</p>",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
             "og_type": "article",
@@ -1115,7 +1106,7 @@ def test_post_hero_does_not_overwrite_manual_og_image(admin_client, aws_mock):
         data={
             "slug": "og-manual",
             "title": "OG Manual",
-            "body": "<p>Hi.</p>",
+            "blocks": "[]",
             "og_image": "https://example.com/my-og.jpg",
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -1136,7 +1127,7 @@ def test_post_without_hero_has_no_image_urls(admin_client, aws_mock):
         data={
             "slug": "no-hero",
             "title": "No Hero",
-            "body": "<p>Hi.</p>",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
             "og_type": "article",
@@ -1158,7 +1149,7 @@ def test_post_create_auto_generates_excerpt_when_empty(admin_client, aws_mock):
         data={
             "slug": "auto-excerpt",
             "title": "Test",
-            "body": "<p>Body.</p>",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
             "og_type": "article",
@@ -1177,7 +1168,7 @@ def test_post_create_keeps_manual_excerpt(admin_client, aws_mock):
         data={
             "slug": "manual-excerpt",
             "title": "Test",
-            "body": "<p>Body.</p>",
+            "blocks": "[]",
             "excerpt": "My own summary.",
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -1197,7 +1188,7 @@ def test_post_create_llm_failure_does_not_block_save(admin_client, aws_mock):
         data={
             "slug": "llm-fail",
             "title": "Test",
-            "body": "<p>Body.</p>",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
             "og_type": "article",
@@ -1217,7 +1208,7 @@ def test_post_create_prefills_seo_description_from_excerpt(admin_client, aws_moc
         data={
             "slug": "seo-desc",
             "title": "Test",
-            "body": "<p>Body.</p>",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
             "og_type": "article",
@@ -1236,7 +1227,7 @@ def test_post_create_keeps_manual_seo_description(admin_client, aws_mock):
         data={
             "slug": "keep-seo",
             "title": "Test",
-            "body": "<p>Body.</p>",
+            "blocks": "[]",
             "seo_description": "My custom meta.",
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -1256,7 +1247,7 @@ def test_post_create_prefills_seo_title_from_title(admin_client, aws_mock):
         data={
             "slug": "seo-title",
             "title": "My Great Post",
-            "body": "<p>Body.</p>",
+            "blocks": "[]",
             "theme_mode": "dark",
             "theme_style": "professional",
             "og_type": "article",
@@ -1275,7 +1266,7 @@ def test_post_create_preserves_manual_seo_title(admin_client, aws_mock):
         data={
             "slug": "custom-seo-title",
             "title": "My Post",
-            "body": "<p>Body.</p>",
+            "blocks": "[]",
             "seo_title": "Custom SEO Title",
             "theme_mode": "dark",
             "theme_style": "professional",
@@ -1284,3 +1275,142 @@ def test_post_create_preserves_manual_seo_title(admin_client, aws_mock):
     )
     item = get_content("POST", "custom-seo-title")
     assert item.get("seo_title") == "Custom SEO Title"
+
+
+# ── Blocks editor ──────────────────────────────────────────────────────────────
+
+def test_post_create_form_has_blocks_field(admin_client):
+    """Post create form must include the Alpine.js blocks editor component."""
+    response = admin_client.get("/admin/post/create")
+    assert response.status_code == 200
+    assert "blocksEditor" in response.text, "Block editor JS missing from post create form"
+
+
+def test_page_create_form_has_blocks_field(admin_client):
+    """Page create form must include the Alpine.js blocks editor component."""
+    response = admin_client.get("/admin/page/create")
+    assert response.status_code == 200
+    assert "blocksEditor" in response.text, "Block editor JS missing from page create form"
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_create_with_blocks_persists(admin_client, aws_mock):
+    """Blocks JSON is stored on post create."""
+    import json
+    from app.db import get_content
+    blocks = [{"id": "abc123", "text": "<p>Test content.</p>", "media": None}]
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "blocks-test",
+            "title": "Blocks Test",
+            "blocks": json.dumps(blocks),
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "blocks-test")
+    assert item is not None
+    assert item["blocks"] == json.dumps(blocks) or json.loads(item["blocks"]) == blocks
+
+
+@patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
+def test_post_blocks_xss_stripped_on_save(admin_client, aws_mock):
+    """<script> tags and on* attrs in block text are stripped on save."""
+    import json
+    from app.db import get_content
+    xss_blocks = [{"id": "xss1", "text": '<p>Safe</p><script>alert(1)</script>', "media": None}]
+    admin_client.post(
+        "/admin/post/create",
+        data={
+            "slug": "xss-test",
+            "title": "XSS Test",
+            "blocks": json.dumps(xss_blocks),
+            "theme_mode": "dark",
+            "theme_style": "professional",
+            "og_type": "article",
+        },
+    )
+    item = get_content("POST", "xss-test")
+    assert item is not None
+    stored = json.loads(item["blocks"])
+    assert "<script>" not in stored[0]["text"]
+    assert "Safe" in stored[0]["text"]
+
+
+def test_page_create_with_blocks_persists(admin_client, aws_mock):
+    """Blocks JSON is stored on page create."""
+    import json
+    from app.db import get_content
+    blocks = [{"id": "p1b2c3", "text": "<p>Page content.</p>", "media": None}]
+    admin_client.post(
+        "/admin/page/create",
+        data={
+            "slug": "page-blocks",
+            "title": "Page Blocks",
+            "blocks": json.dumps(blocks),
+            "published": "on",
+            "theme_mode": "dark",
+            "theme_style": "professional",
+        },
+    )
+    item = get_content("PAGE", "page-blocks")
+    assert item is not None
+    stored = json.loads(item["blocks"])
+    assert stored[0]["text"] == "<p>Page content.</p>"
+
+
+def test_page_blocks_xss_stripped_on_save(admin_client, aws_mock):
+    """XSS is stripped from page block text on save."""
+    import json
+    from app.db import get_content
+    xss_blocks = [{"id": "xss2", "text": '<h2>Title</h2><script>evil()</script>', "media": None}]
+    admin_client.post(
+        "/admin/page/create",
+        data={
+            "slug": "page-xss",
+            "title": "Page XSS",
+            "blocks": json.dumps(xss_blocks),
+            "theme_mode": "dark",
+            "theme_style": "professional",
+        },
+    )
+    item = get_content("PAGE", "page-xss")
+    assert item is not None
+    stored = json.loads(item["blocks"])
+    assert "<script>" not in stored[0]["text"]
+    assert "Title" in stored[0]["text"]
+
+
+def test_upload_image_endpoint_rejects_unauthenticated(aws_mock):
+    """POST /admin/api/upload-image without auth session returns 401."""
+    import io
+    from app.main import app
+    client = TestClient(app, raise_server_exceptions=True, follow_redirects=False)
+    jpeg = _make_jpeg_bytes()
+    response = client.post(
+        "/api/upload-image",
+        files={"file": ("test.jpg", io.BytesIO(jpeg), "image/jpeg")},
+    )
+    assert response.status_code == 401
+
+
+def test_upload_image_endpoint_stores_file(admin_client, aws_mock, tmp_path):
+    """Authenticated upload stores file and returns a /static/... URL."""
+    import io
+    import app.services.image as img_mod
+    original_dir = img_mod.POST_IMAGES_DIR
+    img_mod.POST_IMAGES_DIR = tmp_path
+    try:
+        jpeg = _make_jpeg_bytes()
+        response = admin_client.post(
+            "/api/upload-image",
+            files={"file": ("block.jpg", io.BytesIO(jpeg), "image/jpeg")},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "url" in data
+        assert data["url"].startswith("/static/post-images/")
+    finally:
+        img_mod.POST_IMAGES_DIR = original_dir

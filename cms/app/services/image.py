@@ -36,3 +36,15 @@ def save_hero_image(image_bytes: bytes, slug: str, ext: str) -> Tuple[str, str]:
         f"/static/post-images/{slug}-hero{ext}",
         f"/static/post-images/{slug}-thumb.jpg",
     )
+
+
+def save_block_image(image_bytes: bytes, name: str, ext: str) -> str:
+    """
+    Save an image uploaded via the block editor.
+
+    Returns:
+        Relative /static/... URL for the saved image.
+    """
+    img_path = POST_IMAGES_DIR / f"block-{name}{ext}"
+    img_path.write_bytes(image_bytes)
+    return f"/static/post-images/block-{name}{ext}"

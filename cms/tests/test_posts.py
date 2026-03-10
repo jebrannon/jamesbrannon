@@ -187,3 +187,21 @@ def test_post_hero_urls_default_to_none(client):
     data = client.get("/api/posts/plain-post").json()
     assert data.get("hero_image_url") is None
     assert data.get("hero_thumbnail_url") is None
+
+
+# ── Blocks field ───────────────────────────────────────────────────────────────
+
+def test_post_api_returns_blocks_as_array(client):
+    """GET /api/posts/{slug} must return blocks as a JSON array, not a string."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="blocks-post"))
+    data = client.get("/api/posts/blocks-post").json()
+    assert isinstance(data["blocks"], list)
+
+
+def test_post_blocks_default_to_empty_array(client):
+    """Post with no blocks stored returns blocks: [] in API response."""
+    from app.db import put_content
+    put_content("POST", make_post(slug="no-blocks"))
+    data = client.get("/api/posts/no-blocks").json()
+    assert data["blocks"] == []

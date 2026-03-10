@@ -35,12 +35,33 @@ def test_page_defaults_dark_professional(client):
     assert data["theme_style"] == "professional"
 
 
-def test_page_body_content(client):
+def test_page_blocks_content(client):
+    """Pages store and return blocks as a JSON array."""
+    import json
     from app.db import put_content
-    put_content("PAGE", make_page(slug="about", body="# About\n\nHello world."))
+    blocks = [{"id": "abc", "text": "<p>Hello world.</p>", "media": None}]
+    put_content("PAGE", make_page(slug="about", blocks=json.dumps(blocks)))
 
     response = client.get("/api/pages/about")
-    assert "Hello world." in response.json()["body"]
+    data = response.json()
+    assert isinstance(data["blocks"], list)
+    assert data["blocks"][0]["text"] == "<p>Hello world.</p>"
+
+
+def test_page_api_returns_blocks_as_array(client):
+    """GET /api/pages/{slug} must return blocks as a JSON array, not a string."""
+    from app.db import put_content
+    put_content("PAGE", make_page(slug="about"))
+    data = client.get("/api/pages/about").json()
+    assert isinstance(data["blocks"], list)
+
+
+def test_page_blocks_default_to_empty_array(client):
+    """Page with no blocks stored returns blocks: [] in API response."""
+    from app.db import put_content
+    put_content("PAGE", make_page(slug="about"))
+    data = client.get("/api/pages/about").json()
+    assert data["blocks"] == []
 
 
 def test_list_pages(client):

@@ -64,22 +64,26 @@ document.addEventListener('DOMContentLoaded', function () {
     if (fillTitle) titleSrc.addEventListener('input', fillTitle);
   }
 
-  // ── seo_description ← excerpt | page_headline | body ─────────────────────
+  // ── seo_description ← excerpt | page_headline | block text ──────────────
+  var _blockText = '';
   var fillDesc = makeAutoFill('seo_description', function () {
-    var excerpt   = document.getElementById('excerpt');
-    var headline  = document.getElementById('page_headline');
-    var body      = document.getElementById('body');
+    var excerpt  = document.getElementById('excerpt');
+    var headline = document.getElementById('page_headline');
     var src = (excerpt && excerpt.value)
       ? excerpt.value
       : (headline && headline.value)
         ? headline.value
-        : (body ? body.value : '');
+        : _blockText;
     return stripTags(src).slice(0, 155);
   });
   if (fillDesc) {
-    ['excerpt', 'page_headline', 'body'].forEach(function (id) {
+    ['excerpt', 'page_headline'].forEach(function (id) {
       var el = document.getElementById(id);
       if (el) el.addEventListener('input', fillDesc);
+    });
+    document.addEventListener('jb:blocks-changed', function (e) {
+      _blockText = stripTags((e.detail && e.detail.text) || '').trim();
+      fillDesc();
     });
   }
 });

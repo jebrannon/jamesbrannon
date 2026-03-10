@@ -1,0 +1,232 @@
+{% set fid = field.id %}
+{% set current = data or "[]" %}
+{# Inject initial data into a namespaced global so Alpine.js can read it without HTML-escaping issues #}
+<script>
+(function () {
+  if (!window.__jbBlocksInit) window.__jbBlocksInit = {};
+  window.__jbBlocksInit[{{ fid | tojson }}] = JSON.parse({{ current | tojson }});
+})();
+</script>
+
+<div class="jb-blocks-editor" id="{{ fid }}-root"
+     x-data="blocksEditor(window.__jbBlocksInit[{{ fid | tojson }}])">
+
+  <template x-for="(block, index) in blocks" :key="block.id">
+    <div class="jb-block"
+         draggable="true"
+         @dragstart="dragStart(index)"
+         @dragover.prevent="dragOver(index)"
+         @drop.prevent="drop(index)"
+         @dragend="dragEnd()"
+         :class="{ 'jb-block--dragging': dragIndex === index }">
+
+      <div class="jb-block-header">
+        <span class="jb-drag-handle" title="Drag to reorder">⠿</span>
+        <button type="button" class="jb-btn-sm" @click="moveUp(index)" :disabled="index === 0">↑</button>
+        <button type="button" class="jb-btn-sm" @click="moveDown(index)" :disabled="index === blocks.length - 1">↓</button>
+        <span class="jb-block-num" x-text="'Block ' + (index + 1)"></span>
+        <button type="button" class="jb-btn-sm jb-btn-danger" @click="removeBlock(index)">✕</button>
+      </div>
+
+      <div class="jb-block-text">
+        <div class="jb-toolbar">
+          <button type="button" class="jb-toolbar-btn" @click.prevent="format('bold')" title="Bold"><strong>B</strong></button>
+          <button type="button" class="jb-toolbar-btn" @click.prevent="format('italic')" title="Italic"><em>I</em></button>
+          <button type="button" class="jb-toolbar-btn" @click.prevent="format('h2')" title="Heading 2">H2</button>
+          <button type="button" class="jb-toolbar-btn" @click.prevent="format('h3')" title="Heading 3">H3</button>
+          <button type="button" class="jb-toolbar-btn" @click.prevent="format('ul')" title="Bullet list">•</button>
+          <button type="button" class="jb-toolbar-btn" @click.prevent="format('ol')" title="Numbered list">1.</button>
+        </div>
+        <div class="jb-text-body"
+             contenteditable="true"
+             @focus="focusedBlock = block"
+             @input="updateText(block, $event)"
+             x-html="block.text || ''"
+             placeholder="Start typing…"></div>
+      </div>
+
+      <div class="jb-block-media">
+        <div class="jb-media-type-toggle">
+          <button type="button" class="jb-btn-sm" :class="{ active: !block.media }" @click="setMediaType(block, null)">None</button>
+          <button type="button" class="jb-btn-sm" :class="{ active: block.media && block.media.type === 'image' }" @click="setMediaType(block, 'image')">Image</button>
+          <button type="button" class="jb-btn-sm" :class="{ active: block.media && block.media.type === 'video' }" @click="setMediaType(block, 'video')">Video</button>
+        </div>
+
+        <template x-if="block.media && block.media.type === 'image'">
+          <div class="jb-media-image">
+            <input type="file" accept="image/*" @change="uploadImage(block, $event)" class="form-control mb-2">
+            <template x-if="block.media.url">
+              <img :src="block.media.url" class="jb-image-preview mb-2">
+            </template>
+            <input type="text" placeholder="Alt text" x-model="block.media.alt" class="form-control mb-1">
+            <input type="text" placeholder="Caption (optional)" x-model="block.media.caption" class="form-control">
+          </div>
+        </template>
+
+        <template x-if="block.media && block.media.type === 'video'">
+          <div class="jb-media-video">
+            <input type="text" placeholder="Video URL (YouTube, Vimeo…)" x-model="block.media.url" class="form-control mb-1">
+            <input type="text" placeholder="Caption (optional)" x-model="block.media.caption" class="form-control">
+          </div>
+        </template>
+      </div>
+    </div>
+  </template>
+
+  <button type="button" class="jb-add-block" @click="addBlock()">+ Add section</button>
+
+  <input type="hidden" :name="'{{ fid }}'" :value="JSON.stringify(blocks)">
+</div>
+
+<style>
+.jb-blocks-editor { margin-bottom: 1rem; }
+.jb-block {
+  border: 1px solid var(--tblr-border-color, #444);
+  border-radius: 6px;
+  margin-bottom: .75rem;
+  padding: .75rem;
+  background: var(--tblr-bg-surface, #1a1a2e);
+  transition: opacity .2s;
+}
+.jb-block--dragging { opacity: .4; }
+.jb-block-header {
+  display: flex;
+  align-items: center;
+  gap: .4rem;
+  margin-bottom: .5rem;
+}
+.jb-drag-handle { cursor: grab; font-size: 1.1rem; color: var(--tblr-muted, #888); }
+.jb-block-num { flex: 1; font-size: .75rem; color: var(--tblr-muted, #888); text-transform: uppercase; letter-spacing: .04em; }
+.jb-btn-sm {
+  padding: .15rem .45rem;
+  font-size: .75rem;
+  border: 1px solid var(--tblr-border-color, #444);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+}
+.jb-btn-sm:disabled { opacity: .4; cursor: not-allowed; }
+.jb-btn-sm.active { background: var(--tblr-primary, #0fce8f); color: var(--jb-dark, #0d0d1a); border-color: var(--tblr-primary, #0fce8f); }
+.jb-btn-danger { border-color: var(--tblr-danger, #ff6e70); color: var(--tblr-danger, #ff6e70); }
+.jb-toolbar { display: flex; gap: .25rem; margin-bottom: .35rem; }
+.jb-toolbar-btn {
+  padding: .15rem .45rem;
+  font-size: .8rem;
+  border: 1px solid var(--tblr-border-color, #444);
+  border-radius: 4px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  min-width: 2rem;
+}
+.jb-toolbar-btn:hover { background: var(--tblr-primary, #0fce8f); color: var(--jb-dark, #0d0d1a); border-color: var(--tblr-primary, #0fce8f); }
+.jb-text-body {
+  min-height: 80px;
+  padding: .5rem;
+  border: 1px solid var(--tblr-border-color, #444);
+  border-radius: 4px;
+  background: var(--jb-dark-grey, #1e1e2e);
+  color: var(--jb-light, #fbfbfb);
+  outline: none;
+  line-height: 1.5;
+}
+.jb-text-body:focus { border-color: var(--jb-light, #fbfbfb); }
+.jb-text-body:empty:before { content: attr(placeholder); color: var(--jb-light-grey, #888); pointer-events: none; }
+.jb-block-media { margin-top: .5rem; }
+.jb-media-type-toggle { display: flex; gap: .25rem; margin-bottom: .5rem; }
+.jb-image-preview { max-width: 100%; max-height: 200px; border-radius: 4px; display: block; }
+.jb-add-block {
+  width: 100%;
+  padding: .5rem;
+  border: 1px dashed var(--tblr-border-color, #444);
+  border-radius: 6px;
+  background: transparent;
+  color: var(--tblr-primary, #0fce8f);
+  cursor: pointer;
+  font-size: .85rem;
+  text-align: center;
+}
+.jb-add-block:hover { background: var(--tblr-primary-lt, rgba(15,206,143,.1)); }
+</style>
+
+<script>
+function blocksEditor(initial) {
+  var parsed = Array.isArray(initial) ? initial : [];
+  return {
+    blocks: parsed,
+    dragIndex: null,
+    focusedBlock: null,
+
+    addBlock: function () {
+      this.blocks.push({ id: this._uid(), text: '', media: null });
+    },
+
+    removeBlock: function (i) {
+      if (this.blocks[i].text || this.blocks[i].media) {
+        if (!confirm('Delete this block?')) return;
+      }
+      this.blocks.splice(i, 1);
+    },
+
+    moveUp: function (i) {
+      if (i > 0) this.blocks.splice(i - 1, 0, this.blocks.splice(i, 1)[0]);
+    },
+
+    moveDown: function (i) {
+      if (i < this.blocks.length - 1) this.blocks.splice(i + 1, 0, this.blocks.splice(i, 1)[0]);
+    },
+
+    dragStart: function (i) { this.dragIndex = i; },
+    dragOver:  function (i) { /* CSS handles visual */ },
+    drop:      function (i) {
+      if (this.dragIndex !== null && this.dragIndex !== i) {
+        this.blocks.splice(i, 0, this.blocks.splice(this.dragIndex, 1)[0]);
+      }
+      this.dragIndex = null;
+    },
+    dragEnd: function () { this.dragIndex = null; },
+
+    updateText: function (block, evt) {
+      block.text = evt.target.innerHTML;
+      document.dispatchEvent(new CustomEvent('jb:blocks-changed', {
+        detail: { text: this.blocks.map(function (b) { return b.text || ''; }).join(' ') }
+      }));
+    },
+
+    format: function (cmd) {
+      if (cmd === 'bold')   { document.execCommand('bold');   return; }
+      if (cmd === 'italic') { document.execCommand('italic'); return; }
+      if (cmd === 'h2')     { document.execCommand('formatBlock', false, '<h2>'); return; }
+      if (cmd === 'h3')     { document.execCommand('formatBlock', false, '<h3>'); return; }
+      if (cmd === 'ul')     { document.execCommand('insertUnorderedList'); return; }
+      if (cmd === 'ol')     { document.execCommand('insertOrderedList');   return; }
+    },
+
+    setMediaType: function (block, type) {
+      if (!type) { block.media = null; return; }
+      block.media = { type: type, url: '', alt: '', caption: '' };
+    },
+
+    uploadImage: async function (block, evt) {
+      var file = evt.target.files[0];
+      if (!file) return;
+      var fd = new FormData();
+      fd.append('file', file);
+      try {
+        var res = await fetch('/api/upload-image', { method: 'POST', body: fd });
+        if (res.ok) {
+          var data = await res.json();
+          block.media = Object.assign({}, block.media, { type: 'image', url: data.url });
+        }
+      } catch (e) {
+        console.error('Block image upload failed:', e);
+      }
+    },
+
+    _uid: function () {
+      return Math.random().toString(36).slice(2, 8);
+    }
+  };
+}
+</script>

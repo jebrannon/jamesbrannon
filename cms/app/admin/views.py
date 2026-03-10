@@ -1,8 +1,11 @@
+import json as _json
+import re as _re
 from enum import Enum
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
+import bleach as _bleach
 from starlette.datastructures import UploadFile
 from starlette.requests import Request
 from starlette.responses import Response
@@ -22,6 +25,62 @@ from starlette_admin.fields import (
     URLField,
 )
 from starlette_admin.base import BaseModelView
+
+# ── Block editor helpers ───────────────────────────────────────────────────────
+
+_ALLOWED_TAGS = ["p", "h2", "h3", "strong", "em", "ul", "ol", "li", "a", "br"]
+_ALLOWED_ATTRS: Dict[str, List[str]] = {"a": ["href", "title", "target"]}
+
+
+def _sanitize_blocks(raw_json: str) -> str:
+    """Parse a JSON blocks string, sanitise each block's text, return sanitised JSON."""
+    try:
+        blocks = _json.loads(raw_json)
+    except (_json.JSONDecodeError, ValueError):
+        return "[]"
+    if not isinstance(blocks, list):
+        return "[]"
+    for block in blocks:
+        if isinstance(block.get("text"), str):
+            cleaned = _bleach.clean(
+                block["text"], tags=_ALLOWED_TAGS, attributes=_ALLOWED_ATTRS, strip=True
+            )
+            block["text"] = cleaned if cleaned.strip() else None
+    return _json.dumps(blocks)
+
+
+def _blocks_as_plain_text(blocks_json: Any) -> str:
+    """Extract plain text from all blocks for Ollama excerpt generation."""
+    try:
+        blocks = _json.loads(blocks_json) if isinstance(blocks_json, str) else (blocks_json or [])
+    except Exception:
+        return ""
+    parts = []
+    for b in blocks:
+        txt = b.get("text") or ""
+        txt = _re.sub(r"<[^>]+>", " ", txt)
+        txt = _re.sub(r"\s+", " ", txt).strip()
+        if txt:
+            parts.append(txt)
+    return " ".join(parts)
+
+
+class BlocksField(StringField):
+    """Structured block editor — text + optional media, repeatable."""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.form_template = "forms/blocks.html"
+        self.exclude_from_list = True
+
+    async def parse_form_data(self, request: Request, form_data, action) -> str:
+        raw = form_data.get(self.name, "[]") or "[]"
+        return _sanitize_blocks(raw)
+
+    async def serialize_value(self, request: Request, value, action) -> str:
+        if isinstance(value, list):
+            return _json.dumps(value)
+        return value or "[]"
 
 
 class FieldsetCollectionField(CollectionField):
@@ -336,8 +395,7 @@ class PostView(ContentView):
         StringField("title", label="Title", required=True),
         SlugAutoFillField("slug", label="Slug", required=True,
                           help_text="Auto-filled from title — override to set a custom URL"),
-        TinyMCEEditorField("body", label="Body", required=True,
-                           exclude_from_list=True),
+        BlocksField("blocks", label="Content Blocks", required=False),
         StringField("date", label="Date (ISO 8601)", required=False,
                     help_text="e.g. 2026-03-07T09:00:00"),
         TextAreaField("excerpt", label="Summary / Excerpt", required=False,
@@ -411,7 +469,7 @@ class PostView(ContentView):
         if not data.get("excerpt"):
             data["excerpt"] = await _gen(
                 title=data.get("title", ""),
-                body=data.get("body", ""),
+                body=_blocks_as_plain_text(data.get("blocks", "[]")),
             )
 
         # ── SEO pre-fills ─────────────────────────────────────────────────────
@@ -455,8 +513,7 @@ class PageView(ContentView):
         StringField("slug", label="Slug", required=True,
                     help_text="e.g. about"),
         StringField("title", label="Title", required=True),
-        TextAreaField("body", label="Body (Markdown)", required=False,
-                      exclude_from_list=True),
+        BlocksField("blocks", label="Content Blocks", required=False),
         BooleanField("published", label="Published"),
         *THEME_FIELDS,
         *SEO_FIELDS,
