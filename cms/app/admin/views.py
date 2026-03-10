@@ -753,10 +753,10 @@ class ProfileView(SingletonView):
     label = "Overview"
     fields = [
         # ── Personal intro ────────────────────────────────────────────────
-        StringField("headline", label="Headline", required=False,
-                    help_text="e.g. Product designer & frontend developer"),
-        StringField("tagline", label="Tagline", required=False,
-                    help_text="Short strapline shown beneath the headline"),
+        RichTextField("headline", label="Headline", required=False,
+                      help_text="e.g. Product designer & frontend developer"),
+        RichTextField("tagline", label="Tagline", required=False,
+                      help_text="Short strapline shown beneath the headline"),
         RichTextField("summary", label="Summary", required=False,
                       help_text="A few sentences about you — shown on the landing page"),
 
