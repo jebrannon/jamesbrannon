@@ -310,10 +310,11 @@ class ContentView(BaseModelView):
     """
     CONTENT_TYPE: str  # must be set in subclass
 
-    # Remove export buttons and column-visibility toggle — not needed for a
-    # single-user personal CMS
+    # Remove export, column-visibility and search-builder filter — not needed
+    # for a single-user personal CMS; global search bar is sufficient
     export_types: list = []
     column_visibility: bool = False
+    search_builder: bool = False
 
     async def count(self, request: Request, where=None) -> int:
         return len(list_content(self.CONTENT_TYPE))
