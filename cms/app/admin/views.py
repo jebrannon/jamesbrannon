@@ -762,8 +762,8 @@ class ProfileView(SingletonView):
 
         # ── Blog fieldset ─────────────────────────────────────────────────
         FieldsetCollectionField("blog", label="Blog", fields=[
-            StringField("headline", label="Section Headline", required=False,
-                        help_text="Heading shown above the blog feed on the homepage"),
+            RichTextField("headline", label="Section Headline", required=False,
+                          help_text="Heading shown above the blog feed on the homepage"),
             StringField("category", label="Category (tag filter)", required=False,
                         help_text="Filter posts by tag e.g. 'thoughts'. Leave blank to show all."),
             IntegerField("limit", label="Max Items", required=False,
@@ -772,7 +772,7 @@ class ProfileView(SingletonView):
 
         # ── Strengths fieldset ────────────────────────────────────────────
         FieldsetCollectionField("strengths", label="Strengths", fields=[
-            StringField("headline", label="Section Headline", required=False),
+            RichTextField("headline", label="Section Headline", required=False),
             ListField(CollectionField("items", fields=[
                 StringField("name", label="Name", required=True),
                 RichTextField("description", label="Description", required=False),
@@ -781,7 +781,7 @@ class ProfileView(SingletonView):
 
         # ── Experience fieldset ───────────────────────────────────────────
         FieldsetCollectionField("experience", label="Experience", fields=[
-            StringField("headline", label="Section Headline", required=False),
+            RichTextField("headline", label="Section Headline", required=False),
             ListField(CollectionField("items", fields=[
                 StringField("job_title", label="Job Title", required=True),
                 PageSelectField("page_link", label="Page Link", required=False,
