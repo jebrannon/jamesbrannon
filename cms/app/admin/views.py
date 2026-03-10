@@ -589,7 +589,7 @@ class CategoryView(ContentView):
         StringField("name", label="Name", required=True),
         SlugAutoFillField("slug", label="Slug", required=True,
                           help_text="Auto-filled from name — override to set a custom URL"),
-        RichTextField("page_headline", label="Landing Page Headline", required=False,
+        RichTextField("page_headline", label="Page Headline", required=False,
                       help_text="Displayed at the top of the category listing page",
                       exclude_from_list=True),
         IntegerField("max_items", label="Max Items Per Page", required=False,
