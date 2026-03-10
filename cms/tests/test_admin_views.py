@@ -727,10 +727,10 @@ def test_no_desktop_user_dropdown(admin_client):
 
 
 def test_logo_css_sizing(admin_client):
-    """Base CSS should set the admin logo to 72×96 px with correct padding."""
+    """Base CSS should set the admin logo to 48×64 px with correct padding."""
     response = admin_client.get("/admin/post/list")
-    assert "width: 72px" in response.text
-    assert "height: 96px" in response.text
+    assert "width: 48px" in response.text
+    assert "height: 64px" in response.text
     # Full 3-class specificity selector needed to beat Tabler's vertical navbar rule
     assert "navbar-vertical.navbar-expand-lg .navbar-brand" in response.text
     assert "padding: 2rem 1rem 1rem 1rem" in response.text

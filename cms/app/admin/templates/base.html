@@ -17,10 +17,10 @@
   :root {
     --tblr-font-sans-serif: 'Barlow Semi Condensed', -apple-system, BlinkMacSystemFont, sans-serif;
   }
-  /* Brand logo: fixed 72×96 px, left-aligned in sidebar */
+  /* Brand logo: fixed 48×64 px, left-aligned in sidebar */
   .navbar-logo {
-    width: 72px;
-    height: 96px;
+    width: 48px;
+    height: 64px;
     display: block;
     margin: 0;
   }
@@ -75,6 +75,42 @@
     --tblr-btn-disabled-color: var(--jb-dark);
     --tblr-btn-hover-bg:      var(--jb-light);
     --tblr-btn-active-bg:     var(--jb-light);
+  }
+  /* Cancel / danger buttons — light ghost style, hover fills dark-grey */
+  .btn-danger {
+    --tblr-btn-color:              var(--jb-light);
+    --tblr-btn-bg:                 transparent;
+    --tblr-btn-border-color:       var(--jb-light);
+    --tblr-btn-hover-color:        var(--jb-light);
+    --tblr-btn-hover-bg:           var(--jb-dark-grey);
+    --tblr-btn-hover-border-color: var(--jb-light);
+    --tblr-btn-active-color:       var(--jb-light);
+    --tblr-btn-active-bg:          var(--jb-dark-grey);
+    background-color: transparent;
+    border-color: var(--jb-light);
+    color: var(--jb-light);
+  }
+  /* Standard (non-primary/danger) buttons — dark-grey border, light text, light border on hover */
+  .btn:not(.btn-primary):not(.btn-danger) {
+    --tblr-btn-color:              var(--jb-light);
+    --tblr-btn-border-color:       var(--jb-dark-grey);
+    --tblr-btn-hover-color:        var(--jb-light);
+    --tblr-btn-hover-border-color: var(--jb-light);
+    color: var(--jb-light);
+    border-color: var(--jb-dark-grey);
+  }
+  .btn:not(.btn-primary):not(.btn-danger):hover {
+    border-color: var(--jb-light);
+  }
+  /* Global text — body, paragraphs and anchors use light colour */
+  body, p {
+    color: var(--jb-light);
+  }
+  a {
+    color: var(--jb-light);
+  }
+  a:hover {
+    color: var(--jb-light);
   }
   /* Form inputs and textareas — brand colour styling */
   .form-control,
