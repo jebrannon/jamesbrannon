@@ -549,9 +549,9 @@ class PageView(ContentView):
     pk_attr = "slug"
     form_include_pk = True
     fields = [
+        RichTextField("title", label="Title", required=True),
         StringField("slug", label="Slug", required=True,
                     help_text="e.g. about"),
-        RichTextField("title", label="Title", required=True),
         BlocksField("blocks", label="Content Blocks", required=False),
         BooleanField("published", label="Published"),
         *THEME_FIELDS,
