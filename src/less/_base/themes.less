@@ -32,32 +32,10 @@ body.light {
 }
 
 
-// ── Style tokens ──────────────────────────────────────────────────────────────
-
-body.professional {
-  --font-body:       'Inter', 'Helvetica Neue', Arial, sans-serif;
-  --font-display:    'Inter', 'Helvetica Neue', Arial, sans-serif;
-  --letter-spacing:  -0.01em;
-  --line-height:     1.5;
-  --heading-weight:  600;
-}
-
-body.thoughts {
-  --font-body:       'Georgia', 'Times New Roman', serif;
-  --font-display:    'Georgia', 'Times New Roman', serif;
-  --letter-spacing:  0.01em;
-  --line-height:     1.75;
-  --heading-weight:  400;
-}
-
-
 // ── Apply tokens to document ──────────────────────────────────────────────────
 
 body {
   background-color: var(--color-bg);
   color:            var(--color-text);
-  font-family:      var(--font-body);
-  letter-spacing:   var(--letter-spacing);
-  line-height:      var(--line-height);
   transition:       background-color 0.2s ease, color 0.2s ease;
 }

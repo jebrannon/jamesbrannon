@@ -3,15 +3,15 @@
  *  Info:   James Brannon brand palette.
  *          LESS variables for use throughout the website build.
  *          Also exports CSS custom properties (var(--jb-*)) for runtime use.
- *          Mirrored in cms/static/brand-colours.css for the CMS admin.
+ *          Mirrored in cms/static/tokens.css for the CMS admin.
  */
 
 
 // ── Core palette ─────────────────────────────────────────────────────────────
 @jb-dark:           #2D2D2D;
 @jb-light:          #FBFBFB;
-@jb-professional:   #0FCE8F;   // primary / accent
-@jb-thoughts:       #FF6E70;   // errors / warnings / highlights
+@jb-primary:    #0FCE8F;   // primary / accent
+@jb-secondary:  #FF6E70;   // errors / warnings / highlights
 @jb-dark-grey:      #424242;
 @jb-light-grey:     #F1F1F1;
 
@@ -23,7 +23,7 @@
 @colour-light:   @jb-light;
 @colour-dark:    @jb-dark;
 @colour-copy:    @jb-dark-grey;
-@colour-accent:  @jb-professional;
+@colour-accent:  @jb-primary;
 @colour-opaque:  rgba(0, 0, 0, .8);
 
 
@@ -32,8 +32,8 @@
 :root {
   --jb-dark:              @jb-dark;
   --jb-light:             @jb-light;
-  --jb-professional:      @jb-professional;
-  --jb-thoughts:          @jb-thoughts;
+  --jb-primary:    @jb-primary;
+  --jb-secondary:  @jb-secondary;
   --jb-dark-grey:         @jb-dark-grey;
   --jb-light-grey:        @jb-light-grey;
   --jb-brand-mark-light:  @jb-brand-mark-light;

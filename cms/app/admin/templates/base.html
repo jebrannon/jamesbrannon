@@ -6,7 +6,7 @@
 {% endblock %}
 {% block head_meta %}
 <link rel="icon" type="image/svg+xml" href="/static/admin-favicon.svg">
-<link rel="stylesheet" href="/static/brand-colours.css">
+<link rel="stylesheet" href="/static/tokens.css">
 {% endblock %}
 {% block head_css %}
 <script>document.documentElement.setAttribute('data-bs-theme', 'dark');</script>
@@ -16,6 +16,50 @@
 <style>
   :root {
     --tblr-font-sans-serif: 'Barlow Semi Condensed', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+  /* ── Typography scale ───────────────────────────────────────────────────── */
+  body {
+    font-family: var(--font);
+    font-size:   var(--fs-body);
+    font-weight: var(--fw-body);
+    line-height: var(--lh-body);
+  }
+  h1 {
+    font-size:      var(--fs-h1);
+    font-weight:    var(--fw-h1);
+    font-style:     italic;
+    line-height:    var(--lh-h1);
+    letter-spacing: var(--ls-h1);
+    text-transform: uppercase;
+  }
+  h2 {
+    font-size:   var(--fs-h2);
+    font-weight: var(--fw-h2);
+    font-style:  italic;
+    line-height: var(--lh-h2);
+  }
+  h3 {
+    font-size:   var(--fs-h3);
+    font-weight: var(--fw-h3);
+    font-style:  italic;
+    line-height: var(--lh-h3);
+  }
+  h4 {
+    font-size:   var(--fs-h4);
+    font-weight: var(--fw-h4);
+    font-style:  italic;
+    line-height: var(--lh-h4);
+  }
+  h5, h6 {
+    font-size:      var(--fs-h5);
+    font-weight:    var(--fw-h5);
+    font-style:     italic;
+    line-height:    var(--lh-h5);
+    letter-spacing: var(--ls-h5);
+    text-transform: uppercase;
+  }
+  b, strong {
+    font-weight: var(--fw-bold);
   }
   /* Brand logo: fixed 48×64 px, left-aligned in sidebar */
   .navbar-logo {
@@ -54,12 +98,12 @@
     --tblr-body-color:        var(--jb-light);
     --tblr-body-color-rgb:    251, 251, 251;
     --tblr-emphasis-color:    var(--jb-light);
-    --tblr-link-color:        var(--jb-professional);
-    --tblr-link-hover-color:  var(--jb-professional);
-    --tblr-primary:           var(--jb-professional);
+    --tblr-link-color:        var(--jb-primary);
+    --tblr-link-hover-color:  var(--jb-primary);
+    --tblr-primary:           var(--jb-primary);
     --tblr-primary-rgb:       15, 206, 143;
     --tblr-primary-lt:        rgba(15, 206, 143, .1);
-    --tblr-danger:                        var(--jb-thoughts);
+    --tblr-danger:                        var(--jb-secondary);
     --tblr-danger-rgb:                    255, 110, 112;
     --tblr-danger-lt:                     rgba(255, 110, 112, .1);
     --tblr-border-color:                  var(--jb-dark-grey);
@@ -82,10 +126,10 @@
     --tblr-btn-bg:                 var(--jb-light);
     --tblr-btn-border-color:       transparent;
     --tblr-btn-hover-color:        var(--jb-dark);
-    --tblr-btn-hover-bg:           var(--jb-thoughts);
+    --tblr-btn-hover-bg:           var(--jb-secondary);
     --tblr-btn-hover-border-color: transparent;
     --tblr-btn-active-color:       var(--jb-dark);
-    --tblr-btn-active-bg:          var(--jb-thoughts);
+    --tblr-btn-active-bg:          var(--jb-secondary);
     background-color: var(--jb-light);
     border-color: transparent;
     color: var(--jb-dark);
@@ -93,16 +137,16 @@
   /* Success buttons — identical styling to btn-primary */
   .btn-success {
     --tblr-btn-color:          var(--jb-dark);
-    --tblr-btn-bg:             var(--jb-professional);
-    --tblr-btn-border-color:   var(--jb-professional);
+    --tblr-btn-bg:             var(--jb-primary);
+    --tblr-btn-border-color:   var(--jb-primary);
     --tblr-btn-hover-color:    var(--jb-dark);
     --tblr-btn-hover-bg:       var(--jb-light);
     --tblr-btn-hover-border-color: var(--jb-light);
     --tblr-btn-active-color:   var(--jb-dark);
     --tblr-btn-active-bg:      var(--jb-light);
     --tblr-btn-disabled-color: var(--jb-dark);
-    background-color: var(--jb-professional);
-    border-color: var(--jb-professional);
+    background-color: var(--jb-primary);
+    border-color: var(--jb-primary);
     color: var(--jb-dark);
   }
   /* Standard (non-primary/danger/success) buttons — dark-grey border, light text, light border on hover */
@@ -135,7 +179,7 @@
   }
   /* Draft badge — jb-thoughts bg, dark text (list view + form header) */
   .badge.bg-warning {
-    background-color: var(--jb-thoughts) !important;
+    background-color: var(--jb-secondary) !important;
     color: var(--jb-dark) !important;
   }
   /* Form card headers only — no left padding or margin (dashboard/list cards keep defaults) */

@@ -1,28 +1,79 @@
 /*
- *  File :    _theme/font-size.less
- *  Info :    Define font sizes for this theme.
- *  Usage :   @import "_theme/font-size.less";
- *
+ *  File:   _theme/typography-scheme.less
+ *  Info:   Applies the type scale tokens to HTML elements.
+ *          Token values are defined in _base/typography.less.
  */
 
 
-.theme {
-	.font-size(1.4);
-	.line-height(2.2);
-	font-family: 'muli', sans-serif;
-	font-weight: 100;
+// ── Base ──────────────────────────────────────────────────────────────────────
 
-	h1 {
-		.font-size(4);
-		.line-height(3);
-	}
+body {
+  font-family: var(--font);
+  font-size:   var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+}
 
-	h2 {
-		.font-size(2);
-		.line-height(2.2);
-	}
 
-	a {
-		text-decoration: none;
-	}
+// ── Headings ──────────────────────────────────────────────────────────────────
+
+h1 {
+  font-size:      var(--fs-h1);
+  font-weight:    var(--fw-h1);
+  font-style:     italic;
+  line-height:    var(--lh-h1);
+  letter-spacing: var(--ls-h1);
+  text-transform: uppercase;
+}
+
+h2 {
+  font-size:   var(--fs-h2);
+  font-weight: var(--fw-h2);
+  font-style:  italic;
+  line-height: var(--lh-h2);
+}
+
+h3 {
+  font-size:   var(--fs-h3);
+  font-weight: var(--fw-h3);
+  font-style:  italic;
+  line-height: var(--lh-h3);
+}
+
+h4 {
+  font-size:   var(--fs-h4);
+  font-weight: var(--fw-h4);
+  font-style:  italic;
+  line-height: var(--lh-h4);
+}
+
+h5 {
+  font-size:      var(--fs-h5);
+  font-weight:    var(--fw-h5);
+  font-style:     italic;
+  line-height:    var(--lh-h5);
+  letter-spacing: var(--ls-h5);
+  text-transform: uppercase;
+}
+
+
+// ── Body text ─────────────────────────────────────────────────────────────────
+
+p {
+  font-size:   var(--fs-body);
+  line-height: var(--lh-body);
+}
+
+b,
+strong {
+  font-weight: var(--fw-bold);
+}
+
+
+// ── Anchors ───────────────────────────────────────────────────────────────────
+
+a {
+  font-weight:     var(--fw-anchor);
+  font-style:      italic;
+  text-decoration: none;
 }
