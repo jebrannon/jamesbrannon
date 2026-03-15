@@ -2,146 +2,199 @@
 
 Personal portfolio site — [jamesbrannon.co.uk](https://jamesbrannon.co.uk)
 
+---
+
 ## Stack
 
-### Frontend
-- **Vite 5** — dev server and build tool
-- **LESS** — CSS preprocessing
-- **Vanilla JS** — no framework dependencies
+| Layer | Technology |
+|---|---|
+| Frontend | Vite 5, Vanilla JS, LESS |
+| CMS API | FastAPI, starlette-admin |
+| Database | DynamoDB (local: moto mock, production: AWS) |
+| AI | Ollama (llama3.2) — auto-generates post excerpts |
 
-### CMS
-- **FastAPI** — REST API (`/api/*`) + admin UI (`/admin`)
-- **starlette-admin** — admin UI with Tabler design system
-- **DynamoDB** (local: moto server, production: AWS)
-- **Ollama** — local LLM for auto-generating post excerpts (llama3.2)
+---
 
-## Requirements
+## Quick start
 
-- Node 20+ (use [nvm](https://github.com/nvm-sh/nvm))
-- Python 3.9+
+**Requirements:** Node 20+ (via [nvm](https://github.com/nvm-sh/nvm)) and Python 3.12+
 
-## Installation
-
-### Frontend
+### 1. First-time setup
 
 ```bash
-nvm use
-npm install
+# Install frontend dependencies (nvm switches to Node 20 via .nvmrc)
+nvm use && npm install
+
+# Set up the CMS Python environment and create your .env
+cd cms && bash setup.sh
 ```
 
-### CMS
+`setup.sh` creates `cms/.venv`, installs Python dependencies, and copies `.env.example → .env`.
+Edit `cms/.env` to set credentials before running (default is `admin / changeme` for local dev).
+
+> The `.env` file is gitignored and never committed. If you need to recreate it: `cp cms/.env.example cms/.env`
+
+### 2. Start everything
 
 ```bash
-cd cms
-bash setup.sh
+bash start.sh
 ```
 
-This creates `cms/.venv`, installs Python dependencies, and copies `.env.example` → `.env`.
-Edit `cms/.env` to set credentials before running.
+That's it. `start.sh` loads the right Node version, starts DynamoDB and the CMS API in the
+background, then runs the Vite dev server in the foreground. `Ctrl+C` stops everything.
+
+| Service | URL |
+|---|---|
+| Frontend | http://localhost:3000 |
+| CMS admin | http://localhost:8000/admin |
+| API | http://localhost:8000/api |
+
+Background service logs are written to `/tmp/moto.log` and `/tmp/uvicorn.log`.
+
+---
 
 ## Development
 
-Three processes are needed for full local development:
+### Docker (alternative to manual setup)
+
+If you prefer Docker, a single command starts both DynamoDB and the API:
 
 ```bash
-# 1. Local DynamoDB (moto server)
-cd cms && source .venv/bin/activate
-moto_server -p 8001 &
-
-# 2. CMS API + admin
-uvicorn app.main:app --reload --port 8000
-
-# 3. Frontend (new terminal)
-npm run dev
+cd cms && docker compose up
 ```
 
-| Service      | URL                              |
-|-------------|----------------------------------|
-| Frontend     | http://localhost:3000            |
-| CMS admin    | http://127.0.0.1:8000/admin      |
-| API          | http://127.0.0.1:8000/api        |
+DynamoDB data is persisted across restarts via a named Docker volume (`dynamodb-data`).
 
-Admin credentials are set in `cms/.env` (default: `admin / changeme`).
+### Seed data
 
-Vite proxies `/api` and `/admin` to port 8000 in development, so the frontend
-at port 3000 can reach the CMS without CORS configuration.
+Populate a fresh local database with sample content:
 
-## Ollama (auto-excerpt)
+```bash
+cd cms && source .venv/bin/activate && python seed.py
+```
 
-Posts save an AI-generated excerpt if none is provided manually.
+The script is idempotent — safe to run multiple times.
+
+### Ollama (optional — AI excerpt generation)
+
+Posts auto-generate an excerpt via a local LLM when none is provided manually.
+Saves succeed silently if Ollama is not running — it's optional.
 
 ```bash
 brew install ollama
 ollama pull llama3.2
-ollama serve
+ollama serve   # runs at http://localhost:11434
 ```
 
-Runs at `http://localhost:11434` by default. Configure via `OLLAMA_URL` and
-`OLLAMA_MODEL` in `cms/.env`. Silent failure — saves succeed even if Ollama is down.
+Configure the URL and model via `OLLAMA_URL` and `OLLAMA_MODEL` in `cms/.env`.
+
+---
 
 ## Testing
 
 ```bash
-# All tests (Vitest + pytest) — also runs on every commit via git hook
+# All tests (runs Vitest + pytest) — mirrors the pre-commit hook
 npm test
 
 # Frontend only
 npx vitest run
 
-# CMS only
+# Backend only
 cd cms && source .venv/bin/activate && pytest tests/ -v
 ```
 
-~271 tests total: 85 Vitest (frontend) + 186 pytest (CMS, 5 skipped).
+~200 tests: 85 Vitest (frontend) + ~115 pytest (backend). CI runs on every push via GitHub Actions.
+
+---
 
 ## Build
 
 ```bash
-npm run build
+npm run build      # outputs production bundle to dist/
+npm run preview    # serve dist/ locally for a final check
 ```
 
-Outputs a production-ready bundle to `dist/`.
-
-```bash
-npm run preview
-```
-
-Serves the `dist/` build locally for final checks before deploying.
+---
 
 ## Project structure
 
 ```
-├── index.html
-├── public/
-│   └── images/
 ├── src/
 │   ├── js/
 │   │   ├── main.js
 │   │   ├── router.js
 │   │   └── components/
 │   ├── less/
-│   │   ├── _base/
-│   │   ├── _layout/
-│   │   ├── _mixins/
-│   │   ├── _theme/
-│   │   └── main.less
 │   └── tests/
 ├── cms/
 │   ├── app/
-│   │   ├── admin/          # starlette-admin views + templates
-│   │   ├── routers/        # FastAPI route handlers (posts, pages, categories)
+│   │   ├── admin/          # starlette-admin views + auth
+│   │   ├── routers/        # API route handlers (posts, pages, categories)
 │   │   ├── services/       # image processing (Pillow), LLM (Ollama)
 │   │   ├── db.py           # DynamoDB CRUD helpers
 │   │   ├── models.py       # Pydantic models
-│   │   └── main.py         # FastAPI app entry point
+│   │   ├── handler.py      # AWS Lambda entry point (Mangum)
+│   │   └── main.py         # FastAPI app, middleware, startup
 │   ├── tests/
-│   ├── requirements.txt
-│   ├── requirements-dev.txt
+│   ├── .env.example              # local dev env template (committed)
+│   ├── .env.production.example   # production env template (committed)
 │   └── setup.sh
-└── vite.config.js
+└── .github/workflows/ci.yml
 ```
+
+---
+
+## AWS Deployment (Planned)
+
+The site will run entirely on AWS with no servers to manage.
+
+### Architecture
+
+```
+Browser
+  │
+  ├── Static assets (HTML/JS/CSS)
+  │     └── S3 (static hosting) → CloudFront CDN
+  │
+  ├── API requests (/api/*, /admin/*)
+  │     └── API Gateway (HTTP API) → Lambda → FastAPI (via Mangum)
+  │
+  ├── Database
+  │     └── DynamoDB (PAY_PER_REQUEST, serverless)
+  │
+  └── Uploaded images
+        └── S3 bucket (jamesbrannon-media) → CloudFront CDN
+```
+
+### How it fits together
+
+- **`cms/app/handler.py`** is the Lambda entry point (`handler.handler`). It wraps the FastAPI app using [Mangum](https://mangum.faas.guru/).
+- **Images** — `S3_BUCKET` env var switches image uploads from local filesystem to S3 automatically. No code changes needed.
+- **Database** — the DynamoDB table must be pre-created by IaC (Terraform / CDK) before the first Lambda invocation. The auto-create logic in `lifespan` is bypassed in Lambda (`lifespan="off"`).
+- **Secrets** — credentials are injected at runtime from AWS Secrets Manager or SSM Parameter Store, not from a `.env` file.
+
+### What still needs doing before deployment
+
+- [ ] IaC (Terraform or CDK) — DynamoDB table, Lambda function, API Gateway, S3 buckets, CloudFront distributions
+- [ ] Domain and SSL — Route 53 + ACM certificate for `jamesbrannon.co.uk`
+- [ ] Secrets Manager — store `ADMIN_USER`, `ADMIN_PASS`, `SECRET_KEY`
+- [ ] Admin UI — not yet feature complete
+
+### Required production environment variables
+
+See `cms/.env.production.example` for the full template. Key variables:
+
+| Variable | Description |
+|---|---|
+| `SECRET_KEY` | Strong random string — `python3 -c "import secrets; print(secrets.token_hex(32))"` |
+| `ADMIN_USER` / `ADMIN_PASS` | Non-default admin credentials |
+| `CORS_ORIGINS` | CloudFront domain, e.g. `https://jamesbrannon.co.uk` |
+| `S3_BUCKET` / `S3_BUCKET_REGION` | Media upload bucket |
+| `DYNAMODB_TABLE` / `AWS_REGION` | DynamoDB config |
+
+---
 
 ## Git hooks
 
-- **pre-commit** — runs Vitest + pytest on every commit
-- **pre-push** — secret scanning (AWS keys, tokens, .env files) + build integrity tests + pytest
+- **pre-commit** — runs Vitest + pytest
+- **pre-push** — secret scanning (AWS keys, tokens, `.env` files) + build check + pytest

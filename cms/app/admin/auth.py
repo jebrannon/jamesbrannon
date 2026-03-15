@@ -44,8 +44,8 @@ class SimpleAuthProvider(AuthProvider):
         if _is_blocked(ip):
             raise LoginFailed("Too many login attempts. Please try again later.")
 
-        admin_user = os.getenv("ADMIN_USER", "admin")
-        admin_pass = os.getenv("ADMIN_PASS", "changeme")
+        admin_user = os.getenv("ADMIN_USER", "")
+        admin_pass = os.getenv("ADMIN_PASS", "")
 
         # Constant-time comparison prevents timing attacks
         user_ok = hmac.compare_digest(username, admin_user)

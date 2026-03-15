@@ -20,6 +20,8 @@ release/
 # Environment / secrets
 .env
 .env.*
+!.env.example
+!.env.production.example
 *.key
 *.pem
 *.p8

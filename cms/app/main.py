@@ -12,6 +12,7 @@ from fastapi import FastAPI, File, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.middleware.sessions import SessionMiddleware
 from starlette_admin.base import BaseAdmin as Admin
 from starlette_admin.views import DropDown, Link
@@ -23,6 +24,11 @@ from .admin.views import (
 )
 from .db import create_table_if_not_exists
 from .routers import categories, pages, posts, settings
+
+logging.basicConfig(
+    level=logging.INFO,
+    format='{"time": "%(asctime)s", "level": "%(levelname)s", "name": "%(name)s", "msg": "%(message)s"}',
+)
 
 logger = logging.getLogger(__name__)
 
@@ -38,6 +44,16 @@ if not _IS_LOCAL_DEV and _SECRET_KEY == _DEFAULT_SECRET_KEY:
     raise RuntimeError(
         "SECRET_KEY is not set or is using the insecure default. "
         "Set a strong SECRET_KEY in your environment before deploying."
+    )
+
+_DEV_CREDENTIAL_VALUES = {"", "admin", "changeme"}
+_ADMIN_USER = os.getenv("ADMIN_USER", "")
+_ADMIN_PASS = os.getenv("ADMIN_PASS", "")
+if not _IS_LOCAL_DEV and (
+    _ADMIN_USER in _DEV_CREDENTIAL_VALUES or _ADMIN_PASS in _DEV_CREDENTIAL_VALUES
+):
+    raise RuntimeError(
+        "ADMIN_USER and ADMIN_PASS must be set to non-default values outside of local dev."
     )
 
 
@@ -65,13 +81,30 @@ app.add_middleware(
     allow_origins=_ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["GET"],
-    allow_headers=["*"],
+    allow_headers=["content-type"],
 )
 
 app.add_middleware(
     SessionMiddleware,
     secret_key=_SECRET_KEY,
+    https_only=not _IS_LOCAL_DEV,
+    same_site="strict",
 )
+
+
+class SecurityHeadersMiddleware(BaseHTTPMiddleware):
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        if not _IS_LOCAL_DEV:
+            response.headers["Strict-Transport-Security"] = (
+                "max-age=31536000; includeSubDomains"
+            )
+        return response
+
+app.add_middleware(SecurityHeadersMiddleware)
 
 # ── Global error handler ───────────────────────────────────────────────────────
 

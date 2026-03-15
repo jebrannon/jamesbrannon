@@ -6,6 +6,15 @@ export default defineConfig({
     globals: true,
     css: false,
     include: ['src/tests/**/*.test.js'],
-    reporters: ['verbose']
+    reporters: ['verbose'],
+    coverage: {
+      provider: 'v8',
+      thresholds: {
+        lines: 60,
+        functions: 60,
+        branches: 60,
+        statements: 60,
+      },
+    },
   }
 });
