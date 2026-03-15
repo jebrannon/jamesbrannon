@@ -3,7 +3,7 @@
 {# ── Page header: "All [Label]" title + breadcrumb trail ─────────────────── #}
 {% block header %}
 <div class="d-flex justify-content-between align-items-center">
-  <h1 class="page-title">All {{ model.label }}</h1>
+  <h1>All {{ model.label }}</h1>
   <ol class="breadcrumb">
     <li class="breadcrumb-item">
       <a href="{{ url_for(__name__ ~ ':index') }}">{{ _("Admin") }}</a>
@@ -15,59 +15,53 @@
 
 {# ── Lean layout: single toolbar row + flat table, no card chrome ─────────── #}
 {% block content %}
-<div class="container-fluid">
-  <div class="row">
-    <div class="col-12">
 
-      {# ── Toolbar: bulk actions + search (left) | New button (right) ── #}
-      <div class="jb-list-toolbar">
+  {# ── Toolbar: bulk actions + search (left) | New button (right) ── #}
+  <div class="jb-list-toolbar">
 
-        <div class="jb-list-toolbar-left">
-          <div id="btn_container"></div>
-          {% include "actions.html" %}
-          <div class="input-icon">
-            <span class="input-icon-addon">
-              <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
-                   viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
-                   fill="none" stroke-linecap="round" stroke-linejoin="round">
-                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <circle cx="10" cy="10" r="7"/>
-                <line x1="21" y1="21" x2="15" y2="15"/>
-              </svg>
-            </span>
-            <input type="search" id="searchInput" value="" class="form-control"
-                   placeholder="{{ _('Search') }} {{ model.label | lower }}…"
-                   aria-label="Search in list"/>
-          </div>
-        </div>
-
-        <div class="jb-list-toolbar-right">
-          {% if model.can_create(request) %}
-          <a href="{{ url_for(__name__ ~ ':create', identity=model.identity) }}"
-             class="btn btn-primary">
-            <i class="fa-solid fa-plus me-2"></i>
-            {{ _("New %(name)s", name=model.name) }}
-          </a>
-          {% endif %}
-        </div>
-
+    <div class="jb-list-toolbar-left">
+      <div id="btn_container"></div>
+      {% include "actions.html" %}
+      <div class="input-icon">
+        <span class="input-icon-addon">
+          <svg xmlns="http://www.w3.org/2000/svg" class="icon" width="24" height="24"
+               viewBox="0 0 24 24" stroke-width="2" stroke="currentColor"
+               fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <circle cx="10" cy="10" r="7"/>
+            <line x1="21" y1="21" x2="15" y2="15"/>
+          </svg>
+        </span>
+        <input type="search" id="searchInput" value="" class="form-control"
+               placeholder="{{ _('Search') }} {{ model.label | lower }}…"
+               aria-label="Search in list"/>
       </div>
-
-      {# pageLength injected by DataTables list.js — hidden for single-user scale #}
-      <div id="pageLength_container" class="d-none"></div>
-
-      <div id="alertContainer"></div>
-
-      <table id="dt" class="table table-vcenter text-nowrap">
-        <thead>
-          <tr id="table-header">
-            <th></th>
-            <th></th>
-          </tr>
-        </thead>
-      </table>
-
     </div>
+
+    <div class="jb-list-toolbar-right">
+      {% if model.can_create(request) %}
+      <a href="{{ url_for(__name__ ~ ':create', identity=model.identity) }}"
+         class="btn btn-primary">
+        <i class="fa-solid fa-plus me-2"></i>
+        {{ _("New %(name)s", name=model.name) }}
+      </a>
+      {% endif %}
+    </div>
+
   </div>
-</div>
+
+  {# pageLength injected by DataTables list.js — hidden for single-user scale #}
+  <div id="pageLength_container" class="d-none"></div>
+
+  <div id="alertContainer"></div>
+
+  <table id="dt" class="table table-vcenter text-nowrap">
+    <thead>
+      <tr id="table-header">
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+  </table>
+
 {% endblock %}

@@ -1,5 +1,23 @@
 {% extends "@starlette-admin/layout.html" %}
-{% block navbar %}{% endblock %}
+
+{# ── Override full page body — keep sidebar via super(), replace page-wrapper
+     internals with clean jb-page-header / jb-page-body divs, eliminating the
+     container-fluid > row > row-deck > row-cards nesting from starlette-admin ─ #}
+{% block body %}
+<div class="page">
+    {% block sidebar %}{{ super() }}{% endblock %}
+    <div class="page-wrapper">
+        <div class="jb-page-header">
+            {% block header %}{% endblock %}
+        </div>
+        <div class="jb-page-body">
+            {% block content %}{% endblock %}
+        </div>
+        {% block modal %}{% endblock %}
+    </div>
+</div>
+{% endblock %}
+
 {% block script %}
 {{ super() }}
 {% if current_user %}
@@ -17,8 +35,7 @@ document.addEventListener('DOMContentLoaded', function () {
     // Mark Dashboard link active when on /admin or /admin/
     var path = window.location.pathname.replace(/\/$/, '') || '/';
     var adminRoot = '/admin';
-    var links = nav.querySelectorAll('a.nav-link');
-    links.forEach(function (a) {
+    nav.querySelectorAll('a.nav-link').forEach(function (a) {
         var href = a.getAttribute('href').replace(/\/$/, '') || '/';
         if (href === adminRoot && (path === adminRoot || path === '')) {
             a.classList.add('active');
@@ -33,7 +50,6 @@ document.addEventListener('DOMContentLoaded', function () {
     var table = document.querySelector('table.table');
     if (!table) return;
 
-    /* Find the "Published" column and rename header to "Status" */
     var ths = table.querySelectorAll('thead th');
     var colIdx = -1;
     ths.forEach(function (th, i) {
@@ -44,7 +60,6 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     if (colIdx < 0) return;
 
-    /* Replace each row's boolean icon with a badge; dim draft rows */
     table.querySelectorAll('tbody tr').forEach(function (row) {
         var cells = row.querySelectorAll('td');
         if (cells.length <= colIdx) return;
