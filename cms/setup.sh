@@ -10,6 +10,15 @@ python3 -m venv .venv
 
 cp -n .env.example .env 2>/dev/null && echo "Created .env from .env.example — edit it before running." || echo ".env already exists."
 
+# ── Install git hooks ─────────────────────────────────────────────────────────
+REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+if [ -d "$REPO_ROOT/hooks" ]; then
+  cp "$REPO_ROOT/hooks/pre-commit" "$REPO_ROOT/.git/hooks/pre-commit"
+  cp "$REPO_ROOT/hooks/pre-push"   "$REPO_ROOT/.git/hooks/pre-push"
+  chmod +x "$REPO_ROOT/.git/hooks/pre-commit" "$REPO_ROOT/.git/hooks/pre-push"
+  echo "Git hooks installed."
+fi
+
 echo ""
 echo "✅ Setup complete."
 echo ""

@@ -8,9 +8,12 @@ __pycache__/
 cms/.venv/
 .venv/
 *.egg-info/
+*.whl
 .pytest_cache/
 .coverage
 htmlcov/
+coverage/
+.nyc_output/
 
 # Build output
 dist/
@@ -32,10 +35,16 @@ release/
 
 # Uploaded content — generated at runtime, not source files
 cms/static/post-images/
+cms/static/favicons/
+
+# AWS / CDK
+cdk.out/
+.aws-sam/
 
 # OS
 .DS_Store
 Thumbs.db
+desktop.ini
 
 # Editor
 *~
@@ -44,3 +53,6 @@ Thumbs.db
 .idea/
 .vscode/
 *.sublime-*
+
+# Logs
+npm-debug.log*

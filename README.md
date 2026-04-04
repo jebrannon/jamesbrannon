@@ -8,8 +8,8 @@ Personal portfolio site — [jamesbrannon.co.uk](https://jamesbrannon.co.uk)
 
 | Layer | Technology |
 |---|---|
-| Frontend | Vite 5, Vanilla JS, LESS |
-| CMS API | FastAPI, starlette-admin |
+| Site | Vite 7, Vanilla JS, LESS |
+| CMS | FastAPI, starlette-admin |
 | Database | DynamoDB (local: moto mock, production: AWS) |
 | AI | Ollama (llama3.2) — auto-generates post excerpts |
 
@@ -103,7 +103,7 @@ npx vitest run
 cd cms && source .venv/bin/activate && pytest tests/ -v
 ```
 
-~200 tests: 85 Vitest (frontend) + ~115 pytest (backend). CI runs on every push via GitHub Actions.
+~290 tests: 85 Vitest (Site) + ~204 pytest (CMS). CI runs on every push via GitHub Actions.
 
 ---
 

@@ -1,0 +1,140 @@
+#!/bin/bash
+
+# Pre-push hook: secret scan (JS + Python) → build tests → CMS tests
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+echo -e "${YELLOW}Running security scan before push...${NC}"
+
+remote="$1"
+url="$2"
+FOUND=0
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+
+while read local_ref local_sha remote_ref remote_sha; do
+    if [ "$local_sha" = "0000000000000000000000000000000000000000" ]; then
+        continue
+    fi
+
+    if [ "$remote_sha" = "0000000000000000000000000000000000000000" ]; then
+        range="$local_sha"
+    else
+        range="$remote_sha..$local_sha"
+    fi
+
+    DIFF=$(git diff "$range" -- . \
+        ':!package-lock.json' ':!*.ico' ':!*.png' ':!*.jpg' ':!*.gif' ':!*.svg' \
+        ':!cms/.venv' ':!*.pyc' \
+        2>/dev/null || \
+      git show "$local_sha" -- . \
+        ':!package-lock.json' ':!*.ico' ':!*.png' ':!*.jpg' ':!*.gif' ':!*.svg' \
+        ':!cms/.venv' ':!*.pyc' \
+        2>/dev/null)
+
+    # AWS Access Keys
+    if echo "$DIFF" | grep -qE 'AKIA[0-9A-Z]{16}'; then
+        echo -e "${RED}BLOCKED: AWS Access Key detected${NC}"; FOUND=1
+    fi
+
+    # AWS Secret Access Keys
+    if echo "$DIFF" | grep -qE 'aws_secret_access_key\s*=\s*[^\s]{20,}'; then
+        echo -e "${RED}BLOCKED: AWS Secret Access Key detected${NC}"; FOUND=1
+    fi
+
+    # Generic API keys
+    if echo "$DIFF" | grep -qE '(api[_-]?key|apikey|api[_-]?secret)\s*[:=]\s*["\x27][A-Za-z0-9_\-]{20,}'; then
+        echo -e "${RED}BLOCKED: API key/secret detected${NC}"; FOUND=1
+    fi
+
+    # Google API keys
+    if echo "$DIFF" | grep -qE 'AIza[0-9A-Za-z_\-]{35}'; then
+        echo -e "${RED}BLOCKED: Google API key detected${NC}"; FOUND=1
+    fi
+
+    # GitHub tokens
+    if echo "$DIFF" | grep -qE '(ghp|gho|ghu|ghs|ghr)_[A-Za-z0-9_]{36,}'; then
+        echo -e "${RED}BLOCKED: GitHub token detected${NC}"; FOUND=1
+    fi
+
+    # Slack / Stripe / Twilio tokens
+    if echo "$DIFF" | grep -qE '(sk_live|rk_live|xox[baprs]-)[0-9A-Za-z]{10,}'; then
+        echo -e "${RED}BLOCKED: Slack/Stripe/Twilio token detected${NC}"; FOUND=1
+    fi
+
+    # JWT / Bearer tokens
+    if echo "$DIFF" | grep -qE 'Bearer\s+[A-Za-z0-9_\-\.]{20,}'; then
+        echo -e "${RED}BLOCKED: Bearer token detected${NC}"; FOUND=1
+    fi
+
+    # Secrets/tokens/passwords (JS and Python patterns)
+    if echo "$DIFF" | grep -qEi '(secret|token|password|passwd|pwd)\s*[:=]\s*["\x27][^\s"'\'']{8,}'; then
+        echo -e "${RED}BLOCKED: Secret/token/password detected${NC}"; FOUND=1
+    fi
+
+    # Python hardcoded AWS creds
+    if echo "$DIFF" | grep -qE 'aws_(secret|access)_key\s*=\s*["\x27][A-Za-z0-9/+]{20,}'; then
+        echo -e "${RED}BLOCKED: Hardcoded AWS credential in Python file${NC}"; FOUND=1
+    fi
+
+    # Private keys
+    if echo "$DIFF" | grep -qE '\-\-\-\-\-BEGIN (RSA |EC |DSA |OPENSSH )?PRIVATE KEY'; then
+        echo -e "${RED}BLOCKED: Private key detected${NC}"; FOUND=1
+    fi
+
+    # .env files (check filenames only, not diff content)
+    ENV_FILES=$(git diff --name-only "$range" 2>/dev/null | grep -E '^\.env(\..*)?$')
+    if [ -n "$ENV_FILES" ]; then
+        echo -e "${RED}BLOCKED: .env file in commit: $ENV_FILES${NC}"; FOUND=1
+    fi
+
+    # Connection strings with credentials
+    if echo "$DIFF" | grep -qEi '(mongodb|postgres|mysql|redis)://[^\s]+:[^\s]+@'; then
+        echo -e "${RED}BLOCKED: DB connection string with credentials detected${NC}"; FOUND=1
+    fi
+done
+
+if [ "$FOUND" -eq 1 ]; then
+    echo ""
+    echo -e "${RED}Push rejected: potential secrets detected.${NC}"
+    echo -e "To skip (not recommended): ${YELLOW}git push --no-verify${NC}"
+    exit 1
+fi
+
+echo -e "${GREEN}Security scan passed.${NC}"
+
+# ── Frontend build tests ──────────────────────────────────────────────────────
+echo -e "${YELLOW}Running build integrity tests...${NC}"
+
+NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+nvm use --silent 2>/dev/null || true   # Honour .nvmrc (Node 20)
+
+cd "$REPO_ROOT" || exit 1
+npm run test:build --silent
+if [ $? -ne 0 ]; then
+    echo -e "${RED}Push rejected: build tests failed.${NC}"
+    exit 1
+fi
+echo -e "${GREEN}Build tests passed.${NC}"
+
+# ── CMS Python tests ──────────────────────────────────────────────────────────
+CMS_VENV="$REPO_ROOT/cms/.venv"
+
+if [ -d "$CMS_VENV" ]; then
+    echo -e "${YELLOW}Running CMS tests...${NC}"
+    "$CMS_VENV/bin/python" -m pytest cms/tests/ -x --quiet 2>&1
+    if [ $? -ne 0 ]; then
+        echo -e "${RED}Push rejected: CMS tests failed.${NC}"
+        exit 1
+    fi
+    echo -e "${GREEN}CMS tests passed.${NC}"
+else
+    echo -e "${YELLOW}⚠️  CMS venv not found — skipping CMS push tests.${NC}"
+fi
+
+echo -e "${GREEN}All checks passed. Pushing...${NC}"
+exit 0

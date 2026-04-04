@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Pre-commit hook: run JS/HTML tests + CMS Python tests before every commit
+
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+NC='\033[0m'
+
+REPO_ROOT="$(git rev-parse --show-toplevel)"
+cd "$REPO_ROOT" || exit 1
+
+FAILED=0
+
+# ── 1. Frontend tests (Vitest) ────────────────────────────────────────────────
+echo -e "${YELLOW}Running frontend tests...${NC}"
+
+NVM_DIR="$HOME/.nvm"
+[ -s "$NVM_DIR/nvm.sh" ] && source "$NVM_DIR/nvm.sh"
+[ -s "$NVM_DIR/bash_completion" ] && source "$NVM_DIR/bash_completion"
+nvm use --silent 2>/dev/null || true   # Honour .nvmrc (Node 20)
+
+npm test --silent
+if [ $? -ne 0 ]; then
+  echo -e "${RED}Frontend tests failed.${NC}"
+  FAILED=1
+else
+  echo -e "${GREEN}Frontend tests passed.${NC}"
+fi
+
+# ── 2. CMS Python tests (pytest + moto) ──────────────────────────────────────
+CMS_VENV="$REPO_ROOT/cms/.venv"
+
+if [ ! -d "$CMS_VENV" ]; then
+  echo ""
+  echo -e "${YELLOW}⚠️  CMS venv not found — skipping Python tests.${NC}"
+  echo -e "    Set up with: ${YELLOW}cd cms && bash setup.sh${NC}"
+else
+  echo -e "${YELLOW}Running CMS tests...${NC}"
+  "$CMS_VENV/bin/python" -m pytest cms/tests/ -x --quiet 2>&1
+  if [ $? -ne 0 ]; then
+    echo -e "${RED}CMS tests failed.${NC}"
+    FAILED=1
+  else
+    echo -e "${GREEN}CMS tests passed.${NC}"
+  fi
+fi
+
+# ── Result ────────────────────────────────────────────────────────────────────
+if [ "$FAILED" -eq 1 ]; then
+  echo ""
+  echo -e "${RED}Commit rejected: tests failed. Fix the above errors before committing.${NC}"
+  echo -e "To skip (not recommended): ${YELLOW}git commit --no-verify${NC}"
+  exit 1
+fi
+
+echo -e "${GREEN}All tests passed.${NC}"
+exit 0
