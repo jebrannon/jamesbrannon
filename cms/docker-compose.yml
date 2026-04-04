@@ -10,6 +10,24 @@ services:
     volumes:
       - dynamodb-data:/home/dynamodblocal
 
+  minio:
+    image: minio/minio:latest
+    container_name: jamesbrannon-minio
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ["CMD", "mc", "ready", "local"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   api:
     build: .
     container_name: jamesbrannon-cms
@@ -19,11 +37,15 @@ services:
       - .env
     environment:
       - DYNAMODB_ENDPOINT=http://dynamodb-local:8000
+      - S3_ENDPOINT_URL=http://minio:9000
+      - S3_PUBLIC_BASE_URL=http://localhost:9000/jamesbrannon-media
     depends_on:
       - dynamodb-local
+      - minio
     volumes:
       - .:/app
     command: ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
 
 volumes:
   dynamodb-data:
+  minio-data:

@@ -66,6 +66,40 @@ def test_load_dotenv_called_before_local_app_imports():
     )
 
 
+def test_s3_bucket_validation_exists_in_main():
+    """
+    Regression: main.py must contain a RuntimeError guard for missing S3_BUCKET outside local dev.
+    Uses AST analysis to verify the check exists without re-importing the module
+    (which would trigger load_dotenv and corrupt module state for subsequent tests).
+    """
+    source = MAIN_PY.read_text()
+    tree = ast.parse(source)
+
+    found = False
+    for node in ast.walk(tree):
+        # Looking for: if not _IS_LOCAL_DEV and not os.getenv("S3_BUCKET"): raise RuntimeError(...)
+        if not isinstance(node, ast.If):
+            continue
+        # Check the body contains a Raise with RuntimeError mentioning S3_BUCKET
+        for stmt in node.body:
+            if not isinstance(stmt, ast.Raise):
+                continue
+            exc = stmt.exc
+            if exc is None:
+                continue
+            # RuntimeError("... S3_BUCKET ...")
+            if isinstance(exc, ast.Call):
+                if isinstance(exc.func, ast.Name) and exc.func.id == "RuntimeError":
+                    for arg in exc.args:
+                        if isinstance(arg, ast.Constant) and "S3_BUCKET" in str(arg.value):
+                            found = True
+
+    assert found, (
+        "main.py does not contain a RuntimeError guard for missing S3_BUCKET. "
+        "Add a startup check to prevent silent image upload failures in production."
+    )
+
+
 def test_db_endpoint_env_var_read_at_module_level():
     """
     Documents that db.py reads DYNAMODB_ENDPOINT at module level (not lazily).

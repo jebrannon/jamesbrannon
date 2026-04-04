@@ -1138,18 +1138,15 @@ def test_post_hero_image_stored_on_create(admin_client, aws_mock):
     assert item.get("hero_thumbnail_url", "").endswith("-thumb.jpg")
 
 
-def test_post_hero_thumbnail_is_1200x630(tmp_path):
+def test_post_hero_thumbnail_is_1200x630(tmp_path, monkeypatch):
     """save_hero_image must produce a thumbnail at exactly 1200×630."""
     from PIL import Image
     import app.services.image as img_mod
-    original_dir = img_mod.POST_IMAGES_DIR
-    img_mod.POST_IMAGES_DIR = tmp_path
-    try:
-        img_mod.save_hero_image(_make_jpeg_bytes(2000, 1500), "test-slug", ".jpg")
-        thumb = Image.open(tmp_path / "test-slug-thumb.jpg")
-        assert thumb.size == (1200, 630)
-    finally:
-        img_mod.POST_IMAGES_DIR = original_dir
+    monkeypatch.setattr(img_mod, "_USE_S3", False)
+    monkeypatch.setattr(img_mod, "POST_IMAGES_DIR", tmp_path)
+    img_mod.save_hero_image(_make_jpeg_bytes(2000, 1500), "test-slug", ".jpg")
+    thumb = Image.open(tmp_path / "test-slug-thumb.jpg")
+    assert thumb.size == (1200, 630)
 
 
 @patch("app.services.llm.generate_excerpt", new=AsyncMock(return_value=None))
@@ -1473,24 +1470,19 @@ def test_upload_image_endpoint_rejects_unauthenticated(aws_mock):
     assert response.status_code == 401
 
 
-def test_upload_image_endpoint_stores_file(admin_client, aws_mock, tmp_path):
-    """Authenticated upload stores file and returns a /static/... URL."""
+def test_upload_image_endpoint_stores_file(admin_client, aws_mock):
+    """Authenticated upload stores file and returns a URL containing the block image path."""
     import io
-    import app.services.image as img_mod
-    original_dir = img_mod.POST_IMAGES_DIR
-    img_mod.POST_IMAGES_DIR = tmp_path
-    try:
-        jpeg = _make_jpeg_bytes()
-        response = admin_client.post(
-            "/api/upload-image",
-            files={"file": ("block.jpg", io.BytesIO(jpeg), "image/jpeg")},
-        )
-        assert response.status_code == 200
-        data = response.json()
-        assert "url" in data
-        assert data["url"].startswith("/static/post-images/")
-    finally:
-        img_mod.POST_IMAGES_DIR = original_dir
+    jpeg = _make_jpeg_bytes()
+    response = admin_client.post(
+        "/api/upload-image",
+        files={"file": ("block.jpg", io.BytesIO(jpeg), "image/jpeg")},
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert "url" in data
+    assert "post-images/block-" in data["url"]
+    assert data["url"].endswith(".jpg")
 
 
 # ── Multi-media per block ───────────────────────────────────────────────────────

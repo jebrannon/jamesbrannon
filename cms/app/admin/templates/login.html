@@ -1,0 +1,70 @@
+{% extends "layout.html" %}
+{% block header %}{% endblock %}
+{% block sidebar %}{% endblock %}
+{% block content %}
+    <div class="container-tight py-4">
+        {% if login_logo_url or logo_url %}
+            <div class="text-center mb-4">
+                <a href="." class="navbar-brand navbar-brand-autodark">
+                    <img src="{{ login_logo_url or logo_url }}" height="48" alt="" />
+                </a>
+            </div>
+        {% endif %}
+
+        {% if error %}
+            <div class="alert alert-important alert-danger alert-dismissible mb-3" role="alert">
+                <div class="d-flex">
+                    <div>{{ error }}</div>
+                </div>
+                <a class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="close"></a>
+            </div>
+        {% endif %}
+
+        {% if use_google_oauth %}
+            <div class="card card-md">
+                <div class="card-body text-center">
+                    <h2 class="card-title mb-4">{{ _("Login to your account") }}</h2>
+                    <a href="/auth/google" class="btn btn-primary w-100">
+                        Sign in with Google
+                    </a>
+                </div>
+            </div>
+        {% else %}
+            <form class="card card-md" action="{{ request.url }}" method="POST">
+                <div class="card-body">
+                    <h2 class="card-title text-center mb-4">{{ _("Login to your account") }}</h2>
+                    {% if form_errors %}
+                        <div class="alert alert-danger mb-3" role="alert">
+                            Invalid username or password.
+                        </div>
+                    {% endif %}
+                    <div class="mb-3">
+                        <label class="form-label">{{ _("Username") }}</label>
+                        <input type="text"
+                               name="username"
+                               class="form-control"
+                               placeholder="{{ _('Username') }}"
+                               autocomplete="off" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-label">{{ _("Password") }}</label>
+                        <input type="password"
+                               name="password"
+                               class="form-control"
+                               placeholder="{{ _('Password') }}"
+                               autocomplete="off" />
+                    </div>
+                    <div class="mb-2">
+                        <label class="form-check">
+                            <input name="remember_me" type="checkbox" class="form-check-input" />
+                            <span class="form-check-label">{{ _("Remember me") }}</span>
+                        </label>
+                    </div>
+                    <div class="form-footer">
+                        <button type="submit" class="btn btn-primary w-100">{{ _("Sign in") }}</button>
+                    </div>
+                </div>
+            </form>
+        {% endif %}
+    </div>
+{% endblock %}

@@ -9,7 +9,7 @@ from starlette.responses import Response
 from starlette_admin.auth import AdminConfig, AdminUser, AuthProvider
 from starlette_admin.exceptions import LoginFailed
 
-# ── Rate limiting ──────────────────────────────────────────────────────────────
+# ── Rate limiting (SimpleAuthProvider only) ────────────────────────────────────
 
 _MAX_ATTEMPTS = 5
 _WINDOW_SECONDS = 900  # 15 minutes
@@ -25,11 +25,10 @@ def _is_blocked(ip: str) -> bool:
 
 
 def _record_failure(ip: str) -> None:
-    """Record a failed login attempt for rate-limiting purposes."""
     _failed_attempts[ip].append(time.time())
 
 
-# ── Auth provider ──────────────────────────────────────────────────────────────
+# ── Username / password provider (local dev fallback) ──────────────────────────
 
 class SimpleAuthProvider(AuthProvider):
     async def login(
@@ -47,15 +46,66 @@ class SimpleAuthProvider(AuthProvider):
         admin_user = os.getenv("ADMIN_USER", "")
         admin_pass = os.getenv("ADMIN_PASS", "")
 
-        # Constant-time comparison prevents timing attacks
         user_ok = hmac.compare_digest(username, admin_user)
         pass_ok = hmac.compare_digest(password, admin_pass)
         if user_ok and pass_ok:
             request.session.update({"username": username})
             return response
-        # Only count failed attempts toward the rate limit
         _record_failure(ip)
         raise LoginFailed("Invalid username or password")
+
+    async def is_authenticated(self, request: Request) -> bool:
+        return bool(request.session.get("username"))
+
+    def get_admin_config(self, request: Request) -> AdminConfig:
+        return AdminConfig(app_title="James Brannon CMS")
+
+    def get_admin_user(self, request: Request) -> AdminUser:
+        return AdminUser(username=request.session.get("username", ""))
+
+    async def logout(self, request: Request, response: Response) -> Response:
+        request.session.clear()
+        return response
+
+
+# ── Google OAuth provider ──────────────────────────────────────────────────────
+
+class GoogleOAuthProvider(AuthProvider):
+    """
+    Auth provider that delegates to Google OAuth 2.0.
+    Restricts access to accounts on GOOGLE_ALLOWED_DOMAINS.
+    Falls back to showing a "Sign in with Google" button on the login page.
+    """
+
+    async def render_login(self, request: Request, admin) -> Response:
+        """Override to inject use_google_oauth=True into the login template context."""
+        error = request.query_params.get("error")
+        error_messages = {
+            "oauth_failed": "Google sign-in failed. Please try again.",
+            "token_failed": "Could not retrieve access token from Google.",
+            "domain_not_allowed": "Your Google account domain is not authorised.",
+            "invalid_state": "Invalid OAuth state. Please try again.",
+        }
+        return admin.templates.TemplateResponse(
+            request=request,
+            name="login.html",
+            context={
+                "_is_login_path": True,
+                "use_google_oauth": True,
+                "error": error_messages.get(error) if error else None,
+            },
+        )
+
+    async def login(
+        self,
+        username: str,
+        password: str,
+        remember_me: bool,
+        request: Request,
+        response: Response,
+    ) -> Response:
+        # Standard form submission is not used with Google OAuth
+        raise LoginFailed("Use the Sign in with Google button.")
 
     async def is_authenticated(self, request: Request) -> bool:
         return bool(request.session.get("username"))

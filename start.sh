@@ -35,8 +35,22 @@ cleanup() {
   for pid in "${PIDS[@]}"; do
     kill "$pid" 2>/dev/null || true
   done
+  docker compose -f "$REPO_ROOT/cms/docker-compose.yml" stop minio 2>/dev/null || true
 }
 trap cleanup EXIT INT TERM
+
+# ── MinIO (local S3) ───────────────────────────────────────────────────────────
+if command -v docker &> /dev/null && docker info &> /dev/null; then
+  echo -e "${YELLOW}Starting MinIO...${NC}"
+  docker compose -f "$REPO_ROOT/cms/docker-compose.yml" up minio -d --quiet-pull 2>/dev/null
+  for i in {1..20}; do
+    curl -sf http://localhost:9000/minio/health/live > /dev/null 2>&1 && break
+    sleep 0.5
+  done
+  echo -e "  ${GREEN}✓${NC} http://localhost:9000  (console: http://localhost:9001)"
+else
+  echo -e "${YELLOW}⚠️  Docker not running — MinIO skipped. Image uploads will use local filesystem.${NC}"
+fi
 
 # ── DynamoDB (moto) ────────────────────────────────────────────────────────────
 echo -e "${YELLOW}Starting DynamoDB (moto)...${NC}"

@@ -14,13 +14,19 @@ os.environ.setdefault("DYNAMODB_TABLE", "test-jamesbrannon-content")
 os.environ.setdefault("ADMIN_USER", "admin")
 os.environ.setdefault("ADMIN_PASS", "testpass")
 os.environ.setdefault("SECRET_KEY", "test-secret-key")
+os.environ.setdefault("S3_BUCKET", "test-media")
+os.environ.setdefault("S3_BUCKET_REGION", "eu-west-2")
+# Force empty — tests use moto which intercepts at the SDK level.
+# An explicit endpoint_url would bypass moto and try to connect to MinIO/real AWS.
+os.environ["S3_ENDPOINT_URL"] = ""
+os.environ["S3_PUBLIC_BASE_URL"] = ""
 
 TABLE_NAME = "test-jamesbrannon-content"
 
 
 @pytest.fixture()
 def aws_mock():
-    """Start moto DynamoDB mock and create the table."""
+    """Start moto AWS mock, create the DynamoDB table and S3 bucket."""
     from app.db import _reset_connection_cache
     _reset_connection_cache()
     with mock_aws():
@@ -36,6 +42,11 @@ def aws_mock():
                 {"AttributeName": "SK", "AttributeType": "S"},
             ],
             BillingMode="PAY_PER_REQUEST",
+        )
+        s3 = boto3.client("s3", region_name="eu-west-2")
+        s3.create_bucket(
+            Bucket="test-media",
+            CreateBucketConfiguration={"LocationConstraint": "eu-west-2"},
         )
         yield
 

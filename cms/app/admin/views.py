@@ -141,19 +141,9 @@ from ..constants import (
 from ..db import delete_content, get_content, get_setting, list_content, put_content, put_setting, touch_last_updated
 from ..models import OGType, ThemeMode, ThemeStyle
 
-# ── Static file storage for favicons ──────────────────────────────────────────
+# ── Static file storage ────────────────────────────────────────────────────────
 
 STATIC_DIR = Path(__file__).parent.parent.parent / "static"
-FAVICON_DIR = STATIC_DIR / "favicons"
-FAVICON_DIR.mkdir(parents=True, exist_ok=True)
-
-try:
-    import cairosvg as _cairosvg
-    _CAIROSVG = True
-except (ImportError, OSError):
-    # OSError is raised when libcairo system library is not installed.
-    # Install with: brew install cairo (macOS) or apt install libcairo2 (Linux).
-    _CAIROSVG = False
 
 # ── Shared field groups ────────────────────────────────────────────────────────
 
@@ -246,24 +236,6 @@ def _as_obj(d: Optional[Dict]) -> Optional[SimpleNamespace]:
     return SimpleNamespace(**wrapped)
 
 
-EXPECTED_FAVICON_SIZES = [16, 32, 192, 512]
-
-
-def _convert_favicon(svg_bytes: bytes, save_name: str) -> None:
-    """Convert SVG bytes to PNG variants at standard favicon sizes."""
-    if not _CAIROSVG:
-        return
-    for size in EXPECTED_FAVICON_SIZES:
-        out = FAVICON_DIR / f"{save_name}-{size}.png"
-        try:
-            _cairosvg.svg2png(
-                bytestring=svg_bytes,
-                write_to=str(out),
-                output_width=size,
-                output_height=size,
-            )
-        except Exception:
-            pass  # Skip silently if conversion fails for a particular size
 
 
 # ── Dashboard ──────────────────────────────────────────────────────────────────
@@ -705,10 +677,8 @@ class BrandView(SingletonView):
         if file and hasattr(file, "read") and getattr(file, "filename", ""):
             content = await file.read()
             if content:
-                svg_path = FAVICON_DIR / f"{save_name}.svg"
-                svg_path.write_bytes(content)
-                _convert_favicon(content, save_name)
-                return f"/static/favicons/{save_name}.svg"
+                from ..services.image import save_favicon
+                return save_favicon(content, save_name)
         return existing_url
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
