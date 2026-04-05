@@ -25,6 +25,7 @@
 
 :root {
   --tblr-font-sans-serif: 'Barlow Semi Condensed', -apple-system, BlinkMacSystemFont, sans-serif;
+  --tblr-border-radius:   var(--jb-radius);
 }
 
 [data-bs-theme=dark] {
@@ -42,10 +43,10 @@
   --tblr-danger:                       var(--jb-secondary);
   --tblr-danger-rgb:                   255, 110, 112;
   --tblr-danger-lt:                    rgba(255, 110, 112, .1);
-  --tblr-border-color:                 var(--jb-dark-grey);
-  --tblr-border-color-translucent:     var(--jb-dark-grey);
-  --tblr-border-active-color:          var(--jb-light-grey);
-  --tblr-border-dark-color:            var(--jb-light-grey);
+  --tblr-border-color:                 var(--jb-grey-dark);
+  --tblr-border-color-translucent:     var(--jb-grey-dark);
+  --tblr-border-active-color:          var(--jb-grey-light);
+  --tblr-border-dark-color:            var(--jb-grey-light);
 }
 
 /* Alpine.js — hide elements before initialisation */
@@ -119,7 +120,7 @@ h5, h6 {
 }
 
 /* Utility text colours */
-.text-muted     { color: var(--jb-light-grey) !important; }
+.text-muted     { color: var(--jb-grey-light) !important; }
 .text-secondary { color: var(--jb-light) !important; }
 
 /* SEO settings panel summary label */
@@ -211,26 +212,26 @@ details summary { color: var(--jb-light) !important; }
 /* Inputs and selects */
 .form-control,
 .form-select {
-  background-color: var(--jb-dark-grey);
-  border-color:     var(--jb-dark-grey);
+  background-color: var(--jb-grey-dark);
+  border-color:     var(--jb-grey-dark);
   color:            var(--jb-light);
 }
 .form-control::placeholder,
 textarea::placeholder,
 input::placeholder {
-  color:   var(--jb-light-grey);
+  color:   var(--jb-grey-mild);
   opacity: 1;
 }
 .form-control:focus,
 .form-select:focus {
-  background-color: var(--jb-dark-grey);
+  background-color: var(--jb-grey-dark);
   border-color:     var(--jb-light);
   color:            var(--jb-light);
   box-shadow:       none;
 }
 .form-control:-webkit-autofill {
   -webkit-text-fill-color: var(--jb-light);
-  box-shadow: 0 0 0 1000px var(--jb-dark-grey) inset;
+  box-shadow: 0 0 0 1000px var(--jb-grey-dark) inset;
 }
 
 /* Checkboxes and radio inputs */
@@ -267,13 +268,14 @@ small {
 /* Field labels with extra top spacing (e.g. Brand upload fields) */
 .jb-field-label { margin-top: .5rem; }
 
-/* Fieldset legends */
-.jb-fieldset-legend {
+/* Fieldset legends — h4 scale */
+legend {
+  margin-bottom:  0;
   color:          var(--jb-light);
-  font-size:      var(--legend-fs);
-  font-weight:    var(--legend-fw);
-  letter-spacing: var(--legend-ls);
-  text-transform: uppercase;
+  font-size:      var(--fs-h4);
+  font-weight:    var(--fw-h4);
+  font-style:     italic;
+  line-height:    var(--lh-h4);
 }
 
 /* Form page card — strip all chrome */
@@ -296,6 +298,9 @@ small {
   background: none;
   border:     none !important;
 }
+.card-footer .btn-list {
+  gap: 1rem;
+}
 
 
 /* ── 5. Components ────────────────────────────────────────────────────────── */
@@ -303,6 +308,8 @@ small {
 /* ── Buttons ── */
 .btn {
   border-radius:  var(--jb-btn-radius);
+  padding:        var(--jb-btn-padding);
+  font-family:    var(--jb-btn-font);
   font-size:      var(--jb-btn-fs);
   line-height:    var(--jb-btn-lh);
   font-weight:    var(--jb-btn-fw);
@@ -322,7 +329,7 @@ small {
 
 .btn-secondary {
   --tblr-btn-bg:                 var(--jb-btn-secondary-bg);
-  --tblr-btn-border-color:       var(--jb-btn-secondary-bg);
+  --tblr-btn-border-color:       var(--jb-btn-secondary-border);
   --tblr-btn-color:              var(--jb-btn-secondary-text);
   --tblr-btn-hover-bg:           var(--jb-btn-secondary-hover-bg);
   --tblr-btn-hover-color:        var(--jb-btn-secondary-hover-text);
@@ -346,7 +353,7 @@ small {
 }
 
 /* Default — transparent bg, light border */
-.btn:not(.btn-primary):not(.btn-secondary):not(.btn-danger) {
+.btn:not(.btn-primary):not(.btn-secondary):not(.btn-danger):not(.btn-success) {
   --tblr-btn-color:              var(--jb-btn-default-text);
   --tblr-btn-border-color:       var(--jb-btn-default-border);
   --tblr-btn-hover-color:        var(--jb-btn-default-text);
@@ -355,13 +362,12 @@ small {
   border-color: var(--jb-btn-default-border);
 }
 .btn:not(.btn-primary):not(.btn-secondary):not(.btn-danger):hover {
-  border-color: var(--jb-btn-default-hover-border);
+  border-color: var(--jb-btn-default-hover-border) !important; /* Tabler specificity */
 }
 
-/* Card footer — correct starlette-admin defaults */
-/* Save uses btn-success (not in our system) — remap to primary */
-.card-footer .btn-success {
-  --tblr-btn-bg:          var(--jb-btn-primary-bg);
+/* btn-success is not in our system — remap globally to primary */
+.btn-success {
+  --tblr-btn-bg:           var(--jb-btn-primary-bg);
   --tblr-btn-border-color: var(--jb-btn-primary-bg);
   --tblr-btn-color:        var(--jb-btn-primary-text);
   --tblr-btn-hover-bg:     var(--jb-btn-primary-hover-bg);
@@ -370,20 +376,10 @@ small {
   border-color:     var(--jb-btn-primary-bg);
   color:            var(--jb-btn-primary-text);
 }
-/* Cancel uses btn-danger — remap to default (not destructive) */
-.card-footer a.btn-danger {
-  --tblr-btn-bg:                 transparent;
-  --tblr-btn-border-color:       var(--jb-btn-default-border);
-  --tblr-btn-color:              var(--jb-btn-default-text);
-  --tblr-btn-hover-bg:           transparent;
-  --tblr-btn-hover-color:        var(--jb-btn-default-text);
-  --tblr-btn-hover-border-color: var(--jb-btn-default-hover-border);
-  background-color: transparent;
-  border-color:     var(--jb-btn-default-border);
-  color:            var(--jb-btn-default-text);
-}
-.card-footer a.btn-danger:hover {
-  border-color: var(--jb-btn-default-hover-border);
+.btn-success:hover {
+  background-color: var(--jb-btn-primary-hover-bg);
+  border-color:     var(--jb-btn-primary-hover-bg);
+  color:            var(--jb-btn-primary-hover-text);
 }
 
 /* ── Badges ── */
@@ -407,14 +403,14 @@ small {
 /* ── Tables ── */
 thead th,
 .table > thead > tr > th {
-  background-color: var(--jb-dark-grey) !important;
+  background-color: var(--jb-grey-dark) !important;
   color:            var(--jb-light) !important;
 }
 .card-footer {
-  background-color: var(--jb-dark-grey);
+  background-color: var(--jb-grey-dark);
 }
 .disabled > .page-link {
-  color: var(--jb-light-grey) !important;
+  color: var(--jb-grey-light) !important;
 }
 
 /* ── Sidebar icons — replace FontAwesome glyphs with brand SVGs ── */
@@ -435,7 +431,7 @@ thead th,
 .fa-sign-out { background-image: url('/static/icons/logout.svg'); }
 
 /* ── Muted icon colour (used on placeholder SVGs e.g. analytics chart) ── */
-.jb-icon-muted { color: var(--jb-light-grey); }
+.jb-icon-muted { color: var(--jb-grey-light); }
 
 
 /* ── 6. Singleton pages ───────────────────────────────────────────────────── */
@@ -469,12 +465,12 @@ thead th,
   margin-bottom: .5rem;
 }
 
-.jb-drag-handle { cursor: grab; font-size: 1.1rem; color: var(--jb-light-grey); }
+.jb-drag-handle { cursor: grab; font-size: 1.1rem; color: var(--jb-grey-light); }
 
 .jb-block-num {
   flex:           1;
   font-size:      var(--fs-h5);
-  color:          var(--jb-light-grey);
+  color:          var(--jb-grey-light);
   text-transform: uppercase;
   letter-spacing: .04em;
 }
@@ -498,7 +494,7 @@ thead th,
   font-size:      .7rem;
   text-transform: uppercase;
   letter-spacing: .06em;
-  color:          var(--jb-light-grey);
+  color:          var(--jb-grey-light);
 }
 
 .jb-image-preview { max-width: 100%; max-height: 200px; border-radius: var(--jb-btn-radius); display: block; }
@@ -515,7 +511,7 @@ thead th,
   padding:    .5rem;
   border:     1px solid var(--tblr-border-color);
   border-radius: var(--jb-btn-radius);
-  background: var(--jb-dark-grey);
+  background: var(--jb-grey-dark);
   color:      var(--jb-light);
   outline:    none;
   line-height: var(--lh-body);
@@ -523,7 +519,7 @@ thead th,
 .jb-text-body:focus { border-color: var(--jb-light); }
 .jb-text-body:empty:before {
   content:        attr(placeholder);
-  color:          var(--jb-light-grey);
+  color:          var(--jb-grey-light);
   pointer-events: none;
 }
 
@@ -590,21 +586,21 @@ thead th,
 /* ── 8. Upload components ─────────────────────────────────────────────────── */
 
 /* Progress bar */
-.jb-svg-progress {
+.jb-upload-progress {
   height:        3px;
   border-radius: 2px;
   background:    var(--tblr-border-color);
   overflow:      hidden;
   margin-top:    .5rem;
 }
-.jb-svg-progress-bar {
+.jb-upload-progress-bar {
   height:     100%;
   background: var(--jb-primary);
   transition: width .1s linear;
 }
 
 /* Preview row */
-.jb-svg-preview-row {
+.jb-upload-preview-row {
   display:     flex;
   align-items: flex-end;
   gap:         .75rem;
@@ -612,7 +608,7 @@ thead th,
 }
 
 /* Swatch container */
-.jb-svg-swatch {
+.jb-upload-swatch {
   display:         flex;
   align-items:     center;
   justify-content: center;
@@ -620,35 +616,97 @@ thead th,
   flex-shrink:     0;
   padding:         .5rem;
 }
-.jb-svg-swatch img { object-fit: contain; }
+.jb-upload-swatch img { object-fit: contain; }
 
-/* Light / dark swatch variants — replaces inline style= */
-.jb-svg-swatch--light { background: var(--jb-light); }
-.jb-svg-swatch--dark  { background: var(--jb-dark); }
-.jb-svg-swatch--dark img { filter: invert(1); }
+/* Light / dark swatch variants */
+.jb-upload-swatch--light { background: var(--jb-light); }
+.jb-upload-swatch--dark  { background: var(--jb-dark); }
+.jb-upload-swatch--dark img { filter: invert(1); }
 
-/* Drag-over state on the button */
-.jb-svg-dragover-zone .btn {
-  border-color: var(--jb-btn-primary-bg) !important;
-  background:   rgba(15, 206, 143, .06);
+/* Neutral swatch — no background, for SVGs uploaded without dark mode support */
+.jb-upload-swatch--neutral {
+  background:  transparent;
+  border:      1px dashed var(--jb-grey-dark);
 }
 
 /* Pixel-rendering for small PNG previews */
 .jb-pixel-preview { image-rendering: pixelated; }
 
-/* Saved-asset preview (below file input on Brand edit) */
-.jb-asset-current { padding-top: .75rem; }
-
 /* Logo preview — 80px height */
-.jb-svg-preview-row--logo .jb-svg-swatch img {
+.jb-upload-preview-row--logo .jb-upload-swatch img {
   height: 80px;
   width:  auto;
 }
 
 /* Favicon preview — 24px height */
-.jb-svg-preview-row--favicon .jb-svg-swatch img {
+.jb-upload-preview-row--favicon .jb-upload-swatch img {
   height: 24px;
   width:  auto;
+}
+
+/* ── Upload modal ─────────────────────────────────────────────────────────── */
+
+.jb-upload-modal .modal-content {
+  background: var(--jb-grey-dark);
+  border:     1px solid rgba(255, 255, 255, .1);
+  color:      var(--jb-light);
+}
+
+.jb-upload-modal .modal-header {
+  border-bottom: 1px solid rgba(255, 255, 255, .1);
+}
+
+.jb-upload-modal .modal-footer {
+  border-top: 1px solid rgba(255, 255, 255, .1);
+}
+
+.jb-upload-modal .modal-title {
+  font-size:   var(--fs-h4);
+  font-weight: var(--fw-h4);
+  font-style:  italic;
+  color:       var(--jb-light);
+}
+
+.jb-upload-modal .btn-close {
+  filter: invert(1) grayscale(1);
+}
+
+/* Preview area inside modal */
+.jb-upload-modal-preview {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  min-height:      120px;
+  background:      var(--jb-dark);
+  border-radius:   var(--jb-radius);
+  padding:         1rem;
+}
+
+.jb-upload-modal-preview img {
+  max-width:  100%;
+  max-height: 200px;
+  object-fit: contain;
+}
+
+/* Spinner row */
+.jb-upload-modal-spinner {
+  display:     flex;
+  align-items: center;
+  color:       var(--jb-light);
+}
+
+.jb-upload-modal-spinner .spinner-border {
+  color: var(--jb-primary) !important;
+}
+
+/* Dark mode toggle */
+.jb-upload-modal .form-check-input:checked {
+  background-color: var(--jb-primary);
+  border-color:     var(--jb-primary);
+}
+
+.jb-upload-modal .form-check-label {
+  color: var(--jb-light);
 }
 
 /* Uploaded image preview (hero, block images) */

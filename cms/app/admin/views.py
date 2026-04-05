@@ -408,7 +408,7 @@ class SvgFileField(FileField):
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.form_template = "forms/svg_upload.html"
+        self.form_template = "forms/asset_upload.html"
 
 
 class ImageFileField(FileField):
@@ -623,11 +623,15 @@ class BrandView(SingletonView):
     edit_template = "brand_edit.html"
 
     fields = [
+        StringField("display_name", label="Full Display Name", required=False,
+                    placeholder="James Brannon"),
+        StringField("role_title", label="Role / Title", required=False,
+                    placeholder="Product Designer"),
         # Logo upload — SVG only; stored as-is for dynamic colour theming on the Site
         SvgFileField(
             "logo",
             label="Logo",
-            help_text="Upload your logo. SVG files only.",
+            help_text="SVG files only.",
             required=False,
             accept=".svg,image/svg+xml",
         ),
@@ -639,7 +643,7 @@ class BrandView(SingletonView):
         SvgFileField(
             "favicon",
             label="Favicon",
-            help_text="Upload your favicon. SVG files only.",
+            help_text="SVG files only.",
             required=False,
             accept=".svg,image/svg+xml",
         ),
@@ -649,20 +653,24 @@ class BrandView(SingletonView):
         ),
         URLField("linkedin", label="LinkedIn URL", required=False),
         StringField("linkedin_text", label="LinkedIn Display Text", required=False,
-                    help_text="Text shown as the clickable link, e.g. /in/jamesbrannon"),
+                    placeholder="/in/jamesbrannon"),
         URLField("instagram", label="Instagram URL", required=False),
         StringField("instagram_text", label="Instagram Display Text", required=False,
-                    help_text="Text shown as the clickable link, e.g. @jamesbrannon"),
+                    placeholder="@jamesbrannon"),
         EmailField("email", label="Email Address", required=False),
         StringField("email_text", label="Email Display Text", required=False,
-                    help_text="Text shown as the clickable link, e.g. me@jamesbrannon.co.uk"),
+                    placeholder="me@jamesbrannon.co.uk"),
     ]
 
     def _defaults(self) -> Dict:
         return {
             "key": self.SETTINGS_KEY,
+            "display_name": "",
+            "role_title": "",
             "logo_url": "",
+            "logo_dark_mode": False,
             "favicon_url": "",
+            "favicon_dark_mode": False,
             "linkedin": "",
             "linkedin_text": "",
             "instagram": "",
@@ -671,7 +679,7 @@ class BrandView(SingletonView):
             "email_text": "",
         }
 
-    async def _save_favicon(self, field_value: Any, existing_url: str) -> str:
+    async def _save_favicon(self, field_value: Any, existing_url: str, inject_dark_mode: bool = True) -> str:
         """
         Process the favicon FileField value: save the SVG and generate PNG variants.
         Returns the new URL if a file was uploaded, otherwise the existing URL.
@@ -683,10 +691,10 @@ class BrandView(SingletonView):
             content = await file.read()
             if content:
                 from ..services.image import save_favicon
-                return save_favicon(content, "favicon")
+                return save_favicon(content, "favicon", inject_dark_mode=inject_dark_mode)
         return existing_url
 
-    async def _save_logo(self, field_value: Any, existing_url: str) -> str:
+    async def _save_logo(self, field_value: Any, existing_url: str, inject_dark_mode: bool = True) -> str:
         """Process the logo FileField value. Returns the new URL or the existing one."""
         file, should_delete = _unpack_file(field_value)
         if should_delete:
@@ -695,19 +703,31 @@ class BrandView(SingletonView):
             content = await file.read()
             if content:
                 from ..services.image import save_logo
-                return save_logo(content)
+                return save_logo(content, inject_dark_mode=inject_dark_mode)
         return existing_url
 
+    @staticmethod
+    def _dark_mode_flag(form_data: Any, field_name: str) -> bool:
+        """Read the hidden {field}_dark_mode input submitted alongside an SVG upload."""
+        return form_data.get(f"{field_name}_dark_mode", "false") == "true"
+
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
-        existing = get_setting(self.SETTINGS_KEY) or {}
+        existing  = get_setting(self.SETTINGS_KEY) or {}
+        form_data = await request.form()
+        logo_dm   = self._dark_mode_flag(form_data, "logo")
+        favicon_dm = self._dark_mode_flag(form_data, "favicon")
         data["logo_url"] = await self._save_logo(
             data.pop("logo", None),
             existing.get("logo_url", ""),
+            inject_dark_mode=logo_dm,
         )
         data["favicon_url"] = await self._save_favicon(
             data.pop("favicon", None),
             existing.get("favicon_url", ""),
+            inject_dark_mode=favicon_dm,
         )
+        data["logo_dark_mode"]    = logo_dm
+        data["favicon_dark_mode"] = favicon_dm
         data.pop("key", None)
         put_setting(self.SETTINGS_KEY, data)
         touch_last_updated()
@@ -715,15 +735,22 @@ class BrandView(SingletonView):
         return _as_obj(data)
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
-        existing = get_setting(self.SETTINGS_KEY) or {}
+        existing   = get_setting(self.SETTINGS_KEY) or {}
+        form_data  = await request.form()
+        logo_dm    = self._dark_mode_flag(form_data, "logo")
+        favicon_dm = self._dark_mode_flag(form_data, "favicon")
         data["logo_url"] = await self._save_logo(
             data.pop("logo", None),
             existing.get("logo_url", ""),
+            inject_dark_mode=logo_dm,
         )
         data["favicon_url"] = await self._save_favicon(
             data.pop("favicon", None),
             existing.get("favicon_url", ""),
+            inject_dark_mode=favicon_dm,
         )
+        data["logo_dark_mode"]    = logo_dm
+        data["favicon_dark_mode"] = favicon_dm
         data.pop("key", None)
         put_setting(self.SETTINGS_KEY, data)
         touch_last_updated()

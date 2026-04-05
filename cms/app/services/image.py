@@ -192,15 +192,16 @@ def _inject_dark_mode(svg_bytes: bytes) -> bytes:
     return svg_str.encode("utf-8")
 
 
-def save_logo(svg_bytes: bytes) -> str:
+def save_logo(svg_bytes: bytes, inject_dark_mode: bool = True) -> str:
     """
-    Save the site logo SVG, injecting dark-mode support if not already present.
+    Save the site logo SVG, optionally injecting dark-mode support.
     Uploads to S3/MinIO if configured, otherwise saves to local filesystem.
 
     Returns:
         Public URL of the saved SVG.
     """
-    svg_bytes = _inject_dark_mode(svg_bytes)
+    if inject_dark_mode:
+        svg_bytes = _inject_dark_mode(svg_bytes)
 
     if _USE_S3:
         return _upload_to_s3(svg_bytes, "logos/logo.svg", "image/svg+xml")
@@ -210,16 +211,17 @@ def save_logo(svg_bytes: bytes) -> str:
     return "/static/logos/logo.svg"
 
 
-def save_favicon(svg_bytes: bytes, save_name: str) -> str:
+def save_favicon(svg_bytes: bytes, save_name: str, inject_dark_mode: bool = True) -> str:
     """
-    Save a favicon SVG (with dark-mode support auto-injected if absent) and
-    generate PNG variants at standard sizes.
+    Save a favicon SVG and generate PNG variants at standard sizes.
+    Optionally injects dark-mode support before saving.
     Uploads to S3/MinIO if configured, otherwise saves to local filesystem.
 
     Returns:
         Public URL of the saved SVG.
     """
-    svg_bytes = _inject_dark_mode(svg_bytes)
+    if inject_dark_mode:
+        svg_bytes = _inject_dark_mode(svg_bytes)
     png_variants = _generate_favicon_pngs(svg_bytes, save_name)
 
     if _USE_S3:

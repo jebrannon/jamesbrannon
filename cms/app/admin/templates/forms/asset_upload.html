@@ -1,0 +1,229 @@
+{% set fid = field.id %}
+{% set upload_current_url = current_url | default('') %}
+{% set upload_preview_type = preview_type | default('') %}
+{% set upload_dark_mode = dark_mode | default(true) %}
+{% set upload_saved_dark_mode = saved_dark_mode | default(false) %}
+
+<div x-data="assetUpload({{ {'currentUrl': upload_current_url, 'previewType': upload_preview_type, 'darkMode': upload_dark_mode, 'savedDarkMode': upload_saved_dark_mode} | tojson }})" class="jb-upload">
+
+  {# ── Confirmed preview — saved asset on load, updates after modal confirm ── #}
+
+  {# No dark mode — single neutral swatch, no background treatment #}
+  <div x-show="preview && (isNew ? !stagedDarkMode : !savedDarkMode)" x-cloak
+       class="jb-upload-preview-row {{ ('jb-upload-preview-row--' ~ upload_preview_type) if upload_preview_type }} mb-3">
+    <div class="text-center">
+      <div class="jb-upload-swatch jb-upload-swatch--neutral">
+        <img :src="preview" alt="">
+      </div>
+    </div>
+  </div>
+
+  {# Dark mode — light + dark swatches #}
+  <div x-show="preview && (isNew ? stagedDarkMode : savedDarkMode)" {% if not upload_current_url %}x-cloak{% endif %}
+       class="jb-upload-preview-row {{ ('jb-upload-preview-row--' ~ upload_preview_type) if upload_preview_type }} mb-3">
+    <div class="text-center">
+      <div class="jb-upload-swatch jb-upload-swatch--light">
+        <img :src="preview" alt="">
+      </div>
+      <small class="text-muted d-block mt-1">Light</small>
+    </div>
+    <div class="text-center">
+      <div class="jb-upload-swatch jb-upload-swatch--dark">
+        <img :src="preview" alt="">
+      </div>
+      <small class="text-muted d-block mt-1">Dark</small>
+    </div>
+  </div>
+
+  {# ── Hidden file input and dark mode flag ── #}
+  <input type="file"
+         x-ref="fileInput"
+         name="{{ fid }}"
+         id="{{ fid }}"
+         accept=".svg,image/svg+xml"
+         class="d-none"
+         @change="onFile($event)"
+         {{ 'required' if field.required else '' }}>
+  <input type="hidden" name="{{ fid }}_dark_mode" :value="stagedDarkMode ? 'true' : 'false'">
+
+  <div class="d-flex align-items-center gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" @click="$refs.fileInput.click()"
+            x-text="preview ? 'Choose another file' : 'Choose file'"></button>
+    <small class="text-muted fst-italic" x-show="isNew" x-cloak x-text="filename"></small>
+  </div>
+
+  {% if field.help_text %}
+    <small class="form-hint mt-1 d-block">{{ field.help_text }}</small>
+  {% endif %}
+
+  {# ── Preview modal ── #}
+  <div class="modal fade jb-upload-modal" id="{{ fid }}_modal" x-ref="modal"
+       tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+
+        <div class="modal-header">
+          <h5 class="modal-title">Preview</h5>
+          <button type="button" class="btn-close" @click="cancelModal()"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="jb-upload-modal-preview mb-3">
+            <img :src="modalPreview" alt="" x-show="modalPreview && !fetchingDark">
+            <div class="jb-upload-modal-spinner" x-show="fetchingDark" x-cloak>
+              <div class="spinner-border spinner-border-sm" role="status"></div>
+              <small class="ms-2">Processing&hellip;</small>
+              <button type="button" class="btn btn-sm btn-link ms-2 p-0"
+                      @click="cancelFetch()">Cancel</button>
+            </div>
+          </div>
+
+          {% if upload_dark_mode %}
+          <div class="form-check form-switch mb-1">
+            <input class="form-check-input" type="checkbox" id="{{ fid }}_dm_toggle"
+                   x-model="addDarkMode"
+                   @change="onDarkModeToggle()"
+                   :disabled="fetchingDark">
+            <label class="form-check-label" for="{{ fid }}_dm_toggle">
+              Add dark mode support
+            </label>
+          </div>
+          <small class="text-muted d-block">
+            Embeds a colour-scheme media query so the asset adapts automatically to light and dark backgrounds.
+          </small>
+          <div x-show="modalError" x-cloak class="mt-2 text-danger small" x-text="modalError"></div>
+          {% endif %}
+        </div>
+
+        <div class="modal-footer">
+          <button type="button" class="btn btn-danger" @click="cancelModal()">Cancel</button>
+          <button type="button" class="btn btn-success" :disabled="fetchingDark"
+                  @click="confirmModal()">Use this file</button>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<script>
+(function () {
+  if (window.assetUpload) return;
+  window.assetUpload = function ({ currentUrl, previewType, darkMode, savedDarkMode }) {
+
+    // Non-reactive internal state — kept outside Alpine's Proxy so complex
+    // objects (Bootstrap Modal, AbortController, File) are never deep-proxied.
+    let _bsModal     = null;
+    let _abortCtrl   = null;
+    let _pendingFile = null;
+    let _rawDataUrl  = null;
+
+    return {
+      // ── Confirmed state (shown inline) ────────────────────────────────────
+      cacheTs:        Date.now(),
+      preview:        currentUrl ? currentUrl + '?v=' + Date.now() : null,
+      isNew:          false,
+      filename:       null,
+      stagedDarkMode: savedDarkMode || false,
+
+      // ── Modal state (reactive — drives the template) ──────────────────────
+      modalPreview: null,
+      addDarkMode:  false,
+      fetchingDark: false,
+      modalError:   null,
+
+      previewType:    previewType    || '',
+      darkMode:       darkMode       || false,
+      savedDarkMode:  savedDarkMode  || false,
+
+      _modal() {
+        if (!_bsModal) {
+          _bsModal = new bootstrap.Modal(this.$refs.modal);
+          this.$refs.modal.addEventListener('hidden.bs.modal', () => {
+            if (_pendingFile) this._clearPending();
+          });
+        }
+        return _bsModal;
+      },
+
+      onFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        _pendingFile = file;
+        const reader = new FileReader();
+        reader.onload = ev => {
+          _rawDataUrl       = ev.target.result;
+          this.modalPreview = ev.target.result;
+          this.addDarkMode  = false;
+          this.modalError   = null;
+          this._modal().show();
+        };
+        reader.readAsDataURL(file);
+      },
+
+      async onDarkModeToggle() {
+        if (!this.addDarkMode) {
+          this.modalPreview = _rawDataUrl;
+          this.modalError   = null;
+          return;
+        }
+        this.fetchingDark = true;
+        this.modalError   = null;
+        _abortCtrl = new AbortController();
+        try {
+          const fd = new FormData();
+          fd.append('file', _pendingFile);
+          const resp = await fetch('/api/preview-svg', {
+            method: 'POST', body: fd, signal: _abortCtrl.signal,
+          });
+          if (!resp.ok) throw new Error('server');
+          const json = await resp.json();
+          this.modalPreview = json.preview;
+        } catch (err) {
+          if (err.name !== 'AbortError') {
+            this.modalError   = 'Could not generate dark mode preview. Please try again.';
+            this.addDarkMode  = false;
+            this.modalPreview = _rawDataUrl;
+          }
+        } finally {
+          this.fetchingDark = false;
+          _abortCtrl = null;
+        }
+      },
+
+      cancelFetch() {
+        if (_abortCtrl) _abortCtrl.abort();
+        _abortCtrl        = null;
+        this.addDarkMode  = false;
+        this.modalPreview = _rawDataUrl;
+        this.fetchingDark = false;
+      },
+
+      confirmModal() {
+        this.preview        = this.modalPreview;
+        this.isNew          = true;
+        this.filename       = _pendingFile.name;
+        this.stagedDarkMode = this.addDarkMode;
+        _pendingFile        = null;
+        _rawDataUrl         = null;
+        this._modal().hide();
+      },
+
+      cancelModal() {
+        this._modal().hide();
+        this._clearPending();
+      },
+
+      _clearPending() {
+        _pendingFile                 = null;
+        _rawDataUrl                  = null;
+        this.modalPreview            = null;
+        this.addDarkMode             = false;
+        this.modalError              = null;
+        this.$refs.fileInput.value   = '';
+      },
+    };
+  };
+})();
+</script>

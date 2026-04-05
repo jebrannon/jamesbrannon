@@ -89,4 +89,27 @@ describe('Nav', () => {
 
   });
 
+  describe('Keyboard', () => {
+
+    it('closes nav when Escape key is pressed while nav is open', () => {
+      document.getElementById('nav-button').click(); // open
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      expect(document.body.classList.contains('site-nav-open')).toBe(false);
+    });
+
+    it('does nothing when Escape is pressed while nav is closed', () => {
+      // nav is not open
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      expect(document.body.classList.contains('site-nav-open')).toBe(false);
+    });
+
+    it('sets aria-expanded to false on nav button when Escape closes nav', () => {
+      const btn = document.getElementById('nav-button');
+      btn.click(); // open
+      document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape' }));
+      expect(btn.getAttribute('aria-expanded')).toBe('false');
+    });
+
+  });
+
 });

@@ -1,5 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { renderBlogFeed } from '../js/components/blog-feed.js';
+import { renderBlogFeed, initBlogFeeds } from '../js/components/blog-feed.js';
 
 global.fetch = vi.fn();
 
@@ -100,5 +100,41 @@ describe('renderBlogFeed', () => {
     });
     await renderBlogFeed(container);
     expect(container.querySelector('.blog-feed__excerpt')).toBeNull();
+  });
+});
+
+describe('initBlogFeeds', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    document.body.innerHTML = '';
+  });
+
+  it('auto-initialises all [data-jb-blog-feed] elements', async () => {
+    global.fetch.mockResolvedValue({
+      json: async () => [{ slug: 'post-1', title: 'Post One' }],
+    });
+    const el = document.createElement('div');
+    el.setAttribute('data-jb-blog-feed', '');
+    el.dataset.limit = '3';
+    document.body.appendChild(el);
+    initBlogFeeds();
+    // Allow async renderBlogFeed to resolve
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('limit=3'));
+  });
+
+  it('does nothing when there are no [data-jb-blog-feed] elements', () => {
+    expect(() => initBlogFeeds()).not.toThrow();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('uses default limit of 3 when data-limit is absent', async () => {
+    global.fetch.mockResolvedValue({ json: async () => [] });
+    const el = document.createElement('div');
+    el.setAttribute('data-jb-blog-feed', '');
+    document.body.appendChild(el);
+    initBlogFeeds();
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('limit=3'));
   });
 });

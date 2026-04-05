@@ -19,10 +19,10 @@ Personal portfolio/blog site for jamesbrannon.co.uk. Two halves:
 
 | Layer | Technology |
 |---|---|
-| Site | Vite 7, Vanilla JS, LESS |
-| CMS | FastAPI, starlette-admin 0.16, Mangum |
+| Site | Vite 7.3, Vitest 4.0, Vanilla JS, LESS |
+| CMS | FastAPI 0.128, starlette-admin 0.16, Mangum 0.21 |
 | Database | DynamoDB (local: moto mock server; production: AWS) |
-| Image processing | Pillow (hero thumbnails + block images) |
+| Image processing | Pillow 11.3 (hero thumbnails + block images) |
 | AI (optional) | Ollama llama3.2 — auto-generates post excerpts |
 | Node | 20 (pinned in `.nvmrc`) |
 | Python | 3.12+ |
@@ -65,8 +65,8 @@ cd cms && source .venv/bin/activate && python seed.py
 
 ```bash
 npm test                              # Both (mirrors CI)
-npx vitest run                        # Frontend only (~129 tests)
-cd cms && pytest tests/ -v            # Backend only (~214 tests, 4 skipped)
+npx vitest run                        # Frontend only (~150 tests)
+cd cms && pytest tests/ -v            # Backend only (~294 tests, 4 skipped)
 npm run test:coverage                 # Frontend with coverage report
 ```
 
@@ -120,6 +120,11 @@ jamesbrannon/
 │       ├── image.py     # Hero image + block image processing (local FS or S3)
 │       └── llm.py       # Ollama excerpt generation (fire-and-forget)
 ├── cms/tests/           # pytest — conftest.py, test_*.py (moto + httpx)
+│                        #   test_admin_views.py, test_auth.py, test_categories.py,
+│                        #   test_favicon.py, test_image.py, test_llm.py,
+│                        #   test_models.py, test_oauth.py, test_pages.py,
+│                        #   test_posts.py, test_settings.py, test_startup.py,
+│                        #   test_upload.py, test_views_helpers.py
 ├── src/tests/           # Vitest — *.test.js (happy-dom)
 ├── cms/.env.example     # Local dev env template (committed)
 ├── cms/.env.production.example  # Production env template (committed)
@@ -149,7 +154,7 @@ All PK/SK constants are in `cms/app/constants.py`.
 - `Post` — slug, title, blocks (List[Dict]), date, published, category, excerpt, hero_image_url, hero_thumbnail_url + SEOMixin + ContentBase
 - `Page` — slug, title, blocks, published + SEOMixin + ContentBase
 - `Category` — slug, name, page_headline, max_items + ContentBase
-- `BrandSettings` — logo_url, favicon_url (single SVG with embedded dark-mode media query), linkedin, linkedin_text, instagram, instagram_text, email, email_text
+- `BrandSettings` — display_name, role_title, logo_url, logo_dark_mode, favicon_url (single SVG with embedded dark-mode media query), favicon_dark_mode, linkedin, linkedin_text, instagram, instagram_text, email, email_text
 - `SeoSettings` — inherits SEOMixin (seo_title, seo_description, og_image, og_type, canonical_url, no_index)
 - `ProfileSettings` — headline, tagline, summary, blog feed config (BlogSettings), strengths (StrengthsSection), experience (ExperienceSection)
 - `BlogSettings` — headline, category, limit (homepage blog feed)
@@ -280,10 +285,10 @@ URL: `/admin` (Starlette Admin)
 - `FieldsetCollectionField` — repeated fieldsets (experience, strengths); uses `forms/collection_fieldset.html`
 - `PageSelectField` — dynamic select from `/api/pages`; uses `forms/page_select.html`
 - `CategorySelectField` — dynamic select from `/api/categories`; uses `forms/category_select.html`
-- `SvgFileField` — SVG upload with light/dark live preview; uses `forms/svg_upload.html`
+- `SvgFileField` — SVG upload via CustomUploader modal (preview + optional dark mode injection); uses `forms/asset_upload.html`
 - `ImageFileField` — image upload with preview; uses `forms/image_upload.html`
 
-**Custom form templates** (`cms/app/admin/templates/forms/`): `blocks.html`, `rich_text.html`, `enum_select.html`, `slug_autofill.html`, `collection_fieldset.html`, `page_select.html`, `category_select.html`, `svg_upload.html`, `image_upload.html`
+**Custom form templates** (`cms/app/admin/templates/forms/`): `blocks.html`, `rich_text.html`, `enum_select.html`, `slug_autofill.html`, `collection_fieldset.html`, `page_select.html`, `category_select.html`, `asset_upload.html`, `image_upload.html`
 
 ---
 
@@ -293,8 +298,8 @@ URL: `/admin` (Starlette Admin)
 
 - `save_hero_image(image_bytes, slug, ext)` — saves original + generates 1200×630 JPEG thumbnail via Pillow; returns `(hero_url, thumbnail_url)`
 - `save_block_image(image_bytes, name, ext)` — saves block editor image; returns URL
-- `save_favicon(svg_bytes, save_name)` — saves SVG (dark-mode auto-injected) + generates PNG variants at 16, 32, 192, 512 px via cairosvg (optional); returns SVG URL
-- `save_logo(svg_bytes)` — saves site logo SVG with dark-mode support auto-injected; returns URL
+- `save_favicon(svg_bytes, save_name, inject_dark_mode=True)` — saves SVG + generates PNG variants at 16, 32, 192, 512 px via cairosvg (optional); returns SVG URL
+- `save_logo(svg_bytes, inject_dark_mode=True)` — saves site logo SVG; returns URL
 - `_inject_dark_mode(svg_bytes)` — injects `@media (prefers-color-scheme: dark)` into SVG if not present; samples dominant fill colour to determine flip direction
 - `ensure_s3_bucket_exists()` — called on lifespan startup; creates bucket if missing (no-op when S3 not configured)
 
@@ -302,6 +307,62 @@ URL: `/admin` (Starlette Admin)
 **Production:** uploaded to `s3://{S3_BUCKET}/post-images/`, `s3://{S3_BUCKET}/favicons/`, `s3://{S3_BUCKET}/logos/` — switched automatically by presence of `S3_BUCKET` env var.
 
 Static files served by FastAPI at `/static/`.
+
+---
+
+## CustomUploader Component
+
+The **CustomUploader** is the reusable file upload component for the admin UI. Currently handles SVG uploads; designed to be extended for other media types.
+
+**Files:**
+- Template: `cms/app/admin/templates/forms/asset_upload.html`
+- Alpine component: `window.assetUpload` (defined inline in the template, registered once via IIFE guard)
+- CSS classes: `jb-upload-*` prefix (`cms/static/admin.css`, layer 8)
+- Preview endpoint: `POST /api/preview-svg` (`cms/app/main.py`)
+
+**Alpine config shape:**
+```js
+assetUpload({
+  currentUrl:  '/static/logos/logo.svg',  // saved asset URL or ''
+  previewType: 'logo',                    // 'logo' | 'favicon' | ''
+  darkMode:    true,                      // true only for SVG uploads
+})
+```
+
+**Modal flow:**
+1. User clicks "Choose file" → file picker opens
+2. File selected → Bootstrap modal opens with raw SVG preview
+3. If `darkMode: true`: toggle shown — "Add dark mode support?"
+4. Toggle on → `POST /api/preview-svg` → spinner shown with cancel → modal preview updates with injected SVG
+5. Confirm → file staged, inline preview updated, modal closes
+6. Cancel (or Escape/backdrop) → file selection cleared, saved asset preview restored
+
+**Dark mode flag:**
+A hidden input `<input type="hidden" name="{field_id}_dark_mode" value="true|false">` is submitted with the form. `BrandView._dark_mode_flag()` reads it and passes `inject_dark_mode` to `save_logo()`/`save_favicon()`.
+
+**Using it in a new field:**
+```jinja2
+{% with action=('EDIT' | ra),
+        data=obj[field.name],
+        error=errors.get(field.name, None) if errors else None,
+        current_url=raw_obj.some_url,
+        preview_type='logo',
+        dark_mode=true %}
+    {% include field.form_template %}
+{% endwith %}
+```
+Set `field.form_template = "forms/asset_upload.html"` in the field's `__post_init__`.
+
+**CSS classes:**
+- `.jb-upload` — root wrapper
+- `.jb-upload-preview-row` — flex row of swatches
+- `.jb-upload-preview-row--logo` / `--favicon` — size variants (80px / 24px)
+- `.jb-upload-swatch--light` / `--dark` — background variants
+- `.jb-upload-modal` — modal theming override
+- `.jb-upload-modal-preview` — dark preview area inside modal
+- `.jb-upload-progress` / `.jb-upload-progress-bar` — file read progress
+
+**`POST /api/preview-svg`:** Auth-gated (session required). Accepts `multipart/form-data` with `file` field. Returns `{"preview": "data:image/svg+xml;base64,..."}`. Validates SVG by checking content starts with `<`. Nothing is saved.
 
 ---
 
@@ -342,7 +403,7 @@ Load order: `tabler.min.css` (CDN) → `admin-tokens.css` → `admin.css`. This 
 
 **`!important` discipline:** only used where Tabler's high-specificity selectors cannot be beaten by token remapping alone. Always accompanied by a comment explaining why.
 
-**No inline styles in templates.** BEM modifier classes handle variants (`.jb-svg-swatch--light`, `.jb-svg-swatch--dark`, `.jb-pixel-preview`). If you find yourself writing `style=` in a template, add a class to `admin.css` instead.
+**No inline styles in templates.** BEM modifier classes handle variants (`.jb-upload-swatch--light`, `.jb-upload-swatch--dark`, `.jb-pixel-preview`). If you find yourself writing `style=` in a template, add a class to `admin.css` instead.
 
 ---
 

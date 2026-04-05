@@ -54,3 +54,35 @@ describe('loadBrand', () => {
     expect(icon).toBeNull();
   });
 });
+
+describe('getBrand', () => {
+  beforeEach(async () => {
+    vi.clearAllMocks();
+    vi.resetModules();
+    document.querySelectorAll('link[rel="icon"], link[rel="apple-touch-icon"]').forEach(el => el.remove());
+  });
+
+  it('returns empty object before loadBrand is called', async () => {
+    const { getBrand } = await import('../js/brand.js');
+    expect(getBrand()).toEqual({});
+  });
+
+  it('returns cached brand data after loadBrand succeeds', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ favicon_url: '/static/favicons/favicon.svg', linkedin: 'https://linkedin.com' }),
+    });
+    const { loadBrand, getBrand } = await import('../js/brand.js');
+    await loadBrand();
+    const brand = getBrand();
+    expect(brand.favicon_url).toBe('/static/favicons/favicon.svg');
+    expect(brand.linkedin).toBe('https://linkedin.com');
+  });
+
+  it('returns empty object when fetch fails', async () => {
+    global.fetch.mockRejectedValue(new Error('Network error'));
+    const { loadBrand, getBrand } = await import('../js/brand.js');
+    await loadBrand();
+    expect(getBrand()).toEqual({});
+  });
+});

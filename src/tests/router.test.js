@@ -433,3 +433,174 @@ describe('Router > renderHomepage', () => {
     expect(app.innerHTML).not.toContain('<script>');
   });
 });
+
+// ── renderPost ────────────────────────────────────────────────────────────────
+
+import { renderPost } from '../js/router.js';
+
+describe('Router > renderPost', () => {
+  let app;
+
+  beforeEach(() => {
+    global.fetch = vi.fn();
+    app = document.createElement('div');
+    app.id = 'App';
+    document.body.appendChild(app);
+  });
+
+  afterEach(() => {
+    app.remove();
+  });
+
+  it('renders post article from API response', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'Hello', slug: 'hello', body: '<p>World</p>' }),
+    });
+    await renderPost('hello');
+    expect(app.querySelector('.post__title').textContent).toBe('Hello');
+    expect(app.querySelector('.post__body').innerHTML).toBe('<p>World</p>');
+  });
+
+  it('renders 404 when post returns 404 error', async () => {
+    const err = new Error('HTTP 404');
+    err.status = 404;
+    global.fetch.mockResolvedValue({ ok: false, status: 404 });
+    await renderPost('missing');
+    expect(app.querySelector('.error-404')).not.toBeNull();
+  });
+
+  it('renders date when present', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'Post', date: '2024-01-01', body: '' }),
+    });
+    await renderPost('post');
+    expect(app.querySelector('time')).not.toBeNull();
+  });
+
+  it('renders category when present', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'Post', category: 'design', body: '' }),
+    });
+    await renderPost('post');
+    expect(app.querySelector('.post__category').textContent).toBe('design');
+  });
+
+  it('escapes XSS in title', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: '<script>alert(1)</script>', body: '' }),
+    });
+    await renderPost('xss');
+    expect(app.innerHTML).not.toContain('<script>alert');
+  });
+});
+
+// ── renderCMSPage ─────────────────────────────────────────────────────────────
+
+import { renderCMSPage } from '../js/router.js';
+
+describe('Router > renderCMSPage', () => {
+  let app;
+
+  beforeEach(() => {
+    global.fetch = vi.fn();
+    app = document.createElement('div');
+    app.id = 'App';
+    document.body.appendChild(app);
+  });
+
+  afterEach(() => {
+    app.remove();
+  });
+
+  it('renders CMS page from API response', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'About', body: '<p>About me.</p>' }),
+    });
+    await renderCMSPage('about');
+    expect(app.querySelector('.cms-page__title').textContent).toBe('About');
+    expect(app.querySelector('.cms-page__body').innerHTML).toBe('<p>About me.</p>');
+  });
+
+  it('renders 404 when page returns 404', async () => {
+    global.fetch.mockResolvedValue({ ok: false, status: 404 });
+    await renderCMSPage('missing');
+    expect(app.querySelector('.error-404')).not.toBeNull();
+  });
+
+  it('escapes XSS in page title', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: '<script>xss</script>', body: '' }),
+    });
+    await renderCMSPage('xss');
+    expect(app.innerHTML).not.toContain('<script>xss');
+  });
+});
+
+// ── render404 ─────────────────────────────────────────────────────────────────
+
+import { render404 } from '../js/router.js';
+
+describe('Router > render404', () => {
+  let app;
+
+  beforeEach(() => {
+    app = document.createElement('div');
+    app.id = 'App';
+    document.body.appendChild(app);
+  });
+
+  afterEach(() => {
+    if (document.getElementById('App')) app.remove();
+  });
+
+  it('renders the error-404 element', () => {
+    render404();
+    expect(app.querySelector('.error-404')).not.toBeNull();
+    expect(app.querySelector('.error-404').textContent).toContain('not found');
+  });
+
+  it('does not throw when App element is absent', () => {
+    app.remove();
+    expect(() => render404()).not.toThrow();
+  });
+});
+
+// ── navigate ──────────────────────────────────────────────────────────────────
+
+import { navigate } from '../js/router.js';
+
+describe('Router > navigate', () => {
+  let app;
+
+  beforeEach(() => {
+    global.fetch = vi.fn();
+    app = document.createElement('div');
+    app.id = 'App';
+    document.body.appendChild(app);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    app.remove();
+  });
+
+  it('pushes state to history', () => {
+    global.fetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    const pushSpy = vi.spyOn(history, 'pushState');
+    navigate('/blog');
+    expect(pushSpy).toHaveBeenCalledWith({}, '', '/blog');
+    pushSpy.mockRestore();
+  });
+
+  it('triggers a fetch for the target path', async () => {
+    global.fetch.mockResolvedValue({ ok: true, json: async () => [] });
+    await navigate('/blog');
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/posts'));
+  });
+});

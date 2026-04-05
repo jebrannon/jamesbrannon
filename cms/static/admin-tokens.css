@@ -12,12 +12,9 @@
   --jb-light:         #FBFBFB;
   --jb-primary:       #0FCE8F;   /* primary / accent */
   --jb-secondary:     #FF6E70;   /* errors / warnings */
-  --jb-dark-grey:     #424242;
-  --jb-light-grey:    #F1F1F1;
-
-  /* ── Brand mark ─────────────────────────────────────────────────────────── */
-  --jb-brand-mark-light: #FBFBFB;   /* logo paths on dark backgrounds */
-  --jb-brand-mark-dark:  #1E1E1E;   /* logo paths on light backgrounds */
+  --jb-grey-dark:     #424242;
+  --jb-grey-mild:     #929292;   /* placeholder text */
+  --jb-grey-light:    #F1F1F1;
 
   /* ── Font family ─────────────────────────────────────────────────────────── */
   --font: 'Barlow Semi Condensed', sans-serif;
@@ -66,16 +63,16 @@
   /* ── Sidebar ─────────────────────────────────────────────────────────────── */
   --sidebar-hover-bg: color-mix(in srgb, var(--jb-dark) 80%, black);
 
-  /* ── Fieldset legend ─────────────────────────────────────────────────────── */
-  --legend-fs: 0.8125rem;
-  --legend-fw: 600;
-  --legend-ls: 0.04em;
+  /* ── Radius ──────────────────────────────────────────────────────────────── */
+  --jb-radius: 0.25rem;   /* 4px — applied to inputs, buttons, and UI components */
 
   /* ── Buttons ─────────────────────────────────────────────────────────────── */
-  --jb-btn-radius:    4px;
-  --jb-btn-fs:        var(--fs-small);   /* 0.875rem / 14px */
-  --jb-btn-lh:        var(--lh-h4);      /* 1.4 / ~20px */
+  --jb-btn-radius:    var(--jb-radius);
+  --jb-btn-font:      var(--font);       /* Barlow Semi Condensed */
+  --jb-btn-fs:        1rem;              /* 16px */
+  --jb-btn-lh:        1;                 /* 16px / 16px */
   --jb-btn-fw:        var(--fw-medium);  /* 500 */
+  --jb-btn-padding:   0.75rem 1rem;     /* 12px 16px */
   --jb-btn-transform: none;
 
   /* Primary — green fill, dark text */
@@ -84,22 +81,22 @@
   --jb-btn-primary-hover-bg:     var(--jb-light);
   --jb-btn-primary-hover-text:   var(--jb-dark);
 
-  /* Secondary — dark grey fill, light text */
-  --jb-btn-secondary-bg:           var(--jb-dark-grey);
+  /* Secondary — dark grey fill, light text, no border */
+  --jb-btn-secondary-bg:           var(--jb-grey-dark);
   --jb-btn-secondary-text:         var(--jb-light);
-  --jb-btn-secondary-hover-bg:     var(--jb-dark-grey);
-  --jb-btn-secondary-hover-text:   var(--jb-light);
-  --jb-btn-secondary-border:       var(--jb-light);
+  --jb-btn-secondary-hover-bg:     var(--jb-light);
+  --jb-btn-secondary-hover-text:   var(--jb-dark);
+  --jb-btn-secondary-border:       transparent;
 
   /* Default — transparent, light border */
   --jb-btn-default-text:           var(--jb-light);
-  --jb-btn-default-border:         var(--jb-dark-grey);
+  --jb-btn-default-border:         var(--jb-grey-dark);
   --jb-btn-default-hover-border:   var(--jb-light);
 
-  /* Danger — light fill, dark text; red on hover */
-  --jb-btn-danger-bg:              var(--jb-light);
+  /* Danger — red fill, dark text; light on hover */
+  --jb-btn-danger-bg:              var(--jb-secondary);
   --jb-btn-danger-text:            var(--jb-dark);
-  --jb-btn-danger-hover-bg:        var(--jb-secondary);
+  --jb-btn-danger-hover-bg:        var(--jb-light);
   --jb-btn-danger-hover-text:      var(--jb-dark);
 
 }

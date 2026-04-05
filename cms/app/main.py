@@ -249,6 +249,23 @@ async def oauth_callback(request: Request) -> RedirectResponse:
     return RedirectResponse(url="/admin/")
 
 
+@app.post("/api/preview-svg")
+async def preview_svg(request: Request, file: UploadFile = File(...)) -> JSONResponse:
+    """Auth-gated SVG preview — runs dark-mode injection and returns a data URL. Nothing is saved."""
+    if not request.session.get("username"):
+        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+
+    content = await file.read()
+    if not content.lstrip().startswith(b"<"):
+        return JSONResponse({"error": "Invalid SVG"}, status_code=400)
+
+    from .services.image import _inject_dark_mode
+    import base64
+    processed = _inject_dark_mode(content)
+    data_url = "data:image/svg+xml;base64," + base64.b64encode(processed).decode()
+    return JSONResponse({"preview": data_url})
+
+
 @app.post("/api/upload-image")
 async def upload_block_image(request: Request, file: UploadFile = File(...)) -> JSONResponse:
     """Auth-gated image upload for the block editor media slots."""
