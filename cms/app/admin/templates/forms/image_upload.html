@@ -1,0 +1,59 @@
+{% set fid = field.id %}
+<div x-data="imageUpload()" class="jb-image-upload">
+
+  {# ── Hidden file input, triggered by button ── #}
+  <input type="file"
+         x-ref="fileInput"
+         name="{{ fid }}"
+         id="{{ fid }}"
+         accept="image/*"
+         class="d-none"
+         @change="onFile($event)"
+         {{ 'required' if field.required else '' }}>
+
+  <div class="d-flex align-items-center gap-2">
+    <button type="button" class="btn btn-secondary btn-sm" @click="$refs.fileInput.click()">
+      Choose file
+    </button>
+    <small class="text-muted fst-italic" x-text="filename || 'No file chosen'"></small>
+  </div>
+
+  {% if field.help_text %}
+    <small class="form-hint mt-1 d-block">{{ field.help_text }}</small>
+  {% endif %}
+
+  {# ── Live preview on selection ── #}
+  <div x-show="preview" x-cloak class="mt-3">
+    <img :src="preview" class="jb-image-upload-preview" alt="">
+  </div>
+
+</div>
+
+<style>
+.jb-image-upload-preview {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: var(--btn-radius);
+  display: block;
+}
+</style>
+
+<script>
+(function () {
+  if (window.imageUpload) return;
+  window.imageUpload = function () {
+    return {
+      preview:  null,
+      filename: null,
+      onFile(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+        this.filename = file.name;
+        const reader = new FileReader();
+        reader.onload = ev => { this.preview = ev.target.result; };
+        reader.readAsDataURL(file);
+      },
+    };
+  };
+})();
+</script>

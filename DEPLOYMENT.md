@@ -80,6 +80,10 @@ Full reference for production Lambda environment. All sensitive values come from
 | `CORS_ORIGINS` | `https://jamesbrannon.co.uk` | Comma-separated if multiple origins needed |
 | `S3_BUCKET` | `jamesbrannon-media` | Must be set — absence causes startup failure in production |
 | `S3_BUCKET_REGION` | `eu-west-2` | |
+| `S3_ENDPOINT_URL` | _(unset in production)_ | Only for local dev / MinIO — absence means real AWS S3 |
+| `S3_PUBLIC_BASE_URL` | _(unset in production)_ | Override for public file URL base; defaults to AWS S3 path pattern |
+| `OLLAMA_URL` | _(unset in production)_ | Optional — local LLM for excerpt generation (default: http://localhost:11434) |
+| `OLLAMA_MODEL` | _(unset in production)_ | Optional — Ollama model name (default: llama3.2) |
 
 See `cms/.env.production.example` for the full template.
 

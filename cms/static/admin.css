@@ -1,0 +1,660 @@
+/*
+ *  File:   admin.css
+ *  Info:   CMS admin UI styles — layered on top of Tabler CSS.
+ *          Tokens are defined in admin-tokens.css.
+ *          Load order: tabler.min.css → admin-tokens.css → admin.css
+ *
+ *  Layers:
+ *    1. Tabler remap     — override Tabler/Bootstrap CSS custom properties
+ *    2. Typography       — body, headings, text utilities
+ *    3. Layout           — page structure, navbar, sidebar
+ *    4. Forms            — inputs, labels, cards, fieldsets
+ *    5. Components       — buttons, badges, tables, icons
+ *    6. Singleton pages  — singleton edit page overrides
+ *    7. Block editor     — rich text and block editor
+ *    8. Upload           — SVG and image upload components
+ */
+
+
+/* ── 1. Tabler remap ──────────────────────────────────────────────────────── */
+/*
+ * Remap Tabler's CSS custom properties to our palette.
+ * This is the preferred way to theme Tabler — override their tokens
+ * rather than fighting their selectors with !important.
+ */
+
+:root {
+  --tblr-font-sans-serif: 'Barlow Semi Condensed', -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+[data-bs-theme=dark] {
+  --tblr-body-bg:                      var(--jb-dark);
+  --tblr-bg-surface:                   var(--jb-dark);
+  --tblr-navbar-bg:                    var(--jb-dark);
+  --tblr-body-color:                   var(--jb-light);
+  --tblr-body-color-rgb:               251, 251, 251;
+  --tblr-emphasis-color:               var(--jb-light);
+  --tblr-link-color:                   var(--jb-primary);
+  --tblr-link-hover-color:             var(--jb-primary);
+  --tblr-primary:                      var(--jb-primary);
+  --tblr-primary-rgb:                  15, 206, 143;
+  --tblr-primary-lt:                   rgba(15, 206, 143, .1);
+  --tblr-danger:                       var(--jb-secondary);
+  --tblr-danger-rgb:                   255, 110, 112;
+  --tblr-danger-lt:                    rgba(255, 110, 112, .1);
+  --tblr-border-color:                 var(--jb-dark-grey);
+  --tblr-border-color-translucent:     var(--jb-dark-grey);
+  --tblr-border-active-color:          var(--jb-light-grey);
+  --tblr-border-dark-color:            var(--jb-light-grey);
+}
+
+/* Alpine.js — hide elements before initialisation */
+[x-cloak] { display: none !important; }
+
+
+/* ── 2. Typography ────────────────────────────────────────────────────────── */
+
+body {
+  font-family: var(--font);
+  font-size:   var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
+  color:       var(--jb-light);
+}
+
+p { color: var(--jb-light); }
+
+a       { color: var(--jb-light); }
+a:hover { color: var(--jb-light); }
+
+b, strong { font-weight: var(--fw-bold); }
+
+h1 {
+  font-size:      var(--fs-h1);
+  font-weight:    var(--fw-h1);
+  font-style:     italic;
+  line-height:    var(--lh-h1);
+  letter-spacing: var(--ls-h1);
+  text-transform: uppercase;
+}
+
+/* !important required: Tabler sets h2–h6 with high-specificity component selectors */
+h2 {
+  font-size:   var(--fs-h2) !important;
+  font-weight: var(--fw-h2) !important;
+  font-style:  italic !important;
+  line-height: var(--lh-h2) !important;
+}
+h3 {
+  font-size:   var(--fs-h3) !important;
+  font-weight: var(--fw-h3) !important;
+  font-style:  italic !important;
+  line-height: var(--lh-h3) !important;
+}
+h4 {
+  font-size:   var(--fs-h4) !important;
+  font-weight: var(--fw-h4) !important;
+  font-style:  italic !important;
+  line-height: var(--lh-h4) !important;
+}
+h5, h6 {
+  font-size:      var(--fs-h5) !important;
+  font-weight:    var(--fw-h5) !important;
+  font-style:     italic !important;
+  line-height:    var(--lh-h5) !important;
+  letter-spacing: var(--ls-h5) !important;
+  text-transform: uppercase !important;
+}
+
+/* Reset our heading scale inside the sidebar — starlette-admin uses h1/h3 there */
+.navbar-vertical h1,
+.navbar-vertical h2,
+.navbar-vertical h3 {
+  font-size:      revert !important;
+  font-weight:    revert !important;
+  font-style:     revert !important;
+  line-height:    revert !important;
+  letter-spacing: revert !important;
+  text-transform: revert !important;
+}
+
+/* Utility text colours */
+.text-muted     { color: var(--jb-light-grey) !important; }
+.text-secondary { color: var(--jb-light) !important; }
+
+/* SEO settings panel summary label */
+details summary { color: var(--jb-light) !important; }
+
+
+/* ── 3. Layout ────────────────────────────────────────────────────────────── */
+
+/* Brand logo in sidebar */
+.navbar-logo {
+  width:   var(--navbar-logo-w);
+  height:  var(--navbar-logo-h);
+  display: block;
+  margin:  0;
+}
+
+/* Tabler uses 3-class specificity on .navbar-brand — match it to override */
+.navbar-vertical.navbar-expand-lg .navbar-brand {
+  align-self:      flex-start;
+  justify-content: flex-start;
+  padding:         var(--page-padding) var(--page-padding-sm) var(--page-padding-sm);
+}
+
+/* Hide mobile user-icon dropdown — logout is in the sidebar nav */
+.navbar-vertical .navbar-nav.flex-row.d-lg-none {
+  display: none !important;
+}
+
+/* Sidebar nav — hover and active states */
+.navbar-vertical .nav-link:hover,
+.navbar-vertical .nav-link.active,
+.navbar-vertical .dropdown-item:hover,
+.navbar-vertical .dropdown-item.active {
+  background-color: var(--sidebar-hover-bg);
+}
+
+/* Page header — top/side padding, reduced bottom before content */
+.jb-page-header {
+  padding: var(--page-padding) var(--page-padding) var(--page-padding-sm);
+}
+
+/* Page body — fills remaining height */
+.jb-page-body {
+  padding: 0 var(--page-padding) var(--page-padding);
+  flex: 1;
+}
+
+/* Responsive — tighten side padding on small screens */
+@media (max-width: 768px) {
+  .jb-page-header,
+  .jb-page-body {
+    padding-left:  var(--page-padding-sm);
+    padding-right: var(--page-padding-sm);
+  }
+}
+
+/* Neutralise the container-fluid > row > col-12 starlette-admin injects */
+.jb-page-body > .container-fluid {
+  --tblr-gutter-x: 0;
+  padding: 0;
+}
+
+/* List page toolbar */
+.jb-list-toolbar {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  gap:             1rem;
+  margin-bottom:   1rem;
+}
+.jb-list-toolbar-left {
+  display:     flex;
+  align-items: center;
+  gap:         .75rem;
+  flex:        1;
+}
+.jb-list-toolbar-left .input-icon {
+  flex:      1;
+  max-width: 320px;
+}
+
+/* DataTables pagination spacing */
+.dataTables_wrapper .dataTables_paginate { padding: .75rem 0; }
+.dataTables_wrapper .dataTables_info     { padding: .75rem 0; }
+
+
+/* ── 4. Forms ─────────────────────────────────────────────────────────────── */
+
+/* Inputs and selects */
+.form-control,
+.form-select {
+  background-color: var(--jb-dark-grey);
+  border-color:     var(--jb-dark-grey);
+  color:            var(--jb-light);
+}
+.form-control::placeholder,
+textarea::placeholder,
+input::placeholder {
+  color:   var(--jb-light-grey);
+  opacity: 1;
+}
+.form-control:focus,
+.form-select:focus {
+  background-color: var(--jb-dark-grey);
+  border-color:     var(--jb-light);
+  color:            var(--jb-light);
+  box-shadow:       none;
+}
+.form-control:-webkit-autofill {
+  -webkit-text-fill-color: var(--jb-light);
+  box-shadow: 0 0 0 1000px var(--jb-dark-grey) inset;
+}
+
+/* Checkboxes and radio inputs */
+.form-check-input {
+  background-color: var(--jb-light);
+  border-color:     var(--jb-light);
+}
+
+/* Labels — !important required to override Bootstrap's utility specificity */
+.form-label,
+label {
+  color:          var(--jb-light) !important;
+  font-size:      var(--fs-h5) !important;
+  font-weight:    var(--fw-h5) !important;
+  font-style:     italic !important;
+  line-height:    var(--lh-h5) !important;
+  letter-spacing: var(--ls-h5) !important;
+  text-transform: uppercase !important;
+}
+
+/* Hints and helper text */
+.form-hint,
+.form-text,
+small {
+  color:          var(--jb-light) !important;
+  font-size:      var(--fs-small) !important;
+  font-weight:    var(--fw-body) !important;
+  font-style:     normal !important;
+  line-height:    var(--lh-small) !important;
+  letter-spacing: normal !important;
+  text-transform: none !important;
+}
+
+/* Field labels with extra top spacing (e.g. Brand upload fields) */
+.jb-field-label { margin-top: .5rem; }
+
+/* Fieldset legends */
+.jb-fieldset-legend {
+  color:          var(--jb-light);
+  font-size:      var(--legend-fs);
+  font-weight:    var(--legend-fw);
+  letter-spacing: var(--legend-ls);
+  text-transform: uppercase;
+}
+
+/* Form page card — strip all chrome */
+.card:has(> form) {
+  border:     none;
+  box-shadow: none;
+}
+.card:has(> form) .card-header,
+.card:has(> form) .card-header > * {
+  padding-left: 0;
+  margin-left:  0;
+}
+.card > form > .card-body {
+  padding: 0;
+  border:  none !important;
+}
+.card > form > .card-footer {
+  padding:    0;
+  margin:     0;
+  background: none;
+  border:     none !important;
+}
+
+
+/* ── 5. Components ────────────────────────────────────────────────────────── */
+
+/* ── Buttons ── */
+.btn {
+  border-radius:  var(--jb-btn-radius);
+  font-size:      var(--jb-btn-fs);
+  line-height:    var(--jb-btn-lh);
+  font-weight:    var(--jb-btn-fw);
+  text-transform: var(--jb-btn-transform);
+}
+
+.btn-primary {
+  --tblr-btn-bg:             var(--jb-btn-primary-bg);
+  --tblr-btn-border-color:   var(--jb-btn-primary-bg);
+  --tblr-btn-color:          var(--jb-btn-primary-text);
+  --tblr-btn-hover-bg:       var(--jb-btn-primary-hover-bg);
+  --tblr-btn-hover-color:    var(--jb-btn-primary-hover-text);
+  --tblr-btn-active-bg:      var(--jb-btn-primary-hover-bg);
+  --tblr-btn-active-color:   var(--jb-btn-primary-hover-text);
+  --tblr-btn-disabled-color: var(--jb-btn-primary-text);
+}
+
+.btn-secondary {
+  --tblr-btn-bg:                 var(--jb-btn-secondary-bg);
+  --tblr-btn-border-color:       var(--jb-btn-secondary-bg);
+  --tblr-btn-color:              var(--jb-btn-secondary-text);
+  --tblr-btn-hover-bg:           var(--jb-btn-secondary-hover-bg);
+  --tblr-btn-hover-color:        var(--jb-btn-secondary-hover-text);
+  --tblr-btn-hover-border-color: var(--jb-btn-secondary-border);
+  --tblr-btn-active-bg:          var(--jb-btn-secondary-hover-bg);
+  --tblr-btn-active-color:       var(--jb-btn-secondary-hover-text);
+}
+
+.btn-danger {
+  --tblr-btn-bg:                 var(--jb-btn-danger-bg);
+  --tblr-btn-border-color:       transparent;
+  --tblr-btn-color:              var(--jb-btn-danger-text);
+  --tblr-btn-hover-bg:           var(--jb-btn-danger-hover-bg);
+  --tblr-btn-hover-color:        var(--jb-btn-danger-hover-text);
+  --tblr-btn-hover-border-color: transparent;
+  --tblr-btn-active-bg:          var(--jb-btn-danger-hover-bg);
+  --tblr-btn-active-color:       var(--jb-btn-danger-hover-text);
+  background-color: var(--jb-btn-danger-bg);
+  border-color:     transparent;
+  color:            var(--jb-btn-danger-text);
+}
+
+/* Default — transparent bg, light border */
+.btn:not(.btn-primary):not(.btn-secondary):not(.btn-danger) {
+  --tblr-btn-color:              var(--jb-btn-default-text);
+  --tblr-btn-border-color:       var(--jb-btn-default-border);
+  --tblr-btn-hover-color:        var(--jb-btn-default-text);
+  --tblr-btn-hover-border-color: var(--jb-btn-default-hover-border);
+  color:        var(--jb-btn-default-text);
+  border-color: var(--jb-btn-default-border);
+}
+.btn:not(.btn-primary):not(.btn-secondary):not(.btn-danger):hover {
+  border-color: var(--jb-btn-default-hover-border);
+}
+
+/* Card footer — correct starlette-admin defaults */
+/* Save uses btn-success (not in our system) — remap to primary */
+.card-footer .btn-success {
+  --tblr-btn-bg:          var(--jb-btn-primary-bg);
+  --tblr-btn-border-color: var(--jb-btn-primary-bg);
+  --tblr-btn-color:        var(--jb-btn-primary-text);
+  --tblr-btn-hover-bg:     var(--jb-btn-primary-hover-bg);
+  --tblr-btn-hover-color:  var(--jb-btn-primary-hover-text);
+  background-color: var(--jb-btn-primary-bg);
+  border-color:     var(--jb-btn-primary-bg);
+  color:            var(--jb-btn-primary-text);
+}
+/* Cancel uses btn-danger — remap to default (not destructive) */
+.card-footer a.btn-danger {
+  --tblr-btn-bg:                 transparent;
+  --tblr-btn-border-color:       var(--jb-btn-default-border);
+  --tblr-btn-color:              var(--jb-btn-default-text);
+  --tblr-btn-hover-bg:           transparent;
+  --tblr-btn-hover-color:        var(--jb-btn-default-text);
+  --tblr-btn-hover-border-color: var(--jb-btn-default-hover-border);
+  background-color: transparent;
+  border-color:     var(--jb-btn-default-border);
+  color:            var(--jb-btn-default-text);
+}
+.card-footer a.btn-danger:hover {
+  border-color: var(--jb-btn-default-hover-border);
+}
+
+/* ── Badges ── */
+.badge {
+  font-size:      var(--fs-h5) !important;
+  font-weight:    var(--fw-h5) !important;
+  font-style:     italic !important;
+  line-height:    var(--lh-h5) !important;
+  letter-spacing: var(--ls-h5) !important;
+  text-transform: uppercase !important;
+}
+.badge.bg-warning {
+  background-color: var(--jb-secondary) !important;
+  color:            var(--jb-dark) !important;
+}
+.badge.bg-success {
+  background-color: var(--jb-primary) !important;
+  color:            var(--jb-dark) !important;
+}
+
+/* ── Tables ── */
+thead th,
+.table > thead > tr > th {
+  background-color: var(--jb-dark-grey) !important;
+  color:            var(--jb-light) !important;
+}
+.card-footer {
+  background-color: var(--jb-dark-grey);
+}
+.disabled > .page-link {
+  color: var(--jb-light-grey) !important;
+}
+
+/* ── Sidebar icons — replace FontAwesome glyphs with brand SVGs ── */
+.fa-home::before,
+.fa-pencil::before,
+.fa-sign-out::before { content: '' !important; }
+.fa-home,
+.fa-pencil,
+.fa-sign-out {
+  display:        inline-block !important;
+  width:          16px;
+  height:         16px;
+  background:     center / contain no-repeat;
+  vertical-align: -3px;
+}
+.fa-home     { background-image: url('/static/icons/home.svg'); }
+.fa-pencil   { background-image: url('/static/icons/message.svg'); }
+.fa-sign-out { background-image: url('/static/icons/logout.svg'); }
+
+/* ── Muted icon colour (used on placeholder SVGs e.g. analytics chart) ── */
+.jb-icon-muted { color: var(--jb-light-grey); }
+
+
+/* ── 6. Singleton pages ───────────────────────────────────────────────────── */
+/*
+ * Singleton edit pages (Brand, SEO, Profile etc.) don't need a card header
+ * or the extra "Save and add another" / "Save and continue editing" buttons.
+ */
+.jb-singleton .card-header                { display: none !important; }
+.jb-singleton button[name="_add_another"],
+.jb-singleton button[name="_continue_editing"] { display: none !important; }
+
+
+/* ── 7. Block editor ──────────────────────────────────────────────────────── */
+
+.jb-blocks-editor { margin-bottom: 1rem; }
+
+.jb-block {
+  border:        1px solid var(--tblr-border-color);
+  border-radius: 6px;
+  margin-bottom: .75rem;
+  padding:       .75rem;
+  background:    var(--tblr-bg-surface);
+  transition:    opacity .2s;
+}
+.jb-block--dragging { opacity: .4; }
+
+.jb-block-header {
+  display:       flex;
+  align-items:   center;
+  gap:           .4rem;
+  margin-bottom: .5rem;
+}
+
+.jb-drag-handle { cursor: grab; font-size: 1.1rem; color: var(--jb-light-grey); }
+
+.jb-block-num {
+  flex:           1;
+  font-size:      var(--fs-h5);
+  color:          var(--jb-light-grey);
+  text-transform: uppercase;
+  letter-spacing: .04em;
+}
+
+.jb-block-media  { margin-top: .5rem; }
+
+.jb-media-item {
+  border:        1px solid var(--tblr-border-color);
+  border-radius: var(--jb-btn-radius);
+  padding:       .5rem;
+  margin-bottom: .4rem;
+  background:    var(--jb-dark);
+}
+.jb-media-item-header {
+  display:         flex;
+  align-items:     center;
+  justify-content: space-between;
+  margin-bottom:   .4rem;
+}
+.jb-media-item-label {
+  font-size:      .7rem;
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color:          var(--jb-light-grey);
+}
+
+.jb-image-preview { max-width: 100%; max-height: 200px; border-radius: var(--jb-btn-radius); display: block; }
+
+.jb-add-media { display: flex; gap: .35rem; margin-top: .35rem; }
+
+/* Rich text editor */
+.jb-rich-text { margin-bottom: .5rem; }
+
+.jb-toolbar { display: flex; gap: .25rem; margin-bottom: .35rem; }
+
+.jb-text-body {
+  min-height: 80px;
+  padding:    .5rem;
+  border:     1px solid var(--tblr-border-color);
+  border-radius: var(--jb-btn-radius);
+  background: var(--jb-dark-grey);
+  color:      var(--jb-light);
+  outline:    none;
+  line-height: var(--lh-body);
+}
+.jb-text-body:focus { border-color: var(--jb-light); }
+.jb-text-body:empty:before {
+  content:        attr(placeholder);
+  color:          var(--jb-light-grey);
+  pointer-events: none;
+}
+
+/* Small utility buttons (move ↑↓, ✕, + Image) */
+.jb-btn-sm {
+  padding:       .15rem .45rem;
+  font-size:     var(--fs-h5);
+  font-weight:   var(--jb-btn-fw);
+  border:        1px solid var(--jb-btn-default-border);
+  border-radius: var(--jb-btn-radius);
+  background:    transparent;
+  color:         inherit;
+  cursor:        pointer;
+  line-height:   var(--jb-btn-lh);
+}
+.jb-btn-sm:disabled { opacity: .4; cursor: not-allowed; }
+.jb-btn-sm.active {
+  background:   var(--jb-btn-primary-bg);
+  color:        var(--jb-btn-primary-text);
+  border-color: var(--jb-btn-primary-bg);
+}
+
+/* Danger modifier for small buttons */
+.jb-btn-danger {
+  border-color: var(--jb-secondary);
+  color:        var(--jb-secondary);
+}
+
+/* Toolbar formatting buttons (B, I, H2 …) */
+.jb-toolbar-btn {
+  padding:       .15rem .45rem;
+  font-size:     var(--jb-btn-fs);
+  font-weight:   var(--jb-btn-fw);
+  border:        1px solid var(--jb-btn-default-border);
+  border-radius: var(--jb-btn-radius);
+  background:    transparent;
+  color:         inherit;
+  cursor:        pointer;
+  min-width:     2rem;
+  line-height:   var(--jb-btn-lh);
+}
+.jb-toolbar-btn:hover {
+  background:   var(--jb-btn-primary-bg);
+  color:        var(--jb-btn-primary-text);
+  border-color: var(--jb-btn-primary-bg);
+}
+
+/* Add section button */
+.jb-add-block {
+  width:          100%;
+  padding:        .5rem;
+  border:         1px solid var(--jb-btn-secondary-bg);
+  border-radius:  6px;
+  background:     var(--jb-btn-secondary-bg);
+  color:          var(--jb-btn-secondary-text);
+  cursor:         pointer;
+  font-size:      var(--jb-btn-fs);
+  font-weight:    var(--jb-btn-fw);
+  text-align:     center;
+}
+.jb-add-block:hover { border-color: var(--jb-btn-secondary-border); }
+
+
+/* ── 8. Upload components ─────────────────────────────────────────────────── */
+
+/* Progress bar */
+.jb-svg-progress {
+  height:        3px;
+  border-radius: 2px;
+  background:    var(--tblr-border-color);
+  overflow:      hidden;
+  margin-top:    .5rem;
+}
+.jb-svg-progress-bar {
+  height:     100%;
+  background: var(--jb-primary);
+  transition: width .1s linear;
+}
+
+/* Preview row */
+.jb-svg-preview-row {
+  display:     flex;
+  align-items: flex-end;
+  gap:         .75rem;
+  flex-wrap:   wrap;
+}
+
+/* Swatch container */
+.jb-svg-swatch {
+  display:         flex;
+  align-items:     center;
+  justify-content: center;
+  border-radius:   var(--jb-btn-radius);
+  flex-shrink:     0;
+  padding:         .5rem;
+}
+.jb-svg-swatch img { object-fit: contain; }
+
+/* Light / dark swatch variants — replaces inline style= */
+.jb-svg-swatch--light { background: var(--jb-light); }
+.jb-svg-swatch--dark  { background: var(--jb-dark); }
+.jb-svg-swatch--dark img { filter: invert(1); }
+
+/* Drag-over state on the button */
+.jb-svg-dragover-zone .btn {
+  border-color: var(--jb-btn-primary-bg) !important;
+  background:   rgba(15, 206, 143, .06);
+}
+
+/* Pixel-rendering for small PNG previews */
+.jb-pixel-preview { image-rendering: pixelated; }
+
+/* Saved-asset preview (below file input on Brand edit) */
+.jb-asset-current { padding-top: .75rem; }
+
+/* Logo preview — 80px height */
+.jb-svg-preview-row--logo .jb-svg-swatch img {
+  height: 80px;
+  width:  auto;
+}
+
+/* Favicon preview — 24px height */
+.jb-svg-preview-row--favicon .jb-svg-swatch img {
+  height: 24px;
+  width:  auto;
+}
+
+/* Uploaded image preview (hero, block images) */
+.jb-image-upload-preview {
+  max-width:     100%;
+  max-height:    200px;
+  border-radius: var(--jb-btn-radius);
+  display:       block;
+}

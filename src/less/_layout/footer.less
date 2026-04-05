@@ -1,0 +1,45 @@
+/*
+ *  File :    _layout/footer.less
+ *  Info :    Persistent site footer — contact links from Brand settings.
+ *  Usage :   @import "_layout/footer";
+ *
+ */
+
+
+#Footer {
+	background-color: @colour-dark;
+	color: @colour-light;
+	padding: 40px 60px;
+	text-align: center;
+
+	.footer__nav {
+		display: flex;
+		flex-wrap: wrap;
+		justify-content: center;
+		gap: 8px 32px;
+		list-style: none;
+		margin: 0;
+		padding: 0;
+	}
+
+	.footer__copyright {
+		color: @colour-light;
+		font-size: 0.75rem;
+		margin: 24px 0 0;
+		opacity: 0.5;
+	}
+
+	.footer__link {
+		color: @colour-light;
+		font-size: 0.85rem;
+		font-weight: 500;
+		letter-spacing: 0.05em;
+		text-decoration: none;
+		text-transform: uppercase;
+		.transition(color 0.2s ease);
+
+		&:hover {
+			color: @colour-accent;
+		}
+	}
+}

@@ -44,7 +44,7 @@
     function makeBtn(label, isPrimary, publishedValue) {
         var btn = document.createElement('button');
         btn.type = 'button';
-        btn.className = 'btn' + (isPrimary ? ' btn-primary' : '');
+        btn.className = 'btn' + (isPrimary ? ' btn-primary' : ' btn-secondary');
         btn.textContent = label;
         btn.addEventListener('click', function () {
             cb.checked = publishedValue;

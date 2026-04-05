@@ -36,6 +36,7 @@ release/
 # Uploaded content — generated at runtime, not source files
 cms/static/post-images/
 cms/static/favicons/
+cms/static/logos/
 
 # AWS / CDK
 cdk.out/
@@ -55,4 +56,6 @@ desktop.ini
 *.sublime-*
 
 # Logs
+*.log
 npm-debug.log*
+yarn-error.log

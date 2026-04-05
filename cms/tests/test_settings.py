@@ -12,8 +12,8 @@ def test_brand_returns_empty_when_not_set(client):
 def test_brand_returns_settings_when_set(client):
     from app.db import put_setting
     put_setting("BRAND", {
-        "favicon_light_url": "/static/favicons/favicon-light.svg",
-        "favicon_dark_url": "/static/favicons/favicon-dark.svg",
+        "logo_url": "/static/logos/logo.svg",
+        "favicon_url": "/static/favicons/favicon.svg",
         "linkedin": "https://linkedin.com/in/jamesbrannon",
         "instagram": "https://instagram.com/jamesbrannon",
         "email": "me@jamesbrannon.co.uk",
@@ -21,11 +21,29 @@ def test_brand_returns_settings_when_set(client):
     response = client.get("/api/settings/brand")
     assert response.status_code == 200
     data = response.json()
-    assert data["favicon_light_url"] == "/static/favicons/favicon-light.svg"
-    assert data["favicon_dark_url"] == "/static/favicons/favicon-dark.svg"
+    assert data["logo_url"] == "/static/logos/logo.svg"
+    assert data["favicon_url"] == "/static/favicons/favicon.svg"
     assert data["linkedin"] == "https://linkedin.com/in/jamesbrannon"
     assert data["instagram"] == "https://instagram.com/jamesbrannon"
     assert data["email"] == "me@jamesbrannon.co.uk"
+
+
+def test_brand_logo_url_returned(client):
+    """logo_url is included in the brand response when set."""
+    from app.db import put_setting
+    put_setting("BRAND", {"logo_url": "/static/logos/logo.svg"})
+    response = client.get("/api/settings/brand")
+    assert response.status_code == 200
+    assert response.json()["logo_url"] == "/static/logos/logo.svg"
+
+
+def test_brand_favicon_url_returned(client):
+    """favicon_url is included in the brand response when set."""
+    from app.db import put_setting
+    put_setting("BRAND", {"favicon_url": "/static/favicons/favicon.svg"})
+    response = client.get("/api/settings/brand")
+    assert response.status_code == 200
+    assert response.json()["favicon_url"] == "/static/favicons/favicon.svg"
 
 
 def test_brand_partial_settings(client):

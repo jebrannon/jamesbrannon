@@ -403,6 +403,22 @@ class CategorySelectField(StringField):
         self.form_template = "forms/category_select.html"
 
 
+class SvgFileField(FileField):
+    """FileField with SVG-specific upload progress + light/dark live preview."""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.form_template = "forms/svg_upload.html"
+
+
+class ImageFileField(FileField):
+    """FileField with a styled Choose file button and single image preview."""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.form_template = "forms/image_upload.html"
+
+
 class SlugAutoFillField(StringField):
     """Slug field that auto-fills from the title (posts) or name (categories) on create."""
     def __post_init__(self) -> None:
@@ -424,7 +440,7 @@ class PostView(ContentView):
         RichTextField("excerpt", label="Excerpt", required=False,
                       help_text="Leave blank to auto-generate from content on save",
                       exclude_from_list=True),
-        FileField(
+        ImageFileField(
             "hero_image",
             label="Hero Image",
             required=False,
@@ -607,37 +623,28 @@ class BrandView(SingletonView):
     edit_template = "brand_edit.html"
 
     fields = [
-        # Favicon uploads — SVG files are saved and converted to PNG variants
-        FileField(
-            "favicon_light",
-            label="Favicon — Light Mode",
-            help_text=(
-                "Upload an SVG. PNGs are auto-generated at 16 × 16, 32 × 32, "
-                "192 × 192 and 512 × 512 px. "
-                "Requires libcairo — brew install cairo (macOS) or "
-                "apt install libcairo2 (Linux)."
-            ),
+        # Logo upload — SVG only; stored as-is for dynamic colour theming on the Site
+        SvgFileField(
+            "logo",
+            label="Logo",
+            help_text="Upload your logo. SVG files only.",
             required=False,
             accept=".svg,image/svg+xml",
         ),
-        FileField(
-            "favicon_dark",
-            label="Favicon — Dark Mode",
-            help_text=(
-                "Shown when the visitor's device is in dark mode. "
-                "Falls back to the light favicon if not set. "
-                "Same SVG → PNG conversion applies."
-            ),
-            required=False,
-            accept=".svg,image/svg+xml",
-        ),
-        # URL display — excluded from forms, visible in list/detail only
         StringField(
-            "favicon_light_url", label="Light Favicon URL",
+            "logo_url", label="Logo URL",
             exclude_from_create=True, exclude_from_edit=True, required=False,
         ),
+        # Favicon upload — single SVG; embed @media (prefers-color-scheme: dark) for auto-switching
+        SvgFileField(
+            "favicon",
+            label="Favicon",
+            help_text="Upload your favicon. SVG files only.",
+            required=False,
+            accept=".svg,image/svg+xml",
+        ),
         StringField(
-            "favicon_dark_url", label="Dark Favicon URL",
+            "favicon_url", label="Favicon URL",
             exclude_from_create=True, exclude_from_edit=True, required=False,
         ),
         URLField("linkedin", label="LinkedIn URL", required=False),
@@ -654,8 +661,8 @@ class BrandView(SingletonView):
     def _defaults(self) -> Dict:
         return {
             "key": self.SETTINGS_KEY,
-            "favicon_light_url": "",
-            "favicon_dark_url": "",
+            "logo_url": "",
+            "favicon_url": "",
             "linkedin": "",
             "linkedin_text": "",
             "instagram": "",
@@ -664,11 +671,9 @@ class BrandView(SingletonView):
             "email_text": "",
         }
 
-    async def _save_favicon(
-        self, field_value: Any, save_name: str, existing_url: str
-    ) -> str:
+    async def _save_favicon(self, field_value: Any, existing_url: str) -> str:
         """
-        Process a FileField value: save the SVG and generate PNG variants.
+        Process the favicon FileField value: save the SVG and generate PNG variants.
         Returns the new URL if a file was uploaded, otherwise the existing URL.
         """
         file, should_delete = _unpack_file(field_value)
@@ -678,20 +683,30 @@ class BrandView(SingletonView):
             content = await file.read()
             if content:
                 from ..services.image import save_favicon
-                return save_favicon(content, save_name)
+                return save_favicon(content, "favicon")
+        return existing_url
+
+    async def _save_logo(self, field_value: Any, existing_url: str) -> str:
+        """Process the logo FileField value. Returns the new URL or the existing one."""
+        file, should_delete = _unpack_file(field_value)
+        if should_delete:
+            return ""
+        if file and hasattr(file, "read") and getattr(file, "filename", ""):
+            content = await file.read()
+            if content:
+                from ..services.image import save_logo
+                return save_logo(content)
         return existing_url
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
         existing = get_setting(self.SETTINGS_KEY) or {}
-        data["favicon_light_url"] = await self._save_favicon(
-            data.pop("favicon_light", None),
-            "favicon-light",
-            existing.get("favicon_light_url", ""),
+        data["logo_url"] = await self._save_logo(
+            data.pop("logo", None),
+            existing.get("logo_url", ""),
         )
-        data["favicon_dark_url"] = await self._save_favicon(
-            data.pop("favicon_dark", None),
-            "favicon-dark",
-            existing.get("favicon_dark_url", ""),
+        data["favicon_url"] = await self._save_favicon(
+            data.pop("favicon", None),
+            existing.get("favicon_url", ""),
         )
         data.pop("key", None)
         put_setting(self.SETTINGS_KEY, data)
@@ -701,15 +716,13 @@ class BrandView(SingletonView):
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
         existing = get_setting(self.SETTINGS_KEY) or {}
-        data["favicon_light_url"] = await self._save_favicon(
-            data.pop("favicon_light", None),
-            "favicon-light",
-            existing.get("favicon_light_url", ""),
+        data["logo_url"] = await self._save_logo(
+            data.pop("logo", None),
+            existing.get("logo_url", ""),
         )
-        data["favicon_dark_url"] = await self._save_favicon(
-            data.pop("favicon_dark", None),
-            "favicon-dark",
-            existing.get("favicon_dark_url", ""),
+        data["favicon_url"] = await self._save_favicon(
+            data.pop("favicon", None),
+            existing.get("favicon_url", ""),
         )
         data.pop("key", None)
         put_setting(self.SETTINGS_KEY, data)

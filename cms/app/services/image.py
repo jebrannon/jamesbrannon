@@ -2,6 +2,7 @@
 import io
 import logging
 import os
+import re
 from pathlib import Path
 from typing import List, Tuple
 
@@ -14,6 +15,8 @@ POST_IMAGES_DIR = Path(__file__).parent.parent.parent / "static" / "post-images"
 POST_IMAGES_DIR.mkdir(parents=True, exist_ok=True)
 FAVICON_DIR = Path(__file__).parent.parent.parent / "static" / "favicons"
 FAVICON_DIR.mkdir(parents=True, exist_ok=True)
+LOGO_DIR = Path(__file__).parent.parent.parent / "static" / "logos"
+LOGO_DIR.mkdir(parents=True, exist_ok=True)
 
 THUMB_SIZE = (1200, 630)
 EXPECTED_FAVICON_SIZES = [16, 32, 192, 512]
@@ -142,14 +145,81 @@ def save_block_image(image_bytes: bytes, name: str, ext: str) -> str:
     return f"/static/post-images/block-{name}{ext}"
 
 
-def save_favicon(svg_bytes: bytes, save_name: str) -> str:
+def _inject_dark_mode(svg_bytes: bytes) -> bytes:
     """
-    Save a favicon SVG and generate PNG variants at standard sizes.
+    Automatically add a @media (prefers-color-scheme: dark) rule to an SVG.
+
+    - If the SVG already contains a prefers-color-scheme rule, it is returned unchanged.
+    - Otherwise, the dominant fill colour is sampled to decide whether the mark is dark
+      or light, and a style block is injected that flips fills to the opposite tone in
+      dark mode.
+    """
+    try:
+        svg_str = svg_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return svg_bytes
+
+    if "prefers-color-scheme" in svg_str:
+        return svg_bytes
+
+    # Collect all hex fill/stroke values (skip 'none')
+    colours = re.findall(
+        r'(?:fill|stroke)\s*[=:]\s*["\']?\s*(#[0-9a-fA-F]{3,6})\b',
+        svg_str,
+        re.IGNORECASE,
+    )
+    if not colours:
+        return svg_bytes
+
+    def _luminance(h: str) -> float:
+        h = h.lstrip("#")
+        if len(h) == 3:
+            h = h[0] * 2 + h[1] * 2 + h[2] * 2
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+    avg = sum(_luminance(c) for c in colours) / len(colours)
+    flip_to = "#FBFBFB" if avg < 0.5 else "#2D2D2D"
+
+    style = (
+        "<style>"
+        "@media (prefers-color-scheme: dark) {"
+        f" path, circle, rect, polygon, ellipse {{ fill: {flip_to}; }}"
+        "}"
+        "</style>"
+    )
+    svg_str = re.sub(r"(<svg\b[^>]*>)", rf"\1{style}", svg_str, count=1, flags=re.IGNORECASE)
+    return svg_str.encode("utf-8")
+
+
+def save_logo(svg_bytes: bytes) -> str:
+    """
+    Save the site logo SVG, injecting dark-mode support if not already present.
     Uploads to S3/MinIO if configured, otherwise saves to local filesystem.
 
     Returns:
         Public URL of the saved SVG.
     """
+    svg_bytes = _inject_dark_mode(svg_bytes)
+
+    if _USE_S3:
+        return _upload_to_s3(svg_bytes, "logos/logo.svg", "image/svg+xml")
+
+    logo_path = LOGO_DIR / "logo.svg"
+    logo_path.write_bytes(svg_bytes)
+    return "/static/logos/logo.svg"
+
+
+def save_favicon(svg_bytes: bytes, save_name: str) -> str:
+    """
+    Save a favicon SVG (with dark-mode support auto-injected if absent) and
+    generate PNG variants at standard sizes.
+    Uploads to S3/MinIO if configured, otherwise saves to local filesystem.
+
+    Returns:
+        Public URL of the saved SVG.
+    """
+    svg_bytes = _inject_dark_mode(svg_bytes)
     png_variants = _generate_favicon_pngs(svg_bytes, save_name)
 
     if _USE_S3:

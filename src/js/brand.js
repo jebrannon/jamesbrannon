@@ -33,27 +33,19 @@ export function getBrand() {
 // ── Internal helpers ───────────────────────────────────────────────────────────
 
 function _applyFavicons(brand) {
-  if (!brand) return;
+  if (!brand?.favicon_url) return;
 
-  // Choose favicon variant based on user's colour-scheme preference
-  const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-  const faviconUrl = prefersDark
-    ? (brand.favicon_dark_url || brand.favicon_light_url)
-    : (brand.favicon_light_url || brand.favicon_dark_url);
-
-  if (!faviconUrl) return;
-
-  // Upsert the <link rel="icon"> in <head>
+  // Upsert <link rel="icon"> — the SVG handles light/dark via its own @media rule
   let link = document.querySelector('link[rel="icon"]');
   if (!link) {
     link = document.createElement('link');
     link.rel = 'icon';
     document.head.appendChild(link);
   }
-  link.href = faviconUrl;
+  link.href = brand.favicon_url;
 
-  // Also set the apple-touch-icon to the 192px PNG variant if available
-  const png192 = faviconUrl.replace(/\.svg$/, '-192.png');
+  // Set apple-touch-icon to the 192px PNG variant (generated server-side from the SVG)
+  const png192 = brand.favicon_url.replace(/\.svg$/, '-192.png');
   let apple = document.querySelector('link[rel="apple-touch-icon"]');
   if (!apple) {
     apple = document.createElement('link');

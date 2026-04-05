@@ -163,3 +163,273 @@ describe('Router > fetchJSON', () => {
     await expect(fetchJSON('/api/posts/error')).rejects.toMatchObject({ status: 500 });
   });
 });
+
+// ── route dispatch ────────────────────────────────────────────────────────────
+
+import { route, renderPost, renderBlogListing, renderHomepage, renderCMSPage, render404 } from '../js/router.js';
+
+// Mock footer.js so scrollToFooter is a spy
+vi.mock('../js/footer.js', () => ({
+  scrollToFooter: vi.fn(),
+  renderFooter: vi.fn(),
+  initFooter: vi.fn(),
+}));
+
+import { scrollToFooter } from '../js/footer.js';
+
+describe('Router > route dispatch', () => {
+  let app;
+
+  beforeEach(() => {
+    global.fetch = vi.fn();
+    document.body.className = '';
+    app = document.createElement('div');
+    app.id = 'App';
+    document.body.appendChild(app);
+    vi.clearAllMocks();
+  });
+
+  afterEach(() => {
+    app.remove();
+  });
+
+  it('/ fetches profile settings', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ blog: { limit: 3 } }),
+    });
+    await route('/');
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/settings/profile'));
+  });
+
+  it('/blog fetches posts with limit=100', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => [],
+    });
+    await route('/blog');
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/posts?limit=100'));
+  });
+
+  it('/blog with ?page=2 renders page 2', async () => {
+    const posts = Array.from({ length: 15 }, (_, i) => ({
+      slug: `post-${i + 1}`,
+      title: `Post ${i + 1}`,
+      date: '2024-01-01',
+    }));
+    global.fetch.mockResolvedValue({ ok: true, json: async () => posts });
+    await route('/blog', '?page=2');
+    expect(app.querySelector('.blog-listing__next')).toBeNull();
+    expect(app.querySelector('.blog-listing__prev')).not.toBeNull();
+  });
+
+  it('/blog/{slug} fetches the correct post', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'My Post', slug: 'my-post', body: '<p>Hello</p>' }),
+    });
+    await route('/blog/my-post');
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/posts/my-post'));
+  });
+
+  it('/contact calls scrollToFooter', async () => {
+    await route('/contact');
+    expect(scrollToFooter).toHaveBeenCalled();
+    expect(global.fetch).not.toHaveBeenCalled();
+  });
+
+  it('/{slug} fetches the CMS page by slug', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'About', body: '<p>About me</p>' }),
+    });
+    await route('/about');
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/pages/about'));
+  });
+
+  it('unknown path attempts CMS page lookup', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ title: 'Custom', body: '' }),
+    });
+    await route('/some-custom-page');
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/pages/some-custom-page'));
+  });
+
+  it('unknown path renders 404 when CMS returns 404', async () => {
+    const err = new Error('HTTP 404');
+    err.status = 404;
+    global.fetch.mockRejectedValue(err);
+    await route('/missing');
+    expect(app.querySelector('.error-404')).not.toBeNull();
+  });
+});
+
+// ── renderBlogListing pagination ──────────────────────────────────────────────
+
+describe('Router > renderBlogListing', () => {
+  let app;
+
+  beforeEach(() => {
+    global.fetch = vi.fn();
+    app = document.createElement('div');
+    app.id = 'App';
+    document.body.appendChild(app);
+  });
+
+  afterEach(() => {
+    app.remove();
+  });
+
+  it('renders a list of posts', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => [{ slug: 'hello', title: 'Hello World', date: '2024-01-01' }],
+    });
+    await renderBlogListing(1);
+    expect(app.querySelector('.blog-listing__posts')).not.toBeNull();
+    expect(app.querySelector('a[href="/blog/hello"]')).not.toBeNull();
+  });
+
+  it('shows empty state when no posts', async () => {
+    global.fetch.mockResolvedValue({ ok: true, json: async () => [] });
+    await renderBlogListing(1);
+    expect(app.querySelector('.blog-listing__empty')).not.toBeNull();
+  });
+
+  it('does not show pagination for 10 or fewer posts', async () => {
+    const posts = Array.from({ length: 5 }, (_, i) => ({ slug: `p${i}`, title: `P${i}` }));
+    global.fetch.mockResolvedValue({ ok: true, json: async () => posts });
+    await renderBlogListing(1);
+    expect(app.querySelector('.blog-listing__pagination')).toBeNull();
+  });
+
+  it('shows pagination for more than 10 posts', async () => {
+    const posts = Array.from({ length: 12 }, (_, i) => ({ slug: `p${i}`, title: `P${i}` }));
+    global.fetch.mockResolvedValue({ ok: true, json: async () => posts });
+    await renderBlogListing(1);
+    expect(app.querySelector('.blog-listing__pagination')).not.toBeNull();
+    expect(app.querySelector('.blog-listing__next')).not.toBeNull();
+    expect(app.querySelector('.blog-listing__prev')).toBeNull();
+  });
+
+  it('shows prev link on page 2', async () => {
+    const posts = Array.from({ length: 12 }, (_, i) => ({ slug: `p${i}`, title: `P${i}` }));
+    global.fetch.mockResolvedValue({ ok: true, json: async () => posts });
+    await renderBlogListing(2);
+    expect(app.querySelector('.blog-listing__prev')).not.toBeNull();
+    expect(app.querySelector('.blog-listing__next')).toBeNull();
+  });
+
+  it('shows error state when fetch fails', async () => {
+    global.fetch.mockRejectedValue(new Error('Network error'));
+    await renderBlogListing(1);
+    expect(app.querySelector('.error')).not.toBeNull();
+  });
+
+  it('escapes XSS in post title', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => [{ slug: 'xss', title: '<script>alert(1)</script>' }],
+    });
+    await renderBlogListing(1);
+    expect(app.innerHTML).not.toContain('<script>');
+  });
+});
+
+// ── renderHomepage ────────────────────────────────────────────────────────────
+
+describe('Router > renderHomepage', () => {
+  let app;
+
+  beforeEach(() => {
+    global.fetch = vi.fn();
+    app = document.createElement('div');
+    app.id = 'App';
+    document.body.appendChild(app);
+  });
+
+  afterEach(() => {
+    app.remove();
+  });
+
+  it('fetches profile settings', async () => {
+    global.fetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    await renderHomepage();
+    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/settings/profile'));
+  });
+
+  it('sets document.title to James', async () => {
+    global.fetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    await renderHomepage();
+    expect(document.title).toBe('James');
+  });
+
+  it('renders summary HTML', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({ summary: '<p>About me.</p>' }),
+    });
+    await renderHomepage();
+    expect(app.querySelector('.homepage__summary')).not.toBeNull();
+    expect(app.querySelector('.homepage__summary').innerHTML).toBe('<p>About me.</p>');
+  });
+
+  it('renders strengths section', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        strengths: { headline: 'Skills', items: [{ name: 'Design', description: 'UI/UX' }] },
+      }),
+    });
+    await renderHomepage();
+    expect(app.querySelector('.homepage__strengths')).not.toBeNull();
+    expect(app.querySelector('.strengths-list__name').textContent).toBe('Design');
+  });
+
+  it('renders experience section', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        experience: {
+          headline: 'Work',
+          items: [{ job_title: 'Designer', company: 'Acme', dates: '2020–2023' }],
+        },
+      }),
+    });
+    await renderHomepage();
+    expect(app.querySelector('.homepage__experience')).not.toBeNull();
+    expect(app.querySelector('.experience-list__title').textContent).toBe('Designer');
+    expect(app.querySelector('.experience-list__company').textContent).toBe('Acme');
+  });
+
+  it('skips sections with no data', async () => {
+    global.fetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    await renderHomepage();
+    expect(app.querySelector('.homepage__strengths')).toBeNull();
+    expect(app.querySelector('.homepage__experience')).toBeNull();
+  });
+
+  it('shows error when fetch fails', async () => {
+    global.fetch.mockRejectedValue(new Error('Network error'));
+    await renderHomepage();
+    expect(app.querySelector('.error')).not.toBeNull();
+  });
+
+  it('always renders blog feed section', async () => {
+    global.fetch.mockResolvedValue({ ok: true, json: async () => ({}) });
+    await renderHomepage();
+    expect(app.querySelector('.homepage__blog')).not.toBeNull();
+  });
+
+  it('escapes XSS in strengths name', async () => {
+    global.fetch.mockResolvedValue({
+      ok: true,
+      json: async () => ({
+        strengths: { items: [{ name: '<script>alert(1)</script>' }] },
+      }),
+    });
+    await renderHomepage();
+    expect(app.innerHTML).not.toContain('<script>');
+  });
+});

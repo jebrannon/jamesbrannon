@@ -8,7 +8,7 @@ This file gives an LLM everything needed to pick up work on this codebase withou
 
 Personal portfolio/blog site for jamesbrannon.co.uk. Two halves:
 
-1. **Site** — Vanilla JS SPA (hash routing), LESS styles, built by Vite. Deployed to S3 + CloudFront. Source in `src/`.
+1. **Site** — Vanilla JS SPA (pathname routing), LESS styles, built by Vite. Deployed to S3 + CloudFront. Source in `src/`.
 2. **CMS** — FastAPI app with a Starlette Admin UI. Runs on AWS Lambda (via Mangum adapter). DynamoDB for storage. Source in `cms/`.
 
 > **Naming convention:** always refer to these as **Site** and **CMS**. "Frontend/backend" or "frontend/API" are ambiguous — the CMS has both a backend API and an admin UI frontend.
@@ -65,8 +65,8 @@ cd cms && source .venv/bin/activate && python seed.py
 
 ```bash
 npm test                              # Both (mirrors CI)
-npx vitest run                        # Frontend only (~85 tests)
-cd cms && pytest tests/ -v            # Backend only (~115 tests)
+npx vitest run                        # Frontend only (~129 tests)
+cd cms && pytest tests/ -v            # Backend only (~214 tests, 4 skipped)
 npm run test:coverage                 # Frontend with coverage report
 ```
 
@@ -91,10 +91,11 @@ npm run preview    # serve dist/ locally
 ```
 jamesbrannon/
 ├── src/js/
-│   ├── main.js          # Entry point: loads styles, nav, router, feeds
-│   ├── router.js        # Hash-based SPA routing, dynamic meta tags, SEO
+│   ├── main.js          # Entry point: loads styles, nav, router, footer, brand
+│   ├── router.js        # Pathname-based SPA routing, dynamic meta tags, SEO
 │   ├── nav.js           # Navigation menu
 │   ├── brand.js         # Favicon/social links from API
+│   ├── footer.js        # Footer contact links + scrollToFooter for /contact route
 │   ├── utils.js         # HTML escape, date formatting
 │   └── components/
 │       └── blog-feed.js # Blog feed rendering
@@ -103,7 +104,7 @@ jamesbrannon/
 │   ├── _base/           # normalize, defaults, helpers, colours, typography, themes
 │   ├── _mixins/         # retina, cross-browser, typography mixins
 │   ├── _theme/          # colour-scheme, typography-scheme
-│   └── _layout/         # menu, body, header
+│   └── _layout/         # menu, body, header, footer
 ├── cms/app/
 │   ├── main.py          # FastAPI app, CORS, middleware, security headers, lifespan
 │   ├── handler.py       # AWS Lambda entry point (Mangum wrapper)
@@ -139,7 +140,7 @@ jamesbrannon/
 | Post | `CONTENT#POST` | `SLUG#<slug>` |
 | Page | `CONTENT#PAGE` | `SLUG#<slug>` |
 | Category | `CONTENT#CATEGORY` | `SLUG#<slug>` |
-| Settings | `SETTINGS` | `BRAND` / `SEO` / `PROFILE` |
+| Settings | `SETTINGS` | `BRAND` / `SEO` / `PROFILE` / `BLOG` / `LAST_UPDATED` |
 
 All PK/SK constants are in `cms/app/constants.py`.
 
@@ -148,9 +149,13 @@ All PK/SK constants are in `cms/app/constants.py`.
 - `Post` — slug, title, blocks (List[Dict]), date, published, category, excerpt, hero_image_url, hero_thumbnail_url + SEOMixin + ContentBase
 - `Page` — slug, title, blocks, published + SEOMixin + ContentBase
 - `Category` — slug, name, page_headline, max_items + ContentBase
-- `BrandSettings` — favicons (light/dark), linkedin, instagram, email
+- `BrandSettings` — logo_url, favicon_url (single SVG with embedded dark-mode media query), linkedin, linkedin_text, instagram, instagram_text, email, email_text
 - `SeoSettings` — inherits SEOMixin (seo_title, seo_description, og_image, og_type, canonical_url, no_index)
-- `ProfileSettings` — headline, tagline, summary, blog feed config, strengths, experience sections
+- `ProfileSettings` — headline, tagline, summary, blog feed config (BlogSettings), strengths (StrengthsSection), experience (ExperienceSection)
+- `BlogSettings` — headline, category, limit (homepage blog feed)
+- `StrengthsSection` / `StrengthItem` — headline, items list (name, description)
+- `ExperienceSection` / `ExperienceItem` — headline, items list (job_title, company, dates, summary, page_link)
+- `BlogPageSettings` — page_headline (stored under SETTINGS_BLOG key)
 - `ContentBase` — theme_mode (dark/light), theme_style (professional/thoughts) + SEOMixin
 - `SEOMixin` — seo_title, seo_description, og_image, og_type, canonical_url, no_index
 
@@ -180,20 +185,21 @@ GET /health                       # Health check
 
 ---
 
-## Frontend Routing (SPA)
+## Site Routing (SPA)
 
-Hash-based, handled in `src/js/router.js`:
+Pathname-based, handled in `src/js/router.js`. CloudFront must be configured with a catch-all 404 → `index.html` rule so all paths serve the SPA.
 
-| Hash | Page |
+| Path | Page |
 |---|---|
-| `#about` | Homepage (profile, blog feed, experience) |
-| `#blog` | Blog listing |
-| `#blog/{slug}` | Blog post detail |
-| `#contact` | Contact page |
-| `#page/{slug}` | Static page |
-| *(fallback)* | Homepage |
+| `/` | Homepage — profile summary, blog feed, strengths, experience (from `/api/settings/profile`) |
+| `/blog` | Blog listing — paginated (10/page), supports `?page=N` |
+| `/blog/{slug}` | Blog post detail |
+| `/contact` | Scrolls to `#Footer` (contact links from Brand settings) |
+| `/{slug}` | Dynamic CMS page — any unmatched path looks up `/api/pages/{slug}` |
 
-Router dynamically updates `<title>`, `<meta description>`, Open Graph tags, and `<link rel="canonical">`.
+Router dynamically updates `<title>`, `<meta description>`, Open Graph tags, and `<link rel="canonical">`. Exported functions: `route(path, search)`, `navigate(href)`, `initRouter()`, `renderHomepage()`, `renderBlogListing(page)`, `renderPost(slug)`, `renderCMSPage(slug)`, `render404()`, `applyTheme(data)`, `applyHead(data)`, `fetchJSON(url)`.
+
+`blog-feed.js` exports: `renderBlogFeed(container, options)`, `initBlogFeeds()` (auto-init all `[data-jb-blog-feed]` elements).
 
 ---
 
@@ -210,14 +216,21 @@ AWS_SECRET_ACCESS_KEY=local
 ADMIN_USER=admin
 ADMIN_PASS=changeme
 SECRET_KEY=dev-secret-key-change-in-production
-S3_BUCKET=                   # blank = use local filesystem
+S3_BUCKET=jamesbrannon-media          # blank = use local filesystem
 S3_BUCKET_REGION=eu-west-2
+S3_ENDPOINT_URL=http://localhost:9000  # MinIO — omit for local FS fallback
+S3_PUBLIC_BASE_URL=http://localhost:9000/jamesbrannon-media
 ```
 
 **Optional:**
 ```
 OLLAMA_URL=http://localhost:11434
 OLLAMA_MODEL=llama3.2
+# Google OAuth (leave blank to use ADMIN_USER/ADMIN_PASS instead)
+GOOGLE_CLIENT_ID=
+GOOGLE_CLIENT_SECRET=
+GOOGLE_ALLOWED_DOMAINS=jamesbrannon.co.uk
+OAUTH_REDIRECT_URI=http://localhost:8000/auth/callback
 ```
 
 **Production** (injected at runtime — never in `.env`):
@@ -225,12 +238,18 @@ OLLAMA_MODEL=llama3.2
 ENV=production
 DYNAMODB_TABLE=jamesbrannon-content
 AWS_REGION=eu-west-2
-ADMIN_USER=<strong>
-ADMIN_PASS=<strong>
 SECRET_KEY=<python3 -c "import secrets; print(secrets.token_hex(32))">
 CORS_ORIGINS=https://jamesbrannon.co.uk
 S3_BUCKET=jamesbrannon-media
 S3_BUCKET_REGION=eu-west-2
+# Google OAuth — recommended for production
+GOOGLE_CLIENT_ID=<from Google Cloud Console>
+GOOGLE_CLIENT_SECRET=<from SSM>
+GOOGLE_ALLOWED_DOMAINS=jamesbrannon.co.uk
+OAUTH_REDIRECT_URI=https://<api-gateway-domain>/auth/callback
+# Only required if NOT using Google OAuth
+# ADMIN_USER=<strong>
+# ADMIN_PASS=<strong>
 ```
 
 ---
@@ -240,22 +259,31 @@ S3_BUCKET_REGION=eu-west-2
 URL: `/admin` (Starlette Admin)
 
 **Views** (`cms/app/admin/views.py`):
-- `PostView` — create/edit blog posts (slug, title, rich text blocks, hero image, category, SEO, theme)
+- `PostView` — create/edit blog posts (slug, title, rich text blocks, hero image, category, SEO, theme); auto-dates on publish; auto-generates excerpt via Ollama
 - `PageView` — create/edit static pages
 - `CategoryView` — manage categories
-- `ProfileView` — homepage content (headline, tagline, blog feed config, experience, strengths)
-- `BrandView` — favicons, social links
-- `SeoView` — site-level SEO
-- `DashboardView` — admin homepage
+- `BlogSettingsView` — singleton: blog landing page headline
+- `ProfileView` — singleton: homepage content (headline, tagline, summary, blog feed config, experience, strengths)
+- `BrandView` — singleton: favicons (SVG upload → PNG generation), social links + display text
+- `SeoView` — singleton: site-level SEO and Open Graph settings
+- `DashboardView` — admin homepage (latest post, last-updated timestamp)
 
-**Auth** (`cms/app/admin/auth.py`): `SimpleAuthProvider` — username/password, constant-time comparison (HMAC), rate-limited (5 attempts / 15 min).
+**Auth** (`cms/app/admin/auth.py`):
+- `SimpleAuthProvider` — username/password, constant-time HMAC comparison, rate-limited (5 attempts / 15 min). Used when `GOOGLE_CLIENT_ID` is unset.
+- `GoogleOAuthProvider` — delegates to Google OAuth 2.0 (`/auth/google` → `/auth/callback`), domain-restricted via `GOOGLE_ALLOWED_DOMAINS`.
 
-**Custom form templates** (`cms/app/admin/templates/forms/`):
-- `blocks.html` — block editor (rich text + images)
-- `rich_text.html` — TinyMCE WYSIWYG
-- `enum_select.html` — dropdown for theme_style, og_type, etc.
-- `slug_autofill.html` — auto-generates slug from title
-- `collection_fieldset.html` — repeated fieldsets (experience entries, strengths)
+**Custom field types** (`cms/app/admin/views.py`):
+- `BlocksField` — block editor (text + media, repeatable); uses `forms/blocks.html`
+- `RichTextField` — contenteditable rich-text with formatting toolbar; sanitised via bleach; uses `forms/rich_text.html`
+- `EnumSelectField` — plain Bootstrap select for enums; uses `forms/enum_select.html`
+- `SlugAutoFillField` — auto-generates slug from title (posts) or name (categories); uses `forms/slug_autofill.html`
+- `FieldsetCollectionField` — repeated fieldsets (experience, strengths); uses `forms/collection_fieldset.html`
+- `PageSelectField` — dynamic select from `/api/pages`; uses `forms/page_select.html`
+- `CategorySelectField` — dynamic select from `/api/categories`; uses `forms/category_select.html`
+- `SvgFileField` — SVG upload with light/dark live preview; uses `forms/svg_upload.html`
+- `ImageFileField` — image upload with preview; uses `forms/image_upload.html`
+
+**Custom form templates** (`cms/app/admin/templates/forms/`): `blocks.html`, `rich_text.html`, `enum_select.html`, `slug_autofill.html`, `collection_fieldset.html`, `page_select.html`, `category_select.html`, `svg_upload.html`, `image_upload.html`
 
 ---
 
@@ -263,11 +291,15 @@ URL: `/admin` (Starlette Admin)
 
 `cms/app/services/image.py`:
 
-- `save_hero_image(slug, file)` — saves original + generates 1200×630 JPEG thumbnail via Pillow
-- `save_block_image(slug, name, file)` — saves block editor image
+- `save_hero_image(image_bytes, slug, ext)` — saves original + generates 1200×630 JPEG thumbnail via Pillow; returns `(hero_url, thumbnail_url)`
+- `save_block_image(image_bytes, name, ext)` — saves block editor image; returns URL
+- `save_favicon(svg_bytes, save_name)` — saves SVG (dark-mode auto-injected) + generates PNG variants at 16, 32, 192, 512 px via cairosvg (optional); returns SVG URL
+- `save_logo(svg_bytes)` — saves site logo SVG with dark-mode support auto-injected; returns URL
+- `_inject_dark_mode(svg_bytes)` — injects `@media (prefers-color-scheme: dark)` into SVG if not present; samples dominant fill colour to determine flip direction
+- `ensure_s3_bucket_exists()` — called on lifespan startup; creates bucket if missing (no-op when S3 not configured)
 
-**Local:** saved to `cms/static/post-images/`
-**Production:** uploaded to `s3://{S3_BUCKET}/post-images/` — switched automatically by presence of `S3_BUCKET` env var.
+**Local:** saved to `cms/static/post-images/` (images), `cms/static/favicons/` (favicons), `cms/static/logos/` (logo)
+**Production:** uploaded to `s3://{S3_BUCKET}/post-images/`, `s3://{S3_BUCKET}/favicons/`, `s3://{S3_BUCKET}/logos/` — switched automatically by presence of `S3_BUCKET` env var.
 
 Static files served by FastAPI at `/static/`.
 
@@ -275,13 +307,42 @@ Static files served by FastAPI at `/static/`.
 
 ## Design System
 
-`cms/static/tokens.css` — CSS custom properties for colours and typography. The intended single source of truth for design tokens, shared by both the Site and the CMS admin.
+Site and Admin token systems are intentionally separate:
 
-**Known debt:** tokens are currently duplicated. The Site defines identical values in `src/less/_base/colours.less` and `src/less/_base/typography.less` (comments in those files acknowledge this). The goal is for `cms/static/tokens.css` to be the sole definition, with the Site consuming it directly. Until that's done, any token change must be made in both places.
+- **Site** — `src/less/_base/colours.less` (LESS variables + CSS custom properties) and `src/less/_base/typography.less` (CSS custom properties). Compiled by Vite/LESS into the Site bundle.
+- **Admin** — `cms/static/admin-tokens.css` (CSS custom properties for colours, typography, and buttons) and `cms/static/admin.css` (component styles). Loaded directly by `cms/app/admin/templates/base.html`.
+
+They currently share the same colour and typography values but are not linked — changing one does not affect the other. This is intentional.
 
 LESS files in `src/less/` follow the structure: `_base/` → `_mixins/` → `_theme/` → `_layout/`, all imported by `src/less/main.less`.
 
 Font: Barlow Semi Condensed (Google Fonts). Loaded via Google Fonts CDN in both the Site (`index.html`) and the CMS admin (`cms/app/admin/templates/base.html`).
+
+### Admin CSS architecture
+
+Load order: `tabler.min.css` (CDN) → `admin-tokens.css` → `admin.css`. This order is critical — our files must load after Tabler to override it.
+
+**Token ownership rule:** every `var(--jb-*)` is ours (defined in `admin-tokens.css`); every `var(--tblr-*)` is Tabler's API. These two prefixes are the complete distinction.
+
+**`admin-tokens.css`** defines all custom design tokens:
+- `--jb-dark/light/primary/secondary/dark-grey/light-grey` — brand palette
+- `--font`, `--fs-*`, `--lh-*`, `--fw-*`, `--ls-*` — typography scale
+- `--jb-btn-radius/fs/lh/fw/transform` — button base
+- `--jb-btn-primary/secondary/default/danger-*` — button variants
+
+**`admin.css`** is structured in 8 explicit layers:
+1. **Tabler remap** — override `--tblr-*` tokens to apply our palette (the intended Tabler theming API)
+2. **Typography** — body, headings, text utilities
+3. **Layout** — navbar, sidebar, page header/body, list toolbar
+4. **Forms** — inputs, labels, fieldset legends, card chrome
+5. **Components** — buttons, badges, tables, sidebar icons
+6. **Singleton pages** — scoped via `.jb-singleton` class (added to `<body>` by `singleton_edit.html`)
+7. **Block editor** — all `.jb-block*` and rich-text editor styles
+8. **Upload** — SVG/image upload components, swatch variants, pixel preview
+
+**`!important` discipline:** only used where Tabler's high-specificity selectors cannot be beaten by token remapping alone. Always accompanied by a comment explaining why.
+
+**No inline styles in templates.** BEM modifier classes handle variants (`.jb-svg-swatch--light`, `.jb-svg-swatch--dark`, `.jb-pixel-preview`). If you find yourself writing `style=` in a template, add a class to `admin.css` instead.
 
 ---
 
@@ -294,7 +355,9 @@ Already in place:
 - Rate-limited login (5 attempts / 15 min, tracked in-memory)
 - Constant-time HMAC comparison for admin password
 - Session middleware: `httponly=True`, `secure=True` (prod), `samesite=strict`
-- App refuses to start with default credentials outside `ENV=local`
+- App refuses to start with default credentials outside `ENV=local` (also enforced for missing `S3_BUCKET`)
+- Google OAuth 2.0 support — domain-locked; `GOOGLE_CLIENT_ID` presence enables it; falls back to `ADMIN_USER`/`ADMIN_PASS` when absent
+- CSRF-safe OAuth state parameter (random token in session, validated on callback)
 
 ---
 
@@ -307,7 +370,7 @@ See **`DEPLOYMENT.md`** for the full deployment plan — architecture, agreed de
 Key facts for development context:
 - IaC: AWS CDK (Python) in `infra/`
 - Local S3 mock: MinIO (Docker) — same code path as production
-- All file saves (images, favicons, tokens.css) go direct to S3/MinIO — no FastAPI `/static` mount in production
+- All file saves (images, favicons) go direct to S3/MinIO — no FastAPI `/static` mount in production
 - Secrets via SSM Parameter Store
 - Deploy on push to `master`
 
@@ -319,7 +382,7 @@ Key facts for development context:
 - **Python constants:** UPPERCASE (e.g. `CONTENT_POST`, `SETTINGS_BRAND`) in `constants.py`
 - **Private helpers:** `_leading_underscore`
 - **Logging:** JSON format `{"time": "...", "level": "...", "name": "...", "msg": "..."}`, debug for optional failures, exceptions logged with stack traces
-- **Async:** All FastAPI routers and services are async; Mangum handles the Lambda ↔ ASGI bridge
+- **Async:** FastAPI services are async; routers use standard `def` handlers (FastAPI runs them in a thread pool). Mangum handles the Lambda ↔ ASGI bridge
 - **DynamoDB:** Single-table design — always use helpers in `db.py`, never raw boto3 calls in routers
 - **Tests:** `@mock_aws` decorator from moto, fixture-based setup in `conftest.py`, test isolation per test function
 

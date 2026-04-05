@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
     <head>
-        <title>James Brannon // Digital Creative</title>
+        <title>James</title>
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
@@ -13,8 +13,8 @@
         <meta property="og:description" content="Digital Creative based in Brighton. Draw. Design. Code." />
         <meta property="og:type" content="website" />
 
-        <!-- Favicon -->
-        <link rel="shortcut icon" href="/images/favicon.ico" />
+        <!-- Favicon — brand mark SVG (light/dark mode aware); brand.js will override once settings load -->
+        <link rel="icon" href="/images/ident.svg" type="image/svg+xml" />
 
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -25,8 +25,8 @@
         <div id="SiteNav" class="invert" data-jb-transition="SiteNav">
             <div class="site-nav-inner">
                 <ul class="menu">
-                    <li><a href="#about" title="About">About</a></li>
-                    <li><a href="#contact" title="Contact">Contact</a></li>
+                    <li><a href="/" title="About">About</a></li>
+                    <li><a href="/contact" title="Contact">Contact</a></li>
                 </ul>
             </div>
             <button class="site-nav-button" aria-label="Toggle navigation menu" aria-expanded="false" aria-controls="SiteNav" data-jb-action="OpenSiteNav" type="button">
@@ -43,9 +43,9 @@
                 <div class="ident"><div class="ident-inner"></div></div>
                 <h1 class="james"><img src="/images/james.png" height="30" width="121" alt="James" draggable="false"/></h1>
                 <h2>Draw . Design . Code</h2>
-                <p>Hello, I'm a Digital Creative based in Brighton, working at product startup <a title="StoryStream" target="_blank" href="http://storystream.it">StoryStream</a> and this is my home in the Digital World.<br>Please take a look around.</p>
             </div>
-            <div class="section invert"></div>
+            <div id="App"></div>
+            <footer id="Footer"></footer>
             <div class="collapse-overlay theme"></div>
         </div>
 

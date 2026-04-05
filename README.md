@@ -103,7 +103,7 @@ npx vitest run
 cd cms && source .venv/bin/activate && pytest tests/ -v
 ```
 
-~290 tests: 85 Vitest (Site) + ~204 pytest (CMS). CI runs on every push via GitHub Actions.
+~343 tests: 129 Vitest (Site) + ~214 pytest (CMS, 4 skipped). CI runs on every push via GitHub Actions.
 
 ---
 
@@ -123,6 +123,10 @@ npm run preview    # serve dist/ locally for a final check
 │   ├── js/
 │   │   ├── main.js
 │   │   ├── router.js
+│   │   ├── nav.js
+│   │   ├── footer.js
+│   │   ├── brand.js
+│   │   ├── utils.js
 │   │   └── components/
 │   ├── less/
 │   └── tests/
@@ -175,10 +179,11 @@ Browser
 
 ### What still needs doing before deployment
 
-- [ ] IaC (Terraform or CDK) — DynamoDB table, Lambda function, API Gateway, S3 buckets, CloudFront distributions
+- [ ] IaC (CDK) — DynamoDB table, Lambda function, API Gateway, S3 buckets, CloudFront distributions
 - [ ] Domain and SSL — Route 53 + ACM certificate for `jamesbrannon.co.uk`
-- [ ] Secrets Manager — store `ADMIN_USER`, `ADMIN_PASS`, `SECRET_KEY`
-- [ ] Admin UI — not yet feature complete
+- [ ] SSM Parameter Store — store `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `SECRET_KEY`
+- [ ] CI/CD — GitHub Actions deploy workflow (push to `master` → build + deploy)
+- [ ] Google OAuth — register app in Google Cloud Console, set redirect URI
 
 ### Required production environment variables
 
@@ -187,7 +192,9 @@ See `cms/.env.production.example` for the full template. Key variables:
 | Variable | Description |
 |---|---|
 | `SECRET_KEY` | Strong random string — `python3 -c "import secrets; print(secrets.token_hex(32))"` |
-| `ADMIN_USER` / `ADMIN_PASS` | Non-default admin credentials |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth app credentials (recommended) |
+| `GOOGLE_ALLOWED_DOMAINS` | Comma-separated domains e.g. `jamesbrannon.co.uk` |
+| `OAUTH_REDIRECT_URI` | Must match the redirect URI registered in Google Cloud Console |
 | `CORS_ORIGINS` | CloudFront domain, e.g. `https://jamesbrannon.co.uk` |
 | `S3_BUCKET` / `S3_BUCKET_REGION` | Media upload bucket |
 | `DYNAMODB_TABLE` / `AWS_REGION` | DynamoDB config |

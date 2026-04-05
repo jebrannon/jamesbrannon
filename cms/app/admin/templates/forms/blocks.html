@@ -56,7 +56,14 @@
 
             <template x-if="mi.type === 'image'">
               <div class="jb-media-image">
-                <input type="file" accept="image/*" @change="uploadImage(mi, $event)" class="form-control mb-2">
+                <div x-data="{ filename: null, pick() { $refs.imgInput.click() } }" class="mb-2">
+                  <input type="file" x-ref="imgInput" accept="image/*" class="d-none"
+                         @change="filename = $event.target.files[0]?.name; uploadImage(mi, $event)">
+                  <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-secondary btn-sm" @click="pick()">Choose file</button>
+                    <small class="text-muted fst-italic" x-text="filename || 'No file chosen'"></small>
+                  </div>
+                </div>
                 <template x-if="mi.url">
                   <img :src="mi.url" class="jb-image-preview mb-2">
                 </template>
@@ -88,91 +95,6 @@
   <input type="hidden" :name="'{{ fid }}'" :value="JSON.stringify(blocks)">
 </div>
 
-<style>
-.jb-blocks-editor { margin-bottom: 1rem; }
-.jb-block {
-  border: 1px solid var(--tblr-border-color, #444);
-  border-radius: 6px;
-  margin-bottom: .75rem;
-  padding: .75rem;
-  background: var(--tblr-bg-surface, #1a1a2e);
-  transition: opacity .2s;
-}
-.jb-block--dragging { opacity: .4; }
-.jb-block-header {
-  display: flex;
-  align-items: center;
-  gap: .4rem;
-  margin-bottom: .5rem;
-}
-.jb-drag-handle { cursor: grab; font-size: 1.1rem; color: var(--tblr-muted, #888); }
-.jb-block-num { flex: 1; font-size: .75rem; color: var(--tblr-muted, #888); text-transform: uppercase; letter-spacing: .04em; }
-.jb-btn-sm {
-  padding: .15rem .45rem;
-  font-size: .75rem;
-  border: 1px solid var(--tblr-border-color, #444);
-  border-radius: 4px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-}
-.jb-btn-sm:disabled { opacity: .4; cursor: not-allowed; }
-.jb-btn-sm.active { background: var(--tblr-primary, #0fce8f); color: var(--jb-dark, #0d0d1a); border-color: var(--tblr-primary, #0fce8f); }
-.jb-btn-danger { border-color: var(--tblr-danger, #ff6e70); color: var(--tblr-danger, #ff6e70); }
-.jb-toolbar { display: flex; gap: .25rem; margin-bottom: .35rem; }
-.jb-toolbar-btn {
-  padding: .15rem .45rem;
-  font-size: .8rem;
-  border: 1px solid var(--tblr-border-color, #444);
-  border-radius: 4px;
-  background: transparent;
-  color: inherit;
-  cursor: pointer;
-  min-width: 2rem;
-}
-.jb-toolbar-btn:hover { background: var(--tblr-primary, #0fce8f); color: var(--jb-dark, #0d0d1a); border-color: var(--tblr-primary, #0fce8f); }
-.jb-text-body {
-  min-height: 80px;
-  padding: .5rem;
-  border: 1px solid var(--tblr-border-color, #444);
-  border-radius: 4px;
-  background: var(--jb-dark-grey, #1e1e2e);
-  color: var(--jb-light, #fbfbfb);
-  outline: none;
-  line-height: 1.5;
-}
-.jb-text-body:focus { border-color: var(--jb-light, #fbfbfb); }
-.jb-text-body:empty:before { content: attr(placeholder); color: var(--jb-light-grey, #888); pointer-events: none; }
-.jb-block-media { margin-top: .5rem; }
-.jb-media-item {
-  border: 1px solid var(--tblr-border-color, #333);
-  border-radius: 4px;
-  padding: .5rem;
-  margin-bottom: .4rem;
-  background: var(--jb-dark, #0d0d1a);
-}
-.jb-media-item-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: .4rem;
-}
-.jb-media-item-label { font-size: .7rem; text-transform: uppercase; letter-spacing: .06em; color: var(--tblr-muted, #888); }
-.jb-image-preview { max-width: 100%; max-height: 200px; border-radius: 4px; display: block; }
-.jb-add-media { display: flex; gap: .35rem; margin-top: .35rem; }
-.jb-add-block {
-  width: 100%;
-  padding: .5rem;
-  border: 1px dashed var(--tblr-border-color, #444);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--tblr-primary, #0fce8f);
-  cursor: pointer;
-  font-size: .85rem;
-  text-align: center;
-}
-.jb-add-block:hover { background: var(--tblr-primary-lt, rgba(15,206,143,.1)); }
-</style>
 
 <script>
 function blocksEditor(initial) {

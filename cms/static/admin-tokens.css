@@ -1,0 +1,105 @@
+/*
+ *  File:   admin-tokens.css
+ *  Info:   Design tokens for the CMS admin UI.
+ *          Independent of the Site — do not treat these as shared.
+ *          Site tokens live in src/less/_base/colours.less and src/less/_base/typography.less.
+ */
+
+:root {
+
+  /* ── Colour palette ─────────────────────────────────────────────────────── */
+  --jb-dark:          #2D2D2D;
+  --jb-light:         #FBFBFB;
+  --jb-primary:       #0FCE8F;   /* primary / accent */
+  --jb-secondary:     #FF6E70;   /* errors / warnings */
+  --jb-dark-grey:     #424242;
+  --jb-light-grey:    #F1F1F1;
+
+  /* ── Brand mark ─────────────────────────────────────────────────────────── */
+  --jb-brand-mark-light: #FBFBFB;   /* logo paths on dark backgrounds */
+  --jb-brand-mark-dark:  #1E1E1E;   /* logo paths on light backgrounds */
+
+  /* ── Font family ─────────────────────────────────────────────────────────── */
+  --font: 'Barlow Semi Condensed', sans-serif;
+
+  /* ── Font sizes ─────────────────────────────────────────────────────────── */
+  --fs-h1:    4rem;
+  --fs-h2:    2.5rem;
+  --fs-h3:    2rem;
+  --fs-h4:    1.25rem;
+  --fs-h5:    0.75rem;
+  --fs-body:  1rem;
+  --fs-small: 0.875rem;
+
+  /* ── Line heights (unitless) ─────────────────────────────────────────────── */
+  --lh-h1:    1.125;
+  --lh-h2:    1.2;
+  --lh-h3:    1.25;
+  --lh-h4:    1.4;
+  --lh-h5:    1.667;
+  --lh-body:  1.5;
+  --lh-small: 1.429;
+
+  /* ── Font weights ────────────────────────────────────────────────────────── */
+  --fw-h1:     800;
+  --fw-h2:     800;
+  --fw-h3:     700;
+  --fw-h4:     700;
+  --fw-h5:     500;
+  --fw-body:   400;
+  --fw-medium: 500;
+  --fw-bold:   700;
+  --fw-anchor: 600;
+
+  /* ── Letter spacing ──────────────────────────────────────────────────────── */
+  --ls-h1: 0.02em;
+  --ls-h5: 0.02em;
+
+  /* ── Layout spacing ──────────────────────────────────────────────────────── */
+  --page-padding:    2rem;
+  --page-padding-sm: 1rem;
+
+  /* ── Navbar ──────────────────────────────────────────────────────────────── */
+  --navbar-logo-w: 48px;
+  --navbar-logo-h: 64px;
+
+  /* ── Sidebar ─────────────────────────────────────────────────────────────── */
+  --sidebar-hover-bg: color-mix(in srgb, var(--jb-dark) 80%, black);
+
+  /* ── Fieldset legend ─────────────────────────────────────────────────────── */
+  --legend-fs: 0.8125rem;
+  --legend-fw: 600;
+  --legend-ls: 0.04em;
+
+  /* ── Buttons ─────────────────────────────────────────────────────────────── */
+  --jb-btn-radius:    4px;
+  --jb-btn-fs:        var(--fs-small);   /* 0.875rem / 14px */
+  --jb-btn-lh:        var(--lh-h4);      /* 1.4 / ~20px */
+  --jb-btn-fw:        var(--fw-medium);  /* 500 */
+  --jb-btn-transform: none;
+
+  /* Primary — green fill, dark text */
+  --jb-btn-primary-bg:           var(--jb-primary);
+  --jb-btn-primary-text:         var(--jb-dark);
+  --jb-btn-primary-hover-bg:     var(--jb-light);
+  --jb-btn-primary-hover-text:   var(--jb-dark);
+
+  /* Secondary — dark grey fill, light text */
+  --jb-btn-secondary-bg:           var(--jb-dark-grey);
+  --jb-btn-secondary-text:         var(--jb-light);
+  --jb-btn-secondary-hover-bg:     var(--jb-dark-grey);
+  --jb-btn-secondary-hover-text:   var(--jb-light);
+  --jb-btn-secondary-border:       var(--jb-light);
+
+  /* Default — transparent, light border */
+  --jb-btn-default-text:           var(--jb-light);
+  --jb-btn-default-border:         var(--jb-dark-grey);
+  --jb-btn-default-hover-border:   var(--jb-light);
+
+  /* Danger — light fill, dark text; red on hover */
+  --jb-btn-danger-bg:              var(--jb-light);
+  --jb-btn-danger-text:            var(--jb-dark);
+  --jb-btn-danger-hover-bg:        var(--jb-secondary);
+  --jb-btn-danger-hover-text:      var(--jb-dark);
+
+}

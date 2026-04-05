@@ -120,9 +120,9 @@ class BlogPageSettings(BaseModel):
 
 
 class BrandSettings(BaseModel):
-    """Site-wide brand identity — favicon URLs, social links and display text."""
-    favicon_light_url: str = ""
-    favicon_dark_url: str = ""
+    """Site-wide brand identity — logo, favicon URL, social links and display text."""
+    logo_url: str = ""
+    favicon_url: str = ""
     linkedin: Optional[str] = None
     linkedin_text: Optional[str] = None
     instagram: Optional[str] = None

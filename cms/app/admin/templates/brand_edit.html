@@ -4,86 +4,96 @@
     {%- set comms_fields = ['linkedin', 'linkedin_text', 'instagram', 'instagram_text', 'email', 'email_text'] -%}
     {%- set all_fields = model.get_fields_list(request, 'EDIT' | ra) -%}
 
-    {# ── Brand fieldset (favicons) ────────────────────────────────────────── #}
+    {# ── Brand fieldset ────────────────────────────────────────────────────── #}
     <fieldset class="border rounded p-3 mb-3">
         <legend class="float-none w-auto px-2 jb-fieldset-legend">Brand</legend>
 
         {% for field in all_fields %}
             {% if field.name not in comms_fields %}
+
+                {# ── Logo ─────────────────────────────────────────────────── #}
+                {% if field.name == 'logo' %}
+                <div class="mb-4">
+                    <label class="form-label jb-field-label">{{ field.label }}</label>
+                    {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+                        {% include field.form_template %}
+                    {% endwith %}
+                    {% set svg_url = raw_obj.logo_url %}
+                    {% if svg_url %}
+                    <div class="jb-asset-current mt-2">
+                        <div class="jb-svg-preview-row jb-svg-preview-row--logo">
+                            <div class="text-center">
+                                <div class="jb-svg-swatch jb-svg-swatch--light">
+                                    <img src="{{ svg_url }}" alt="">
+                                </div>
+                                <small class="text-muted d-block mt-1">Light</small>
+                            </div>
+                            <div class="text-center">
+                                <div class="jb-svg-swatch jb-svg-swatch--dark">
+                                    <img src="{{ svg_url }}" alt="">
+                                </div>
+                                <small class="text-muted d-block mt-1">Dark</small>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {# ── Favicon ───────────────────────────────────────────────── #}
+                {% elif field.name == 'favicon' %}
+                <div class="mb-4">
+                    <label class="form-label jb-field-label">{{ field.label }}</label>
+                    {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+                        {% include field.form_template %}
+                    {% endwith %}
+                    {% set svg_url = raw_obj.favicon_url %}
+                    {% if svg_url %}
+                    <div class="jb-asset-current mt-2">
+                        <div class="jb-svg-preview-row jb-svg-preview-row--favicon">
+                            <div class="text-center">
+                                <div class="jb-svg-swatch jb-svg-swatch--light">
+                                    <img src="{{ svg_url }}" alt="">
+                                </div>
+                                <small class="text-muted d-block mt-1">Light</small>
+                            </div>
+                            <div class="text-center">
+                                <div class="jb-svg-swatch jb-svg-swatch--dark">
+                                    <img src="{{ svg_url }}" alt="">
+                                </div>
+                                <small class="text-muted d-block mt-1">Dark</small>
+                            </div>
+                            {% for size in [16, 32] %}
+                                {% set png_url = svg_url | replace('.svg', '-' ~ size ~ '.png') %}
+                                <div class="text-center">
+                                    <div class="jb-svg-swatch jb-svg-swatch--light">
+                                        <img src="{{ png_url }}"
+                                             width="{{ size }}" height="{{ size }}"
+                                             class="jb-pixel-preview" alt="{{ size }}px"
+                                             onerror="this.closest('.text-center').style.display='none'">
+                                    </div>
+                                    <small class="text-muted d-block mt-1">{{ size }}px</small>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+
+                {# ── Skip URL display fields (shown in preview above) ──────── #}
+                {% elif field.name not in ['logo_url', 'favicon_url'] %}
                 <div class="mb-3">
                     {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
                         {% include field.label_template %}
                         {% include field.form_template %}
                     {% endwith %}
                 </div>
-
-                {# ── Light favicon preview row ────────────────────────── #}
-                {% if field.name == 'favicon_light' %}
-                    {% set svg_url = raw_obj.favicon_light_url %}
-                    {% if svg_url %}
-                    <div class="mb-4 p-3 rounded border d-flex flex-row align-items-end gap-4 flex-wrap"
-                         style="background:#f8f9fa;">
-                        {% for size in [16, 32, 192, 512] %}
-                            {% set display = size if size <= 64 else 64 %}
-                            {% set png_url = svg_url | replace('.svg', '-' ~ size ~ '.png') %}
-                            <div class="text-center">
-                                <div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
-                                    <img src="{{ png_url }}"
-                                         width="{{ display }}" height="{{ display }}"
-                                         alt="{{ size }}px"
-                                         style="image-rendering:pixelated;"
-                                         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'text-danger small',textContent:'not generated'}))">
-                                </div>
-                                <small class="text-muted d-block mt-1">{{ size }}px</small>
-                            </div>
-                        {% endfor %}
-                        <div class="text-center ms-2 ps-2 border-start">
-                            <div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
-                                <img src="{{ svg_url }}" width="64" height="64"
-                                     alt="SVG" style="object-fit:contain;">
-                            </div>
-                            <small class="text-muted d-block mt-1">SVG</small>
-                        </div>
-                    </div>
-                    {% endif %}
-                {% endif %}
-
-                {# ── Dark favicon preview row ─────────────────────────── #}
-                {% if field.name == 'favicon_dark' %}
-                    {% set svg_url = raw_obj.favicon_dark_url %}
-                    {% if svg_url %}
-                    <div class="mb-4 p-3 rounded border d-flex flex-row align-items-end gap-4 flex-wrap"
-                         style="background:#1e1e2d;">
-                        {% for size in [16, 32, 192, 512] %}
-                            {% set display = size if size <= 64 else 64 %}
-                            {% set png_url = svg_url | replace('.svg', '-' ~ size ~ '.png') %}
-                            <div class="text-center">
-                                <div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
-                                    <img src="{{ png_url }}"
-                                         width="{{ display }}" height="{{ display }}"
-                                         alt="{{ size }}px"
-                                         style="image-rendering:pixelated;"
-                                         onerror="this.replaceWith(Object.assign(document.createElement('span'),{className:'text-light small',textContent:'not generated'}))">
-                                </div>
-                                <small class="text-light d-block mt-1">{{ size }}px</small>
-                            </div>
-                        {% endfor %}
-                        <div class="text-center ms-2 ps-2 border-start border-secondary">
-                            <div style="width:64px;height:64px;display:flex;align-items:center;justify-content:center;">
-                                <img src="{{ svg_url }}" width="64" height="64"
-                                     alt="SVG" style="object-fit:contain;">
-                            </div>
-                            <small class="text-light d-block mt-1">SVG</small>
-                        </div>
-                    </div>
-                    {% endif %}
                 {% endif %}
 
             {% endif %}
         {% endfor %}
     </fieldset>
 
-    {# ── Communications fieldset ──────────────────────────────────────────── #}
+    {# ── Communications fieldset ───────────────────────────────────────────── #}
     <fieldset class="border rounded p-3 mb-3">
         <legend class="float-none w-auto px-2 jb-fieldset-legend">Communications</legend>
         {% for field in all_fields %}
@@ -97,4 +107,5 @@
             {% endif %}
         {% endfor %}
     </fieldset>
+
 {% endblock %}

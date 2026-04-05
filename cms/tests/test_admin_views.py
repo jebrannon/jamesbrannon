@@ -435,7 +435,7 @@ def test_dashboard_returns_200(admin_client):
 
 
 def test_page_titles_prefixed_with_site_name(admin_client):
-    """Every admin page title must start with 'JJ Admin /'."""
+    """Every admin page title must start with 'James /'."""
     pages = [
         "/admin/",
         "/admin/post/list",
@@ -445,8 +445,8 @@ def test_page_titles_prefixed_with_site_name(admin_client):
     for path in pages:
         response = admin_client.get(path)
         assert response.status_code == 200, f"{path} returned {response.status_code}"
-        assert "<title>JJ Admin /" in response.text, \
-            f"Browser tab title on {path} does not start with 'JJ Admin /'"
+        assert "<title>James /" in response.text, \
+            f"Browser tab title on {path} does not start with 'James /'"
 
 
 # ── Integration: sidebar navigation ───────────────────────────────────────────
@@ -727,19 +727,42 @@ def test_no_desktop_user_dropdown(admin_client):
 
 
 def test_logo_css_sizing(admin_client):
-    """Base CSS should set the admin logo to 48×64 px with correct padding."""
+    """Admin CSS token files are linked and contain the 48×64 px logo dimensions.
+
+    The TestClient serves static files as external links, not inline content,
+    so this test verifies the CSS files are present on disk with the expected
+    token values rather than checking the HTML response body.
+    """
+    from pathlib import Path
     response = admin_client.get("/admin/post/list")
-    assert "width: 48px" in response.text
-    assert "height: 64px" in response.text
-    # Full 3-class specificity selector needed to beat Tabler's vertical navbar rule
-    assert "navbar-vertical.navbar-expand-lg .navbar-brand" in response.text
-    assert "padding: 2rem 1rem 1rem 1rem" in response.text
+    # Both CSS files must be linked in the page
+    assert "admin-tokens.css" in response.text
+    assert "admin.css" in response.text
+
+    # Verify the token definitions on disk (where the values actually live)
+    tokens_css = Path(__file__).parent.parent / "static" / "admin-tokens.css"
+    assert tokens_css.exists()
+    tokens_content = tokens_css.read_text()
+    assert "--navbar-logo-w: 48px" in tokens_content
+    assert "--navbar-logo-h: 64px" in tokens_content
+
+    # Verify the selector that applies them is in admin.css
+    admin_css = Path(__file__).parent.parent / "static" / "admin.css"
+    assert admin_css.exists()
+    admin_content = admin_css.read_text()
+    assert "navbar-vertical.navbar-expand-lg .navbar-brand" in admin_content
+    assert "var(--navbar-logo-w)" in admin_content
+    assert "var(--navbar-logo-h)" in admin_content
 
 
 def test_mobile_user_icon_hidden(admin_client):
-    """Mobile user-icon dropdown should be suppressed via CSS."""
-    response = admin_client.get("/admin/post/list")
-    assert "flex-row.d-lg-none" in response.text  # our CSS hide rule is present
+    """Mobile user-icon dropdown should be suppressed via CSS rule in admin.css."""
+    from pathlib import Path
+    # The hide rule lives in admin.css (external file), not inline in the response
+    admin_css = Path(__file__).parent.parent / "static" / "admin.css"
+    assert admin_css.exists()
+    content = admin_css.read_text()
+    assert "flex-row.d-lg-none" in content  # our CSS hide rule is present
 
 
 # ── UI: logo and favicon ──────────────────────────────────────────────────────

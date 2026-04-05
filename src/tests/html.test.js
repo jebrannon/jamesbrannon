@@ -54,7 +54,7 @@ describe('HTML', () => {
     });
 
     it('has a favicon link', () => {
-      expect(html).toMatch(/favicon\.ico/);
+      expect(html).toMatch(/rel="icon"/);
     });
 
   });
@@ -71,8 +71,8 @@ describe('HTML', () => {
     });
 
     it('has About and Contact nav links', () => {
-      expect(html).toMatch(/href="#about"/);
-      expect(html).toMatch(/href="#contact"/);
+      expect(html).toMatch(/href="\/"/);
+      expect(html).toMatch(/href="\/contact"/);
     });
 
   });
