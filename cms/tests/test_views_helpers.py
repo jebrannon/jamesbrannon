@@ -157,3 +157,18 @@ class TestUnpackFile:
         file, should_delete = _unpack_file(None)
         assert file is None
         assert should_delete is False
+
+
+# ── ToggleField ───────────────────────────────────────────────────────────────
+
+class TestToggleField:
+    def test_toggle_field_uses_toggle_template(self):
+        from app.admin.views import ToggleField
+        field = ToggleField("published", label="Published")
+        assert field.form_template == "forms/toggle.html"
+
+    def test_toggle_field_is_boolean_field(self):
+        from app.admin.views import ToggleField
+        from starlette_admin.fields import BooleanField
+        field = ToggleField("no_index", label="No Index")
+        assert isinstance(field, BooleanField)

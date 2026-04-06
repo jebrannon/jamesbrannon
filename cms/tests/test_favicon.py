@@ -105,3 +105,24 @@ def test_save_favicon_local_fallback(tmp_path, monkeypatch):
     url = _save_favicon(_SVG, "favicon-light")
     assert url == "/static/favicons/favicon-light.svg"
     assert (tmp_path / "favicon-light.svg").exists()
+
+
+def test_save_favicon_local_injects_dark_mode(tmp_path, monkeypatch):
+    """save_favicon embeds dark-mode CSS when inject_dark_mode=True."""
+    from app.services.image import save_favicon as _save_favicon
+    monkeypatch.setattr(image_module, "_USE_S3", False)
+    monkeypatch.setattr(image_module, "FAVICON_DIR", tmp_path)
+    _save_favicon(_SVG, "favicon-dark-inject", inject_dark_mode=True)
+    content = (tmp_path / "favicon-dark-inject.svg").read_text()
+    assert "prefers-color-scheme" in content
+
+
+def test_save_favicon_local_no_dark_mode(tmp_path, monkeypatch):
+    """save_favicon saves SVG unchanged when inject_dark_mode=False."""
+    from app.services.image import save_favicon as _save_favicon
+    monkeypatch.setattr(image_module, "_USE_S3", False)
+    monkeypatch.setattr(image_module, "FAVICON_DIR", tmp_path)
+    # _SVG already lacks a prefers-color-scheme rule
+    _save_favicon(_SVG, "favicon-no-dm", inject_dark_mode=False)
+    content = (tmp_path / "favicon-no-dm.svg").read_text()
+    assert "prefers-color-scheme" not in content

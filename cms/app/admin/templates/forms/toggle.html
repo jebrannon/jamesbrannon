@@ -1,0 +1,12 @@
+<div class="jb-toggle-row {% if error %}is-invalid{% endif %}">
+  <div class="form-check form-switch mb-0">
+    <input id="{{ field.id }}"
+           name="{{ field.id }}"
+           class="form-check-input"
+           type="checkbox"
+           {{ 'checked' if data else '' }}
+           {{ field.input_params() | safe }}>
+  </div>
+  <label class="jb-toggle-label" for="{{ field.id }}">{{ field.label }}</label>
+</div>
+{% include "forms/_error.html" %}

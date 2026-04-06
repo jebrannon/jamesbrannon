@@ -259,8 +259,9 @@ async def preview_svg(request: Request, file: UploadFile = File(...)) -> JSONRes
     if not content.lstrip().startswith(b"<"):
         return JSONResponse({"error": "Invalid SVG"}, status_code=400)
 
+    import asyncio, base64
     from .services.image import _inject_dark_mode
-    import base64
+    await asyncio.sleep(1)
     processed = _inject_dark_mode(content)
     data_url = "data:image/svg+xml;base64," + base64.b64encode(processed).decode()
     return JSONResponse({"preview": data_url})

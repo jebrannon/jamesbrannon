@@ -68,7 +68,7 @@ p { color: var(--jb-light); }
 a       { color: var(--jb-light); }
 a:hover { color: var(--jb-light); }
 
-b, strong { font-weight: var(--fw-bold); }
+b, strong { font-weight: var(--fw-medium); }
 
 h1 {
   font-size:      var(--fs-h1);
@@ -350,6 +350,15 @@ legend {
   background-color: var(--jb-btn-danger-bg);
   border-color:     transparent;
   color:            var(--jb-btn-danger-text);
+}
+
+/* Disabled — all variants */
+.btn:disabled,
+.btn.disabled {
+  background-color: var(--jb-btn-disabled-bg)   !important;
+  border-color:     var(--jb-btn-disabled-border) !important;
+  color:            var(--jb-btn-disabled-text)  !important;
+  opacity:          1 !important;
 }
 
 /* Default — transparent bg, light border */
@@ -644,47 +653,189 @@ thead th,
   width:  auto;
 }
 
-/* ── Upload modal ─────────────────────────────────────────────────────────── */
+/* ── Shared dialog (.jb-dialog) ───────────────────────────────────────────── */
 
-.jb-upload-modal .modal-content {
-  background: var(--jb-grey-dark);
-  border:     1px solid rgba(255, 255, 255, .1);
-  color:      var(--jb-light);
+.modal-backdrop {
+  background-color: #000;
+}
+.modal-backdrop.show {
+  opacity: 0.75; /* matches --jb-backdrop */
 }
 
-.jb-upload-modal .modal-header {
-  border-bottom: 1px solid rgba(255, 255, 255, .1);
+.jb-dialog .modal-dialog {
+  min-width: 480px;
 }
 
-.jb-upload-modal .modal-footer {
-  border-top: 1px solid rgba(255, 255, 255, .1);
+.jb-dialog .modal-content {
+  background:    var(--jb-dark);
+  border:        1px solid var(--jb-grey-dark);
+  border-radius: var(--jb-radius);
+  color:         var(--jb-light);
 }
 
-.jb-upload-modal .modal-title {
-  font-size:   var(--fs-h4);
-  font-weight: var(--fw-h4);
-  font-style:  italic;
+.jb-dialog .modal-header {
+  border-bottom:   none;
+  padding:         1rem;
+  background:      none;
+  display:         flex;
+  align-items:     flex-start;
+  justify-content: space-between;
+}
+
+.jb-dialog .modal-body {
+  padding:     1rem;
+  background:  none;
+  font-size:   var(--fs-body);
+  font-weight: var(--fw-body);
+  line-height: var(--lh-body);
   color:       var(--jb-light);
 }
 
-.jb-upload-modal .btn-close {
-  filter: invert(1) grayscale(1);
+.jb-dialog .modal-footer {
+  border-top:  none;
+  padding:     1rem;
+  gap:         1rem;
+  background:  var(--jb-dark) !important;
 }
+.jb-dialog .modal-footer .btn {
+  margin: 0;
+}
+
+
+.jb-dialog .modal-title {
+  font-size:      var(--fs-h4) !important;
+  font-weight:    var(--fw-h4) !important;
+  line-height:    var(--lh-h4) !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  font-style:     italic;
+  color:          var(--jb-light);
+}
+
+.jb-dialog .btn-close {
+  background-image:    url('/static/icons/close.svg') !important;
+  background-size:     16px 16px !important;
+  background-position: center !important;
+  background-repeat:   no-repeat !important;
+  background-color:    transparent !important;
+  filter:              none;
+  opacity:             0.6;
+  position:            static;
+  width:               16px;
+  height:              16px;
+  padding:             0;
+  margin:              0;
+  flex-shrink:         0;
+  align-self:          flex-start;
+}
+.jb-dialog .btn-close:hover {
+  opacity: 1;
+}
+
+.jb-dialog-body {
+  font-size:   var(--fs-body);
+  line-height: var(--lh-body);
+  color:       var(--jb-light);
+  margin:      0;
+  opacity:     0.85;
+}
+
+/* ── Form toggle ──────────────────────────────────────────────────────────── */
+
+.form-switch .form-check-input {
+  width:             36px;
+  height:            20px;
+  border-radius:     999px;
+  background-color:  var(--jb-light);
+  border:            none;
+  cursor:            pointer;
+  background-image:  url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%232D2D2D'/%3e%3c/svg%3e");
+  background-size:   20px 20px;
+  transition:        background-color .2s ease, background-position .2s ease;
+  margin-top:        0;
+}
+.form-switch .form-check-input:checked {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%232D2D2D'/%3e%3c/svg%3e");
+}
+.form-switch .form-check-input:checked {
+  background-color:  var(--jb-primary);
+  border-color:      var(--jb-primary);
+}
+.form-switch .form-check-input:focus {
+  box-shadow: none;
+  border:     none;
+}
+.form-switch .form-check-input:disabled {
+  opacity: 0.4;
+  cursor:  not-allowed;
+}
+
+/* Toggle + label side-by-side layout */
+.jb-toggle-row {
+  display:     flex;
+  align-items: flex-start;
+  gap:         1rem;
+}
+
+.jb-toggle-row .form-check {
+  flex-shrink: 0;
+  padding:     3px 0 0 0;
+  min-height:  0;
+  width:       36px;
+  height:      auto;
+}
+.jb-toggle-row .form-check-input {
+  margin-left: 0 !important;
+  margin-top:  0 !important;
+  float:       none !important;
+}
+
+.jb-toggle-label {
+  font-size:      var(--fs-body) !important;
+  font-weight:    var(--fw-body) !important;
+  font-style:     normal !important;
+  line-height:    var(--lh-body) !important;
+  color:          var(--jb-light) !important;
+  text-transform: none !important;
+  letter-spacing: normal !important;
+  cursor:         pointer;
+  margin:         0;
+}
+
+
+/* ── Upload modal (extends .jb-dialog) ────────────────────────────────────── */
 
 /* Preview area inside modal */
 .jb-upload-modal-preview {
   display:         flex;
-  align-items:     center;
+  align-items:     stretch;
   justify-content: center;
-  min-height:      120px;
-  background:      var(--jb-dark);
+  min-height:      200px;
+  background:      var(--jb-grey-dark);
   border-radius:   var(--jb-radius);
   padding:         1rem;
 }
 
 .jb-upload-modal-preview img {
   max-width:  100%;
-  max-height: 200px;
+  max-height: 160px;
+  object-fit: contain;
+}
+
+/* Dual swatch row inside modal — shown when dark mode is on */
+.jb-upload-modal-swatches {
+  display: flex;
+  gap:     1rem;
+  width:   100%;
+}
+.jb-upload-modal-swatches .jb-upload-swatch {
+  flex:           1;
+  align-items:    center;
+  justify-content: center;
+}
+.jb-upload-modal-swatches .jb-upload-swatch img {
+  max-width:  100%;
+  max-height: 160px;
   object-fit: contain;
 }
 

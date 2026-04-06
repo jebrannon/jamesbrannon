@@ -63,6 +63,12 @@
   /* ── Sidebar ─────────────────────────────────────────────────────────────── */
   --sidebar-hover-bg: color-mix(in srgb, var(--jb-dark) 80%, black);
 
+  /* ── Icons ───────────────────────────────────────────────────────────────── */
+  --jb-icon-close:   '/static/icons/close.svg';
+  --jb-icon-home:    '/static/icons/home.svg';
+  --jb-icon-logout:  '/static/icons/logout.svg';
+  --jb-icon-message: '/static/icons/message.svg';
+
   /* ── Radius ──────────────────────────────────────────────────────────────── */
   --jb-radius: 0.25rem;   /* 4px — applied to inputs, buttons, and UI components */
 
@@ -98,5 +104,13 @@
   --jb-btn-danger-text:            var(--jb-dark);
   --jb-btn-danger-hover-bg:        var(--jb-light);
   --jb-btn-danger-hover-text:      var(--jb-dark);
+
+  /* Disabled — applies to all button variants */
+  --jb-btn-disabled-bg:            var(--jb-dark);
+  --jb-btn-disabled-border:        var(--jb-dark);
+  --jb-btn-disabled-text:          var(--jb-grey-mild);
+
+  /* Dialog / modal backdrop */
+  --jb-backdrop:                   rgba(0, 0, 0, 0.75);
 
 }

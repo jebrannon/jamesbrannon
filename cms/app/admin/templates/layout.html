@@ -14,12 +14,75 @@
             {% block content %}{% endblock %}
         </div>
         {% block modal %}{% endblock %}
+
+        {# ── Shared jbDialog singleton — open via window.jbDialog.open({...}) ── #}
+        <div x-data="jbDialog()" x-cloak>
+          <div class="modal fade jb-dialog" x-ref="modal" tabindex="-1" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+
+                <div class="modal-header">
+                  <h5 class="modal-title" x-text="title"></h5>
+                  <button type="button" class="btn-close" @click="cancel()"></button>
+                </div>
+
+                <div class="modal-body">
+                  <p class="jb-dialog-body" x-text="body"></p>
+                </div>
+
+                <div class="modal-footer">
+                  <button type="button" class="btn btn-secondary" @click="cancel()">Cancel</button>
+                  <button type="button" class="btn btn-danger" @click="confirm()">Confirm</button>
+                </div>
+
+              </div>
+            </div>
+          </div>
+        </div>
     </div>
 </div>
 {% endblock %}
 
 {% block script %}
 {{ super() }}
+<script>
+window.jbDialog = function () {
+  let _bsModal   = null;
+  let _onConfirm = null;
+
+  return {
+    title: 'Are you sure?',
+    body:  '',
+
+    init() {
+      // Replace the factory with the live Alpine-bound instance so that
+      // non-Alpine code can call window.jbDialog.open(...) directly.
+      window.jbDialog = this;
+    },
+
+    _modal() {
+      if (!_bsModal) _bsModal = new bootstrap.Modal(this.$refs.modal);
+      return _bsModal;
+    },
+
+    open({ title, body, onConfirm } = {}) {
+      this.title = title || 'Are you sure?';
+      this.body  = body  || '';
+      _onConfirm = onConfirm || null;
+      this._modal().show();
+    },
+
+    confirm() {
+      this._modal().hide();
+      if (_onConfirm) _onConfirm();
+    },
+
+    cancel() {
+      this._modal().hide();
+    },
+  };
+};
+</script>
 {% if current_user %}
 <script>
 document.addEventListener('DOMContentLoaded', function () {

@@ -66,7 +66,7 @@ cd cms && source .venv/bin/activate && python seed.py
 ```bash
 npm test                              # Both (mirrors CI)
 npx vitest run                        # Frontend only (~150 tests)
-cd cms && pytest tests/ -v            # Backend only (~294 tests, 4 skipped)
+cd cms && pytest tests/ -v            # Backend only (~311 tests, 4 skipped)
 npm run test:coverage                 # Frontend with coverage report
 ```
 
@@ -112,9 +112,12 @@ jamesbrannon/
 │   ├── db.py            # DynamoDB CRUD helpers, table auto-create
 │   ├── constants.py     # DynamoDB key constants (CONTENT_POST, SETTINGS_BRAND, etc.)
 │   ├── admin/
-│   │   ├── views.py     # Starlette Admin ModelView subclasses
+│   │   ├── views.py     # Starlette Admin ModelView subclasses + custom field types
 │   │   ├── auth.py      # SimpleAuthProvider + rate limiting
 │   │   └── templates/   # Custom Jinja2 admin templates
+│   │       ├── layout.html          # Base layout; injects jbDialog singleton
+│   │       ├── modals/actions.html  # Overrides Starlette Admin delete confirmation
+│   │       └── forms/               # Custom field templates (toggle, asset_upload, etc.)
 │   ├── routers/         # FastAPI routers: posts.py, pages.py, categories.py, settings.py
 │   └── services/
 │       ├── image.py     # Hero image + block image processing (local FS or S3)
@@ -185,6 +188,7 @@ GET /api/settings/brand           # Brand settings (favicons, socials)
 GET /api/settings/seo             # Site SEO settings
 GET /api/settings/profile         # Profile / homepage content
 POST /api/upload-image            # Auth-required; upload block editor image
+POST /api/preview-svg             # Auth-required; dark-mode inject preview (nothing saved)
 GET /health                       # Health check
 ```
 
@@ -212,8 +216,8 @@ Router dynamically updates `<title>`, `<meta description>`, Open Graph tags, and
 
 **Local** (`cms/.env`):
 ```
-ENV=local
-DYNAMODB_ENDPOINT=http://localhost:8001
+ENV=local                              # informational only — not read by app code
+DYNAMODB_ENDPOINT=http://localhost:8001  # presence of this var signals local dev mode
 DYNAMODB_TABLE=jamesbrannon-content
 AWS_REGION=eu-west-2
 AWS_ACCESS_KEY_ID=local
@@ -226,6 +230,8 @@ S3_BUCKET_REGION=eu-west-2
 S3_ENDPOINT_URL=http://localhost:9000  # MinIO — omit for local FS fallback
 S3_PUBLIC_BASE_URL=http://localhost:9000/jamesbrannon-media
 ```
+
+> **Local dev detection:** `main.py` detects local dev by the presence of `DYNAMODB_ENDPOINT` (`_IS_LOCAL_DEV = bool(os.getenv("DYNAMODB_ENDPOINT"))`). The `ENV` var is present in `.env.example` for human readability only — the app does not read it.
 
 **Optional:**
 ```
@@ -280,6 +286,7 @@ URL: `/admin` (Starlette Admin)
 **Custom field types** (`cms/app/admin/views.py`):
 - `BlocksField` — block editor (text + media, repeatable); uses `forms/blocks.html`
 - `RichTextField` — contenteditable rich-text with formatting toolbar; sanitised via bleach; uses `forms/rich_text.html`
+- `ToggleField` — styled toggle switch (BooleanField subclass); uses `forms/toggle.html`
 - `EnumSelectField` — plain Bootstrap select for enums; uses `forms/enum_select.html`
 - `SlugAutoFillField` — auto-generates slug from title (posts) or name (categories); uses `forms/slug_autofill.html`
 - `FieldsetCollectionField` — repeated fieldsets (experience, strengths); uses `forms/collection_fieldset.html`
@@ -288,7 +295,7 @@ URL: `/admin` (Starlette Admin)
 - `SvgFileField` — SVG upload via CustomUploader modal (preview + optional dark mode injection); uses `forms/asset_upload.html`
 - `ImageFileField` — image upload with preview; uses `forms/image_upload.html`
 
-**Custom form templates** (`cms/app/admin/templates/forms/`): `blocks.html`, `rich_text.html`, `enum_select.html`, `slug_autofill.html`, `collection_fieldset.html`, `page_select.html`, `category_select.html`, `asset_upload.html`, `image_upload.html`
+**Custom form templates** (`cms/app/admin/templates/forms/`): `blocks.html`, `rich_text.html`, `toggle.html`, `enum_select.html`, `slug_autofill.html`, `collection_fieldset.html`, `page_select.html`, `category_select.html`, `asset_upload.html`, `image_upload.html`
 
 ---
 
@@ -307,6 +314,37 @@ URL: `/admin` (Starlette Admin)
 **Production:** uploaded to `s3://{S3_BUCKET}/post-images/`, `s3://{S3_BUCKET}/favicons/`, `s3://{S3_BUCKET}/logos/` — switched automatically by presence of `S3_BUCKET` env var.
 
 Static files served by FastAPI at `/static/`.
+
+---
+
+## Shared Dialog Component (jbDialog)
+
+A singleton Alpine component that provides a reusable confirmation dialog throughout the admin UI.
+
+**Files:**
+- Singleton HTML + script: `cms/app/admin/templates/layout.html` (injected once into every page)
+- Action modal override: `cms/app/admin/templates/modals/actions.html` (overrides Starlette Admin's delete confirmation — keeps same IDs so `actions.js` wiring is untouched)
+- CSS class: `.jb-dialog` (`cms/static/admin.css`, layer 5/components)
+
+**Usage from any page:**
+```js
+window.jbDialog.open({
+  title: 'Are you sure?',       // optional, defaults to 'Are you sure?'
+  body:  'This cannot be undone.',
+  onConfirm: () => { /* ... */ },
+});
+```
+
+**Alpine config (global singleton):**
+```js
+jbDialog() // exposed as window.jbDialog via init() lifecycle hook
+// State: title, body (reactive — drives the template)
+// Methods: open({ title, body, onConfirm }), confirm(), cancel()
+```
+
+**CSS class `.jb-dialog`:** dark background (`--jb-dark`), no header/footer dividers, 1rem padding all around, 480px min-width, H4 modal title (italic bold), custom close icon (`/static/icons/close.svg`).
+
+**Modal backdrop:** controlled by `.modal-backdrop.show { opacity: 0.75 }`. Token: `--jb-backdrop: rgba(0, 0, 0, 0.75)` (defined in `admin-tokens.css`; the `.show` opacity rule is what actually applies it).
 
 ---
 
@@ -333,7 +371,7 @@ assetUpload({
 1. User clicks "Choose file" → file picker opens
 2. File selected → Bootstrap modal opens with raw SVG preview
 3. If `darkMode: true`: toggle shown — "Add dark mode support?"
-4. Toggle on → `POST /api/preview-svg` → spinner shown with cancel → modal preview updates with injected SVG
+4. Toggle on → `POST /api/preview-svg` → spinner shown (no cancel) → modal preview updates; dual light/dark swatches shown side by side when dark mode is on
 5. Confirm → file staged, inline preview updated, modal closes
 6. Cancel (or Escape/backdrop) → file selection cleared, saved asset preview restored
 
@@ -358,8 +396,9 @@ Set `field.form_template = "forms/asset_upload.html"` in the field's `__post_ini
 - `.jb-upload-preview-row` — flex row of swatches
 - `.jb-upload-preview-row--logo` / `--favicon` — size variants (80px / 24px)
 - `.jb-upload-swatch--light` / `--dark` — background variants
-- `.jb-upload-modal` — modal theming override
-- `.jb-upload-modal-preview` — dark preview area inside modal
+- `.jb-upload-modal` — upload modal (extends `.jb-dialog`)
+- `.jb-upload-modal-preview` — preview area inside modal (dark bg, `align-items: stretch`)
+- `.jb-upload-modal-swatches` — dual side-by-side light/dark swatch layout (dark mode on)
 - `.jb-upload-progress` / `.jb-upload-progress-bar` — file read progress
 
 **`POST /api/preview-svg`:** Auth-gated (session required). Accepts `multipart/form-data` with `file` field. Returns `{"preview": "data:image/svg+xml;base64,..."}`. Validates SVG by checking content starts with `<`. Nothing is saved.
@@ -386,20 +425,24 @@ Load order: `tabler.min.css` (CDN) → `admin-tokens.css` → `admin.css`. This 
 **Token ownership rule:** every `var(--jb-*)` is ours (defined in `admin-tokens.css`); every `var(--tblr-*)` is Tabler's API. These two prefixes are the complete distinction.
 
 **`admin-tokens.css`** defines all custom design tokens:
-- `--jb-dark/light/primary/secondary/dark-grey/light-grey` — brand palette
+- `--jb-dark/light/primary/secondary/grey-dark/grey-mild/grey-light` — brand palette
 - `--font`, `--fs-*`, `--lh-*`, `--fw-*`, `--ls-*` — typography scale
-- `--jb-btn-radius/fs/lh/fw/transform` — button base
-- `--jb-btn-primary/secondary/default/danger-*` — button variants
+- `--jb-btn-radius/font/fs/lh/fw/padding/transform` — button base
+- `--jb-btn-primary/secondary/default/danger-*` — button variants (bg, text, hover-bg, hover-text)
+- `--jb-btn-disabled-bg/border/text` — disabled state (dark bg, dark border, mild-grey text)
+- `--jb-icon-close/home/logout/message` — icon path strings (NOT `url()` — CSS vars can't interpolate inside `url()`)
+- `--jb-backdrop` — modal overlay: `rgba(0, 0, 0, 0.75)`
+- `--jb-radius` — 0.25rem; applied to inputs, buttons, UI components
 
 **`admin.css`** is structured in 8 explicit layers:
 1. **Tabler remap** — override `--tblr-*` tokens to apply our palette (the intended Tabler theming API)
-2. **Typography** — body, headings, text utilities
+2. **Typography** — body, headings, text utilities (`b/strong` use `--fw-medium`)
 3. **Layout** — navbar, sidebar, page header/body, list toolbar
-4. **Forms** — inputs, labels, fieldset legends, card chrome
-5. **Components** — buttons, badges, tables, sidebar icons
+4. **Forms** — inputs, labels, fieldset legends, card chrome; toggle component (`.jb-toggle-row`)
+5. **Components** — buttons (incl. disabled state), badges, tables, sidebar icons; shared dialog (`.jb-dialog`)
 6. **Singleton pages** — scoped via `.jb-singleton` class (added to `<body>` by `singleton_edit.html`)
 7. **Block editor** — all `.jb-block*` and rich-text editor styles
-8. **Upload** — SVG/image upload components, swatch variants, pixel preview
+8. **Upload** — SVG/image upload components (`.jb-upload-*`), swatch variants, modal extends `.jb-dialog`
 
 **`!important` discipline:** only used where Tabler's high-specificity selectors cannot be beaten by token remapping alone. Always accompanied by a comment explaining why.
 

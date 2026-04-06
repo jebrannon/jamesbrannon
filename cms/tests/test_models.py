@@ -178,6 +178,101 @@ class TestProfileSettings:
         assert b.limit == 3
 
 
+# ── StrengthItem / StrengthsSection ───────────────────────────────────────────
+
+class TestStrengthsModels:
+    def test_valid_strength_item(self):
+        s = StrengthItem(name="Design")
+        assert s.name == "Design"
+        assert s.description is None
+
+    def test_strength_item_with_description(self):
+        s = StrengthItem(name="Design", description="UI/UX work")
+        assert s.description == "UI/UX work"
+
+    def test_strengths_section_defaults(self):
+        s = StrengthsSection()
+        assert s.headline is None
+        assert s.items == []
+
+    def test_strengths_section_with_items(self):
+        s = StrengthsSection(
+            headline="Skills",
+            items=[StrengthItem(name="Design"), StrengthItem(name="Code")],
+        )
+        assert s.headline == "Skills"
+        assert len(s.items) == 2
+        assert s.items[0].name == "Design"
+
+
+# ── ExperienceItem / ExperienceSection ────────────────────────────────────────
+
+class TestExperienceModels:
+    def test_valid_experience_item(self):
+        e = ExperienceItem(job_title="Designer")
+        assert e.job_title == "Designer"
+        assert e.company is None
+        assert e.dates is None
+        assert e.summary is None
+        assert e.page_link is None
+
+    def test_experience_item_all_fields(self):
+        e = ExperienceItem(
+            job_title="Senior Designer",
+            company="Acme",
+            dates="2020–2024",
+            summary="<p>Led design.</p>",
+            page_link="about",
+        )
+        assert e.company == "Acme"
+        assert e.dates == "2020–2024"
+        assert e.summary == "<p>Led design.</p>"
+        assert e.page_link == "about"
+
+    def test_experience_section_defaults(self):
+        e = ExperienceSection()
+        assert e.headline is None
+        assert e.items == []
+
+    def test_experience_section_with_items(self):
+        e = ExperienceSection(
+            headline="Experience",
+            items=[ExperienceItem(job_title="Designer", company="Acme")],
+        )
+        assert e.headline == "Experience"
+        assert len(e.items) == 1
+        assert e.items[0].company == "Acme"
+
+
+# ── BlogPageSettings ───────────────────────────────────────────────────────────
+
+class TestBlogPageSettings:
+    def test_empty_is_valid(self):
+        b = BlogPageSettings()
+        assert b.page_headline is None
+
+    def test_with_headline(self):
+        b = BlogPageSettings(page_headline="All Posts")
+        assert b.page_headline == "All Posts"
+
+
+# ── BrandSettings dark mode flags ─────────────────────────────────────────────
+
+class TestBrandSettingsDarkMode:
+    def test_logo_dark_mode_defaults_to_false(self):
+        b = BrandSettings()
+        assert b.logo_dark_mode is False
+
+    def test_favicon_dark_mode_defaults_to_false(self):
+        b = BrandSettings()
+        assert b.favicon_dark_mode is False
+
+    def test_dark_mode_flags_can_be_set(self):
+        b = BrandSettings(logo_dark_mode=True, favicon_dark_mode=True)
+        assert b.logo_dark_mode is True
+        assert b.favicon_dark_mode is True
+
+
 # ── Enum values ───────────────────────────────────────────────────────────────
 
 class TestEnums:

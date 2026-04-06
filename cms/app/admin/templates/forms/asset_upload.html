@@ -49,7 +49,6 @@
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="btn btn-secondary btn-sm" @click="$refs.fileInput.click()"
             x-text="preview ? 'Choose another file' : 'Choose file'"></button>
-    <small class="text-muted fst-italic" x-show="isNew" x-cloak x-text="filename"></small>
   </div>
 
   {% if field.help_text %}
@@ -57,47 +56,60 @@
   {% endif %}
 
   {# ── Preview modal ── #}
-  <div class="modal fade jb-upload-modal" id="{{ fid }}_modal" x-ref="modal"
+  <div class="modal fade jb-dialog jb-upload-modal" id="{{ fid }}_modal" x-ref="modal"
        tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
 
         <div class="modal-header">
-          <h5 class="modal-title">Preview</h5>
+          <h5 class="modal-title">Uploader</h5>
           <button type="button" class="btn-close" @click="cancelModal()"></button>
         </div>
 
         <div class="modal-body">
           <div class="jb-upload-modal-preview mb-3">
-            <img :src="modalPreview" alt="" x-show="modalPreview && !fetchingDark">
+
+            {# Single preview — dark mode off #}
+            <img :src="modalPreview" alt=""
+                 x-show="modalPreview && !fetchingDark && !addDarkMode">
+
+            {# Dual swatches — dark mode on #}
+            <div class="jb-upload-modal-swatches" x-show="modalPreview && !fetchingDark && addDarkMode" x-cloak>
+              <div class="jb-upload-swatch jb-upload-swatch--light">
+                <img :src="modalPreview" alt="">
+              </div>
+              <div class="jb-upload-swatch jb-upload-swatch--dark">
+                <img :src="modalPreview" alt="">
+              </div>
+            </div>
+
+            {# Spinner #}
             <div class="jb-upload-modal-spinner" x-show="fetchingDark" x-cloak>
               <div class="spinner-border spinner-border-sm" role="status"></div>
               <small class="ms-2">Processing&hellip;</small>
-              <button type="button" class="btn btn-sm btn-link ms-2 p-0"
-                      @click="cancelFetch()">Cancel</button>
             </div>
+
           </div>
 
           {% if upload_dark_mode %}
-          <div class="form-check form-switch mb-1">
-            <input class="form-check-input" type="checkbox" id="{{ fid }}_dm_toggle"
-                   x-model="addDarkMode"
-                   @change="onDarkModeToggle()"
-                   :disabled="fetchingDark">
-            <label class="form-check-label" for="{{ fid }}_dm_toggle">
-              Add dark mode support
+          <div class="jb-toggle-row">
+            <div class="form-check form-switch mb-0">
+              <input class="form-check-input" type="checkbox" id="{{ fid }}_dm_toggle"
+                     x-model="addDarkMode"
+                     @change="onDarkModeToggle()"
+                     :disabled="fetchingDark">
+            </div>
+            <label class="jb-toggle-label" for="{{ fid }}_dm_toggle">
+              <strong>Dark + light mode support</strong> — Selecting this embeds a colour-scheme media query so the SVG adapts automatically to light and dark modes.
             </label>
           </div>
-          <small class="text-muted d-block">
-            Embeds a colour-scheme media query so the asset adapts automatically to light and dark backgrounds.
-          </small>
-          <div x-show="modalError" x-cloak class="mt-2 text-danger small" x-text="modalError"></div>
+          <div x-show="modalError" x-cloak class="mt-1 text-danger small" x-text="modalError"></div>
           {% endif %}
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-danger" @click="cancelModal()">Cancel</button>
-          <button type="button" class="btn btn-success" :disabled="fetchingDark"
+          <button type="button" class="btn btn-secondary" :disabled="fetchingDark"
                   @click="confirmModal()">Use this file</button>
         </div>
 

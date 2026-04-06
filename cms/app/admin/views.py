@@ -84,6 +84,14 @@ def _blocks_as_plain_text(blocks_json: Any) -> str:
     return " ".join(parts)
 
 
+class ToggleField(BooleanField):
+    """BooleanField rendered as a styled toggle switch using forms/toggle.html."""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.form_template = "forms/toggle.html"
+
+
 class BlocksField(StringField):
     """Structured block editor — text + optional media, repeatable."""
 
@@ -185,7 +193,7 @@ SEO_FIELDS = [
         help_text="Leave blank to use the page URL automatically",
         exclude_from_list=True,
     ),
-    BooleanField("no_index", label="No Index (hide from search engines)",
+    ToggleField("no_index", label="No Index (hide from search engines)",
                  exclude_from_list=True),
 ]
 
@@ -462,7 +470,7 @@ class PostView(ContentView):
                     exclude_from_create=True, exclude_from_edit=True,
                     exclude_from_list=True, required=False),
         BlocksField("blocks", label="Content Blocks", required=False),
-        BooleanField("published", label="Published"),
+        ToggleField("published", label="Published"),
         CategorySelectField("category", label="Category", required=False,
                             help_text="Assign this post to a category"),
         *THEME_FIELDS,
@@ -565,7 +573,7 @@ class PageView(ContentView):
         StringField("slug", label="Slug", required=True,
                     help_text="e.g. about"),
         BlocksField("blocks", label="Content Blocks", required=False),
-        BooleanField("published", label="Published"),
+        ToggleField("published", label="Published"),
         *THEME_FIELDS,
         *SEO_FIELDS,
     ]
