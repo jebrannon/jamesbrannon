@@ -114,6 +114,12 @@ function blocksEditor(initial) {
     dragIndex: null,
     focusedBlock: null,
 
+    init: function () {
+      this.$watch('blocks', function () {
+        document.dispatchEvent(new CustomEvent('jb:field:change'));
+      });
+    },
+
     addBlock: function () {
       this.blocks.push({ id: this._uid(), text: '', media: [] });
     },

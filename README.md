@@ -93,7 +93,7 @@ Configure the URL and model via `OLLAMA_URL` and `OLLAMA_MODEL` in `cms/.env`.
 ## Testing
 
 ```bash
-# All tests (runs Vitest + pytest) — mirrors the pre-commit hook
+# Frontend tests (Vitest)
 npm test
 
 # Frontend only
@@ -103,7 +103,7 @@ npx vitest run
 cd cms && source .venv/bin/activate && pytest tests/ -v
 ```
 
-~461 tests: ~150 Vitest (Site) + ~311 pytest (CMS, 4 skipped). CI runs on every push via GitHub Actions.
+~479 tests: ~150 Vitest (Site) + ~329 pytest (CMS, 4 skipped). CI runs on every push via GitHub Actions.
 
 ---
 

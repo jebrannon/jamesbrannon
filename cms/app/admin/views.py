@@ -25,6 +25,7 @@ from starlette_admin.fields import (
     URLField,
 )
 from starlette_admin.base import BaseModelView
+from starlette_admin.exceptions import FormValidationError
 
 # ── Block editor helpers ───────────────────────────────────────────────────────
 
@@ -631,10 +632,12 @@ class BrandView(SingletonView):
     edit_template = "brand_edit.html"
 
     fields = [
-        StringField("display_name", label="Full Display Name", required=False,
-                    placeholder="James Brannon"),
+        StringField("display_name", label="Display Name", required=False,
+                    placeholder="James Brannon",
+                    help_text="Shown in the site header and used in SEO titles."),
         StringField("role_title", label="Role / Title", required=False,
-                    placeholder="Product Designer"),
+                    placeholder="Product Designer",
+                    help_text="Shown beneath your name on the homepage and profile page."),
         # Logo upload — SVG only; stored as-is for dynamic colour theming on the Site
         SvgFileField(
             "logo",
@@ -659,15 +662,26 @@ class BrandView(SingletonView):
             "favicon_url", label="Favicon URL",
             exclude_from_create=True, exclude_from_edit=True, required=False,
         ),
-        URLField("linkedin", label="LinkedIn URL", required=False),
-        StringField("linkedin_text", label="LinkedIn Display Text", required=False,
-                    placeholder="/in/jamesbrannon"),
-        URLField("instagram", label="Instagram URL", required=False),
-        StringField("instagram_text", label="Instagram Display Text", required=False,
-                    placeholder="@jamesbrannon"),
-        EmailField("email", label="Email Address", required=False),
-        StringField("email_text", label="Email Display Text", required=False,
-                    placeholder="me@jamesbrannon.co.uk"),
+        URLField("linkedin", label="URL", required=False,
+                 placeholder="https://linkedin.com/in/jamesbrannon",
+                 help_text="Full profile URL."),
+        StringField("linkedin_text", label="Display Text", required=False,
+                    placeholder="James Brannon",
+                    maxlength=60,
+                    help_text="Label shown as the link on the site. Required if URL is set."),
+        URLField("instagram", label="URL", required=False,
+                 placeholder="https://instagram.com/jamesbrannon",
+                 help_text="Full profile URL."),
+        StringField("instagram_text", label="Display Text", required=False,
+                    placeholder="@jamesbrannon",
+                    maxlength=60,
+                    help_text="Label shown as the link on the site. Required if URL is set."),
+        EmailField("email", label="Address", required=False,
+                   help_text="Contact email address."),
+        StringField("email_text", label="Display Text", required=False,
+                    placeholder="me@jamesbrannon.co.uk",
+                    maxlength=60,
+                    help_text="Label shown as the link on the site. Required if address is set."),
     ]
 
     def _defaults(self) -> Dict:
@@ -691,6 +705,7 @@ class BrandView(SingletonView):
         """
         Process the favicon FileField value: save the SVG and generate PNG variants.
         Returns the new URL if a file was uploaded, otherwise the existing URL.
+        Raises ValueError if the uploaded file is not a valid SVG.
         """
         file, should_delete = _unpack_file(field_value)
         if should_delete:
@@ -698,21 +713,49 @@ class BrandView(SingletonView):
         if file and hasattr(file, "read") and getattr(file, "filename", ""):
             content = await file.read()
             if content:
+                if not content.lstrip().startswith(b"<"):
+                    raise ValueError("favicon must be a valid SVG file.")
                 from ..services.image import save_favicon
                 return save_favicon(content, "favicon", inject_dark_mode=inject_dark_mode)
         return existing_url
 
     async def _save_logo(self, field_value: Any, existing_url: str, inject_dark_mode: bool = True) -> str:
-        """Process the logo FileField value. Returns the new URL or the existing one."""
+        """Process the logo FileField value. Returns the new URL or the existing one.
+        Raises ValueError if the uploaded file is not a valid SVG.
+        """
         file, should_delete = _unpack_file(field_value)
         if should_delete:
             return ""
         if file and hasattr(file, "read") and getattr(file, "filename", ""):
             content = await file.read()
             if content:
+                if not content.lstrip().startswith(b"<"):
+                    raise ValueError("logo must be a valid SVG file.")
                 from ..services.image import save_logo
                 return save_logo(content, inject_dark_mode=inject_dark_mode)
         return existing_url
+
+    @staticmethod
+    def _validate_comms(data: Dict[str, Any]) -> None:
+        """
+        Ensure URL and Display Text are either both present or both empty
+        for each communications channel. Raises FormValidationError if not.
+        """
+        pairs = [
+            ("linkedin",  "linkedin_text",  "LinkedIn URL",  "LinkedIn Display Text"),
+            ("instagram", "instagram_text", "Instagram URL", "Instagram Display Text"),
+            ("email",     "email_text",     "Email Address", "Email Display Text"),
+        ]
+        errors: Dict[str, str] = {}
+        for url_field, text_field, url_label, text_label in pairs:
+            has_url  = bool((data.get(url_field)  or "").strip())
+            has_text = bool((data.get(text_field) or "").strip())
+            if has_url and not has_text:
+                errors[text_field] = f"{text_label} is required when {url_label} is set."
+            elif has_text and not has_url:
+                errors[url_field] = f"{url_label} is required when {text_label} is set."
+        if errors:
+            raise FormValidationError(errors)
 
     @staticmethod
     def _dark_mode_flag(form_data: Any, field_name: str) -> bool:
@@ -720,20 +763,27 @@ class BrandView(SingletonView):
         return form_data.get(f"{field_name}_dark_mode", "false") == "true"
 
     async def create(self, request: Request, data: Dict[str, Any]) -> Any:
+        self._validate_comms(data)
         existing  = get_setting(self.SETTINGS_KEY) or {}
         form_data = await request.form()
         logo_dm   = self._dark_mode_flag(form_data, "logo")
         favicon_dm = self._dark_mode_flag(form_data, "favicon")
-        data["logo_url"] = await self._save_logo(
-            data.pop("logo", None),
-            existing.get("logo_url", ""),
-            inject_dark_mode=logo_dm,
-        )
-        data["favicon_url"] = await self._save_favicon(
-            data.pop("favicon", None),
-            existing.get("favicon_url", ""),
-            inject_dark_mode=favicon_dm,
-        )
+        try:
+            data["logo_url"] = await self._save_logo(
+                data.pop("logo", None),
+                existing.get("logo_url", ""),
+                inject_dark_mode=logo_dm,
+            )
+        except ValueError as exc:
+            raise FormValidationError({"logo": str(exc)}) from exc
+        try:
+            data["favicon_url"] = await self._save_favicon(
+                data.pop("favicon", None),
+                existing.get("favicon_url", ""),
+                inject_dark_mode=favicon_dm,
+            )
+        except ValueError as exc:
+            raise FormValidationError({"favicon": str(exc)}) from exc
         data["logo_dark_mode"]    = logo_dm
         data["favicon_dark_mode"] = favicon_dm
         data.pop("key", None)
@@ -743,20 +793,27 @@ class BrandView(SingletonView):
         return _as_obj(data)
 
     async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
+        self._validate_comms(data)
         existing   = get_setting(self.SETTINGS_KEY) or {}
         form_data  = await request.form()
         logo_dm    = self._dark_mode_flag(form_data, "logo")
         favicon_dm = self._dark_mode_flag(form_data, "favicon")
-        data["logo_url"] = await self._save_logo(
-            data.pop("logo", None),
-            existing.get("logo_url", ""),
-            inject_dark_mode=logo_dm,
-        )
-        data["favicon_url"] = await self._save_favicon(
-            data.pop("favicon", None),
-            existing.get("favicon_url", ""),
-            inject_dark_mode=favicon_dm,
-        )
+        try:
+            data["logo_url"] = await self._save_logo(
+                data.pop("logo", None),
+                existing.get("logo_url", ""),
+                inject_dark_mode=logo_dm,
+            )
+        except ValueError as exc:
+            raise FormValidationError({"logo": str(exc)}) from exc
+        try:
+            data["favicon_url"] = await self._save_favicon(
+                data.pop("favicon", None),
+                existing.get("favicon_url", ""),
+                inject_dark_mode=favicon_dm,
+            )
+        except ValueError as exc:
+            raise FormValidationError({"favicon": str(exc)}) from exc
         data["logo_dark_mode"]    = logo_dm
         data["favicon_dark_mode"] = favicon_dm
         data.pop("key", None)

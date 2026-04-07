@@ -36,7 +36,7 @@ Personal portfolio/blog site for jamesbrannon.co.uk. Two halves:
 nvm use && npm install
 cd cms && bash setup.sh    # creates .venv, installs deps, copies .env.example → .env
 
-# Start all services (DynamoDB mock on :8001, API on :8000, Vite on :3000)
+# Start all services (MinIO on :9000, DynamoDB mock on :8001, API on :8000, Vite on :3000)
 bash start.sh
 ```
 
@@ -64,9 +64,9 @@ cd cms && source .venv/bin/activate && python seed.py
 ## Running Tests
 
 ```bash
-npm test                              # Both (mirrors CI)
+npm test                              # Frontend only (alias for npx vitest run)
 npx vitest run                        # Frontend only (~150 tests)
-cd cms && pytest tests/ -v            # Backend only (~311 tests, 4 skipped)
+cd cms && pytest tests/ -v            # Backend only (~329 tests, 4 skipped)
 npm run test:coverage                 # Frontend with coverage report
 ```
 
@@ -115,7 +115,9 @@ jamesbrannon/
 │   │   ├── views.py     # Starlette Admin ModelView subclasses + custom field types
 │   │   ├── auth.py      # SimpleAuthProvider + rate limiting
 │   │   └── templates/   # Custom Jinja2 admin templates
-│   │       ├── layout.html          # Base layout; injects jbDialog singleton
+│   │       ├── layout.html          # Base layout; injects jbDialog + jbFormState
+│   │       ├── brand_edit.html      # Brand-specific edit page (pair hints script)
+│   │       ├── includes/publish_controls.html  # Save Draft / Publish button logic
 │   │       ├── modals/actions.html  # Overrides Starlette Admin delete confirmation
 │   │       └── forms/               # Custom field templates (toggle, asset_upload, etc.)
 │   ├── routers/         # FastAPI routers: posts.py, pages.py, categories.py, settings.py
@@ -131,7 +133,7 @@ jamesbrannon/
 ├── src/tests/           # Vitest — *.test.js (happy-dom)
 ├── cms/.env.example     # Local dev env template (committed)
 ├── cms/.env.production.example  # Production env template (committed)
-├── vite.config.js       # Dev server :3000, proxies /api + /admin + /static → :8000
+├── vite.config.js       # Dev server :3000, proxies /api + /admin → :8000
 └── start.sh             # Starts moto + uvicorn + vite in one command
 ```
 
@@ -402,6 +404,48 @@ Set `field.form_template = "forms/asset_upload.html"` in the field's `__post_ini
 - `.jb-upload-progress` / `.jb-upload-progress-bar` — file read progress
 
 **`POST /api/preview-svg`:** Auth-gated (session required). Accepts `multipart/form-data` with `file` field. Returns `{"preview": "data:image/svg+xml;base64,..."}`. Validates SVG by checking content starts with `<`. Nothing is saved.
+
+---
+
+## Admin Form State Tracking (jbFormState)
+
+All edit forms start with their primary save button **disabled**. The button enables when the form is dirty — i.e. the current field values differ from the snapshot taken on page load. Create forms are skipped and start enabled (server validation handles required fields on submit).
+
+**Rule:** `enabled = isDirty`
+
+**How it works:**
+
+- `jbFormState` lives in `layout.html` and runs on every admin page
+- It fires in `requestAnimationFrame` after `DOMContentLoaded` — this is load-bearing: it ensures both Alpine (loaded via `defer`) and `publish_controls.html` (synchronous `DOMContentLoaded`) have fully run before the snapshot is taken
+- It detects create pages via `pathname.indexOf('/create')` and exits early, leaving buttons at their default (enabled) state
+- The primary button is identified by the `data-jb-primary` attribute — re-queried on each state change, not cached at init
+- Standard HTML fields (`input`, `select`, `textarea`) are tracked automatically via `input` and `change` DOM events
+- File inputs set a one-way `_hasFile` flag on `change` (file paths cannot be read by JS, so a flag is used)
+- Custom Alpine fields signal changes via the `jb:field:change` custom event dispatched on `document`
+
+**Convention — custom Alpine fields:**
+
+Any Alpine component that manages form state outside standard HTML fields must dispatch `jb:field:change` when its committed value changes:
+
+```js
+document.dispatchEvent(new CustomEvent('jb:field:change'));
+```
+
+Current implementations:
+- `blocksEditor` (`forms/blocks.html`) — dispatches from `init()` via `$watch('blocks', ...)`; fires on any block mutation (add/remove/move/edit/media)
+- `assetUpload` (`forms/asset_upload.html`) — dispatches from `confirmModal()` when the user confirms a staged file
+
+**Convention — primary buttons added dynamically:**
+
+Any script that creates the primary submit button programmatically must add `data-jb-primary` to it. The tracker re-queries this attribute on each state change, so dynamically added buttons work without any extra wiring.
+
+Current implementation: `publish_controls.html` adds `data-jb-primary` to the Publish / Update button it creates. The default starlette-admin save button (on singleton forms) is auto-marked by `jbFormState` itself at init time.
+
+**Brand comms pair hints:**
+
+`brand_edit.html` includes a standalone cosmetic script that shows a soft inline warning (`form-hint text-warning`) when one field in a comms pair (URL + display text) is filled without the other. This does **not** affect button state. Server-side `_validate_comms` in `BrandView` remains the authoritative validation.
+
+Pairs: `linkedin`/`linkedin_text`, `instagram`/`instagram_text`, `email`/`email_text`.
 
 ---
 

@@ -1642,3 +1642,163 @@ def test_page_block_can_have_multiple_media_items(admin_client, aws_mock):
     assert len(stored[0]["media"]) == 2
     assert stored[0]["media"][0]["url"] == "/static/post-images/p1.jpg"
     assert stored[0]["media"][1]["url"] == "/static/post-images/p2.jpg"
+
+
+# ── BrandView: paired comms validation ────────────────────────────────────────
+
+def test_brand_validate_comms_url_without_text_raises():
+    from app.admin.views import BrandView
+    from starlette_admin.exceptions import FormValidationError
+    view = BrandView()
+    with pytest.raises(FormValidationError) as exc_info:
+        view._validate_comms({"linkedin": "https://linkedin.com/in/james", "linkedin_text": ""})
+    assert "linkedin_text" in exc_info.value.errors
+
+
+def test_brand_validate_comms_text_without_url_raises():
+    from app.admin.views import BrandView
+    from starlette_admin.exceptions import FormValidationError
+    view = BrandView()
+    with pytest.raises(FormValidationError) as exc_info:
+        view._validate_comms({"linkedin": "", "linkedin_text": "James Brannon"})
+    assert "linkedin" in exc_info.value.errors
+
+
+def test_brand_validate_comms_both_present_passes():
+    from app.admin.views import BrandView
+    view = BrandView()
+    # Should not raise
+    view._validate_comms({
+        "linkedin": "https://linkedin.com/in/james", "linkedin_text": "James Brannon",
+        "instagram": "", "instagram_text": "",
+        "email": "", "email_text": "",
+    })
+
+
+def test_brand_validate_comms_both_empty_passes():
+    from app.admin.views import BrandView
+    view = BrandView()
+    view._validate_comms({
+        "linkedin": "", "linkedin_text": "",
+        "instagram": "", "instagram_text": "",
+        "email": "", "email_text": "",
+    })
+
+
+def test_brand_validate_comms_instagram_url_without_text_raises():
+    from app.admin.views import BrandView
+    from starlette_admin.exceptions import FormValidationError
+    view = BrandView()
+    with pytest.raises(FormValidationError) as exc_info:
+        view._validate_comms({
+            "linkedin": "", "linkedin_text": "",
+            "instagram": "https://instagram.com/james", "instagram_text": "",
+            "email": "", "email_text": "",
+        })
+    assert "instagram_text" in exc_info.value.errors
+
+
+def test_brand_validate_comms_email_text_without_address_raises():
+    from app.admin.views import BrandView
+    from starlette_admin.exceptions import FormValidationError
+    view = BrandView()
+    with pytest.raises(FormValidationError) as exc_info:
+        view._validate_comms({
+            "linkedin": "", "linkedin_text": "",
+            "instagram": "", "instagram_text": "",
+            "email": "", "email_text": "hello@example.com",
+        })
+    assert "email" in exc_info.value.errors
+
+
+# ── BrandView: SVG content validation ─────────────────────────────────────────
+
+@pytest.mark.asyncio
+async def test_brand_save_logo_rejects_non_svg(aws_mock):
+    from app.admin.views import BrandView
+
+    view = BrandView()
+    fake_file = MagicMock()
+    fake_file.filename = "logo.svg"
+    fake_file.read = AsyncMock(return_value=b"PNG\x89not-svg-content")
+    with patch("app.admin.views._unpack_file", return_value=(fake_file, False)):
+        with pytest.raises(ValueError, match="valid SVG"):
+            await view._save_logo(fake_file, "")
+
+
+@pytest.mark.asyncio
+async def test_brand_save_favicon_rejects_non_svg(aws_mock):
+    from app.admin.views import BrandView
+
+    view = BrandView()
+    fake_file = MagicMock()
+    fake_file.filename = "favicon.svg"
+    fake_file.read = AsyncMock(return_value=b"\x89PNG non-svg")
+    with patch("app.admin.views._unpack_file", return_value=(fake_file, False)):
+        with pytest.raises(ValueError, match="valid SVG"):
+            await view._save_favicon(fake_file, "")
+
+
+# ── jbFormState dirty tracker ─────────────────────────────────────────────────
+
+def test_form_state_tracker_present_on_edit_pages(admin_client):
+    """jbFormState script is injected via layout.html on all admin pages."""
+    resp = admin_client.get('/admin/brand/edit/BRAND')
+    assert 'jbFormState' in resp.text
+
+
+def test_form_state_tracker_present_on_singleton_seo(admin_client):
+    resp = admin_client.get('/admin/seo/edit/SEO')
+    assert 'jbFormState' in resp.text
+
+
+def test_form_state_tracker_present_on_post_create(admin_client):
+    resp = admin_client.get('/admin/post/create')
+    assert 'jbFormState' in resp.text
+
+
+def test_form_state_skips_create_via_pathname_check(admin_client):
+    """Tracker script contains the /create bail-out so create forms stay enabled."""
+    resp = admin_client.get('/admin/post/create')
+    assert "indexOf('/create')" in resp.text
+
+
+def test_publish_controls_marks_primary_button(admin_client):
+    """publish_controls.html adds data-jb-primary to the Publish/Update button."""
+    resp = admin_client.get('/admin/post/create')
+    assert "data-jb-primary" in resp.text
+
+
+def test_publish_controls_primary_on_edit(admin_client, aws_mock):
+    """data-jb-primary is present on post edit pages too."""
+    from app.db import put_content
+    from .conftest import make_post
+    put_content("POST", make_post(slug="dirty-edit-test"))
+    resp = admin_client.get('/admin/post/edit/dirty-edit-test')
+    assert resp.status_code == 200
+    assert "data-jb-primary" in resp.text
+
+
+def test_blocks_editor_dispatches_field_change(admin_client):
+    """Block editor init() dispatches jb:field:change via $watch."""
+    resp = admin_client.get('/admin/post/create')
+    assert 'jb:field:change' in resp.text
+
+
+def test_asset_upload_dispatches_field_change_on_confirm(admin_client):
+    """Asset uploader confirmModal() dispatches jb:field:change."""
+    resp = admin_client.get('/admin/brand/edit/BRAND')
+    assert 'jb:field:change' in resp.text
+
+
+def test_brand_edit_includes_pair_hints_script(admin_client):
+    """Brand edit page includes the comms pair hint script."""
+    resp = admin_client.get('/admin/brand/edit/BRAND')
+    assert 'form-hint text-warning' in resp.text
+
+
+def test_brand_pair_hints_cover_all_three_channels(admin_client):
+    """Pair hints script references all three comms channels."""
+    resp = admin_client.get('/admin/brand/edit/BRAND')
+    for field in ['linkedin_text', 'instagram_text', 'email_text']:
+        assert field in resp.text

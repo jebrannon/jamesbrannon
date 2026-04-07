@@ -45,6 +45,7 @@
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn' + (isPrimary ? ' btn-primary' : ' btn-secondary');
+        if (isPrimary) btn.setAttribute('data-jb-primary', '');
         btn.textContent = label;
         btn.addEventListener('click', function () {
             cb.checked = publishedValue;

@@ -1,5 +1,53 @@
 {% extends "singleton_edit.html" %}
 
+{% block script %}
+{{ super() }}
+<script>
+/* ── Brand comms pair hints ───────────────────────────────────────────────────
+   Soft inline warning when one field in a pair is filled without the other.
+   Cosmetic only — does not affect button state. Server validates on submit.
+─────────────────────────────────────────────────────────────────────────────── */
+(function () {
+  document.addEventListener('DOMContentLoaded', function () {
+    var pairs = [
+      ['linkedin',  'linkedin_text'],
+      ['instagram', 'instagram_text'],
+      ['email',     'email_text'],
+    ];
+
+    pairs.forEach(function (pair) {
+      var a = document.getElementById(pair[0]);
+      var b = document.getElementById(pair[1]);
+      if (!a || !b) return;
+
+      var hintA = _makeHint(a);
+      var hintB = _makeHint(b);
+
+      [a, b].forEach(function (el) {
+        el.addEventListener('input', function () { _check(a, b, hintA, hintB); });
+      });
+    });
+
+    function _makeHint(input) {
+      var hint = document.createElement('small');
+      hint.className = 'form-hint text-warning mt-1 d-none';
+      input.closest('.mb-3').appendChild(hint);
+      return hint;
+    }
+
+    function _check(a, b, hintA, hintB) {
+      var hasA = a.value.trim() !== '';
+      var hasB = b.value.trim() !== '';
+      hintA.textContent = (!hasA && hasB) ? 'Required when display text is set.' : '';
+      hintB.textContent = (hasA && !hasB) ? 'Required when URL / address is set.' : '';
+      hintA.classList.toggle('d-none', !(!hasA && hasB));
+      hintB.classList.toggle('d-none', !(hasA && !hasB));
+    }
+  });
+})();
+</script>
+{% endblock %}
+
 {% block edit_form %}
     {%- set comms_fields = ['linkedin', 'linkedin_text', 'instagram', 'instagram_text', 'email', 'email_text'] -%}
     {%- set all_fields = model.get_fields_list(request, 'EDIT' | ra) -%}
@@ -43,11 +91,44 @@
         {% endfor %}
     </fieldset>
 
-    {# ── Communications fieldset ───────────────────────────────────────────── #}
+    {# ── LinkedIn fieldset ─────────────────────────────────────────────────── #}
+    {%- set linkedin_fields = ['linkedin', 'linkedin_text'] -%}
     <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2">Communications</legend>
+        <legend class="float-none w-auto px-2">LinkedIn</legend>
         {% for field in all_fields %}
-            {% if field.name in comms_fields %}
+            {% if field.name in linkedin_fields %}
+                <div class="mb-3">
+                    {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+                        {% include field.label_template %}
+                        {% include field.form_template %}
+                    {% endwith %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </fieldset>
+
+    {# ── Instagram fieldset ────────────────────────────────────────────────── #}
+    {%- set instagram_fields = ['instagram', 'instagram_text'] -%}
+    <fieldset class="border rounded p-3 mb-3">
+        <legend class="float-none w-auto px-2">Instagram</legend>
+        {% for field in all_fields %}
+            {% if field.name in instagram_fields %}
+                <div class="mb-3">
+                    {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+                        {% include field.label_template %}
+                        {% include field.form_template %}
+                    {% endwith %}
+                </div>
+            {% endif %}
+        {% endfor %}
+    </fieldset>
+
+    {# ── Email fieldset ────────────────────────────────────────────────────── #}
+    {%- set email_fields = ['email', 'email_text'] -%}
+    <fieldset class="border rounded p-3 mb-3">
+        <legend class="float-none w-auto px-2">Email</legend>
+        {% for field in all_fields %}
+            {% if field.name in email_fields %}
                 <div class="mb-3">
                     {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
                         {% include field.label_template %}

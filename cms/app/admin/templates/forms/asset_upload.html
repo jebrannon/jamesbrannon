@@ -219,6 +219,7 @@
         this.stagedDarkMode = this.addDarkMode;
         _pendingFile        = null;
         _rawDataUrl         = null;
+        document.dispatchEvent(new CustomEvent('jb:field:change'));
         this._modal().hide();
       },
 
