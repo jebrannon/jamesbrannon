@@ -65,8 +65,8 @@ cd cms && source .venv/bin/activate && python seed.py
 
 ```bash
 npm test                              # Frontend only (alias for npx vitest run)
-npx vitest run                        # Frontend only (~150 tests)
-cd cms && pytest tests/ -v            # Backend only (~349 tests, 4 skipped)
+npx vitest run                        # Frontend only (~156 tests)
+cd cms && pytest tests/ -v            # Backend only (~350 tests, 4 skipped)
 npm run test:coverage                 # Frontend with coverage report
 ```
 

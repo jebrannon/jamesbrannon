@@ -20,19 +20,26 @@ export function applyTheme(data) {
 /**
  * Update <title> and meta/og tags for the current page.
  * Falls back to data.title when seo_title is absent.
+ * ogType: pass 'article' for posts, 'website' for everything else.
+ * siteSettings: site-level SEO defaults from /api/settings/seo.
  */
-export function applyHead(data = {}) {
+export function applyHead(data = {}, { ogType = 'website', siteSettings = {} } = {}) {
   const title = data.seo_title || data.title;
   if (title) document.title = title;
 
-  _setMeta('name', 'description', data.seo_description || '');
+  const description = data.seo_description || siteSettings.seo_description || '';
+  const image = data.og_image || data.hero_thumbnail_url || siteSettings.og_image || '';
+  const siteName = siteSettings.site_name || '';
+
+  _setMeta('name', 'description', description);
   _setMeta('property', 'og:title', title || '');
-  _setMeta('property', 'og:description', data.seo_description || '');
-  _setMeta('property', 'og:image', data.og_image || '');
-  _setMeta('property', 'og:type', data.og_type || 'website');
+  _setMeta('property', 'og:description', description);
+  _setMeta('property', 'og:image', image);
+  _setMeta('property', 'og:type', ogType);
+  if (siteName) _setMeta('property', 'og:site_name', siteName);
 
   if (data.canonical_url) _setCanonical(data.canonical_url);
-  _setMeta('name', 'robots', data.no_index ? 'noindex,nofollow' : 'index,follow');
+  _setMeta('name', 'robots', (data.no_index || siteSettings.no_index) ? 'noindex,nofollow' : 'index,follow');
 }
 
 function _setMeta(attrName, attrValue, content) {
@@ -71,12 +78,15 @@ export async function fetchJSON(url) {
 
 export async function renderHomepage() {
   applyTheme({});
-  applyHead({ title: 'James' });
   const app = document.getElementById('App');
   if (!app) return;
 
   try {
-    const profile = await fetchJSON(`${BASE}/api/settings/profile`);
+    const [profile, siteSettings] = await Promise.all([
+      fetchJSON(`${BASE}/api/settings/profile`),
+      fetchJSON(`${BASE}/api/settings/seo`).catch(() => ({})),
+    ]);
+    applyHead({ title: 'James' }, { ogType: 'website', siteSettings });
     const blogLimit = profile.blog?.limit ?? 3;
 
     let html = '<div class="homepage">';
@@ -146,7 +156,8 @@ export async function renderHomepage() {
 
 export async function renderBlogListing(page = 1) {
   applyTheme({});
-  applyHead({ title: 'Blog — James Brannon' });
+  const siteSettings = await fetchJSON(`${BASE}/api/settings/seo`).catch(() => ({}));
+  applyHead({ title: 'Blog — James Brannon' }, { ogType: 'website', siteSettings });
   const app = document.getElementById('App');
   if (!app) return;
 
@@ -198,9 +209,12 @@ export async function renderPost(slug) {
   const app = document.getElementById('App');
   if (!app) return;
   try {
-    const data = await fetchJSON(`${BASE}/api/posts/${slug}`);
+    const [data, siteSettings] = await Promise.all([
+      fetchJSON(`${BASE}/api/posts/${slug}`),
+      fetchJSON(`${BASE}/api/settings/seo`).catch(() => ({})),
+    ]);
     applyTheme(data);
-    applyHead(data);
+    applyHead(data, { ogType: 'article', siteSettings });
     // data.body is CMS-authored HTML — intentionally rendered as markup.
     // All other interpolated values are escaped to prevent XSS.
     app.innerHTML = `
@@ -222,9 +236,12 @@ export async function renderCMSPage(slug) {
   const app = document.getElementById('App');
   if (!app) return;
   try {
-    const data = await fetchJSON(`${BASE}/api/pages/${slug}`);
+    const [data, siteSettings] = await Promise.all([
+      fetchJSON(`${BASE}/api/pages/${slug}`),
+      fetchJSON(`${BASE}/api/settings/seo`).catch(() => ({})),
+    ]);
     applyTheme(data);
-    applyHead(data);
+    applyHead(data, { ogType: 'website', siteSettings });
     // data.body is CMS-authored HTML — intentionally rendered as markup.
     app.innerHTML = `
       <section class="cms-page">

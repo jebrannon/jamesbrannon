@@ -148,7 +148,7 @@ from ..constants import (
     SETTINGS_BLOG, SETTINGS_BRAND, SETTINGS_LAST_UPDATED, SETTINGS_PROFILE, SETTINGS_SEO,
 )
 from ..db import delete_content, get_content, get_setting, list_content, put_content, put_setting, touch_last_updated
-from ..models import OGType, ThemeMode, ThemeStyle
+from ..models import ThemeMode, ThemeStyle
 
 # ── Static file storage ────────────────────────────────────────────────────────
 
@@ -179,16 +179,14 @@ SEO_FIELDS = [
     ),
     TextAreaField(
         "seo_description", label="Meta Description", required=False,
-        help_text="~155 chars — shown in search results and og:description",
+        help_text="~155 chars — shown in search results and social previews",
         exclude_from_list=True,
     ),
     StringField(
-        "og_image", label="OG Image URL", required=False,
-        help_text="Absolute URL for social sharing image (1200x630 px recommended)",
+        "og_image", label="Social Image URL", required=False,
+        help_text="Absolute URL for social sharing image (1200×630 px recommended)",
         exclude_from_list=True,
     ),
-    EnumSelectField("og_type", label="OG Type", enum=OGType, required=False,
-                    exclude_from_list=True),
     StringField(
         "canonical_url", label="Canonical URL", required=False,
         help_text="Leave blank to use the page URL automatically",
@@ -824,21 +822,37 @@ class BrandView(SingletonView):
 
 
 class SeoView(SingletonView):
-    """Singleton admin view for site-level SEO and Open Graph settings."""
+    """Singleton admin view for site-level SEO defaults."""
     SETTINGS_KEY = SETTINGS_SEO
     identity = "seo"
     name = "SEO"
     label = "SEO Metadata"
-    fields = [*SEO_FIELDS]
+    fields = [
+        StringField(
+            "site_name", label="Site Name", required=False,
+            help_text="Used as the title suffix and og:site_name (e.g. 'James Brannon')",
+            exclude_from_list=True,
+        ),
+        TextAreaField(
+            "seo_description", label="Default Meta Description", required=False,
+            help_text="Fallback description when a page has no specific meta description (~155 chars)",
+            exclude_from_list=True,
+        ),
+        StringField(
+            "og_image", label="Default Social Image URL", required=False,
+            help_text="Fallback social sharing image when a page has no specific OG image (1200×630 px recommended)",
+            exclude_from_list=True,
+        ),
+        ToggleField("no_index", label="No Index (hide entire site from search engines)",
+                    exclude_from_list=True),
+    ]
 
     def _defaults(self) -> Dict:
         return {
             "key": self.SETTINGS_KEY,
-            "seo_title": "",
+            "site_name": "",
             "seo_description": "",
             "og_image": "",
-            "og_type": "website",
-            "canonical_url": "",
             "no_index": False,
         }
 

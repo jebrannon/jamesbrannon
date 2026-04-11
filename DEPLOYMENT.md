@@ -113,7 +113,7 @@ Work through this in order. Tick items off as they are completed.
 - [x] Refactor `image.py` to use S3-direct for all file saves (hero images, block images, favicons)
 - [x] Add `S3_BUCKET` startup validation to `main.py` (fail fast if missing in production)
 - [x] Update `cms/.env.example` with MinIO config
-- [x] Update tests to use moto S3 mock (349 passing, 4 skipped)
+- [x] Update tests to use moto S3 mock (350 passing, 4 skipped)
 
 ### Phase 2 — Infrastructure (CDK)
 - [ ] Scaffold `infra/` CDK app (Python)

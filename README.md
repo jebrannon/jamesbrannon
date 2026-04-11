@@ -103,7 +103,7 @@ npx vitest run
 cd cms && source .venv/bin/activate && pytest tests/ -v
 ```
 
-~499 tests: ~150 Vitest (Site) + ~349 pytest (CMS, 4 skipped). CI runs on every push via GitHub Actions.
+~506 tests: ~156 Vitest (Site) + ~350 pytest (CMS, 4 skipped). CI runs on every push via GitHub Actions.
 
 ---
 

@@ -103,9 +103,10 @@ class TestPageModel:
         p = Page(slug="s", title="T")
         assert p.published is False
 
-    def test_og_type_defaults_to_website(self):
+    def test_page_has_no_og_type(self):
+        """og_type removed from Page — always website, not stored."""
         p = Page(slug="s", title="T")
-        assert p.og_type == OGType.website
+        assert not hasattr(p, 'og_type')
 
 
 # ── Category ──────────────────────────────────────────────────────────────────
@@ -150,12 +151,20 @@ class TestBrandSettings:
 class TestSeoSettings:
     def test_empty_seo_is_valid(self):
         s = SeoSettings()
-        assert s.seo_title is None
+        assert s.site_name is None
+        assert s.seo_description is None
+        assert s.og_image is None
+        assert s.og_site_name is None
         assert s.no_index is False
 
-    def test_og_type_defaults_to_website(self):
+    def test_site_name_can_be_set(self):
+        s = SeoSettings(site_name="James Brannon")
+        assert s.site_name == "James Brannon"
+
+    def test_no_og_type_on_seo_settings(self):
+        """og_type removed from SeoSettings — always website at site level."""
         s = SeoSettings()
-        assert s.og_type == OGType.website
+        assert not hasattr(s, 'og_type')
 
 
 # ── ProfileSettings ───────────────────────────────────────────────────────────

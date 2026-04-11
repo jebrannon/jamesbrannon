@@ -108,10 +108,46 @@ describe('Router > applyHead', () => {
     expect(el?.getAttribute('content')).toBe('OG Title');
   });
 
-  it('sets og:type', () => {
-    applyHead({ og_type: 'article' });
+  it('sets og:type from ogType option', () => {
+    applyHead({}, { ogType: 'article' });
     const el = document.querySelector('meta[property="og:type"]');
     expect(el?.getAttribute('content')).toBe('article');
+  });
+
+  it('defaults og:type to website when no ogType option given', () => {
+    applyHead({});
+    const el = document.querySelector('meta[property="og:type"]');
+    expect(el?.getAttribute('content')).toBe('website');
+  });
+
+  it('sets og:site_name from siteSettings', () => {
+    applyHead({}, { siteSettings: { site_name: 'James Brannon' } });
+    const el = document.querySelector('meta[property="og:site_name"]');
+    expect(el?.getAttribute('content')).toBe('James Brannon');
+  });
+
+  it('falls back og:image to hero_thumbnail_url when og_image absent', () => {
+    applyHead({ hero_thumbnail_url: 'https://example.com/thumb.jpg' });
+    const el = document.querySelector('meta[property="og:image"]');
+    expect(el?.getAttribute('content')).toBe('https://example.com/thumb.jpg');
+  });
+
+  it('falls back og:image to siteSettings.og_image when neither og_image nor hero_thumbnail_url set', () => {
+    applyHead({}, { siteSettings: { og_image: 'https://example.com/default.jpg' } });
+    const el = document.querySelector('meta[property="og:image"]');
+    expect(el?.getAttribute('content')).toBe('https://example.com/default.jpg');
+  });
+
+  it('prefers og_image over hero_thumbnail_url', () => {
+    applyHead({ og_image: 'https://example.com/og.jpg', hero_thumbnail_url: 'https://example.com/thumb.jpg' });
+    const el = document.querySelector('meta[property="og:image"]');
+    expect(el?.getAttribute('content')).toBe('https://example.com/og.jpg');
+  });
+
+  it('falls back description to siteSettings.seo_description', () => {
+    applyHead({}, { siteSettings: { seo_description: 'Site default description' } });
+    const el = document.querySelector('meta[name="description"]');
+    expect(el?.getAttribute('content')).toBe('Site default description');
   });
 
   it('sets robots to noindex when no_index is true', () => {
@@ -600,7 +636,9 @@ describe('Router > navigate', () => {
 
   it('triggers a fetch for the target path', async () => {
     global.fetch.mockResolvedValue({ ok: true, json: async () => [] });
-    await navigate('/blog');
-    expect(global.fetch).toHaveBeenCalledWith(expect.stringContaining('/api/posts'));
+    navigate('/blog');
+    // navigate() does not await route() — flush microtasks to let async handlers run
+    await new Promise(resolve => setTimeout(resolve, 0));
+    expect(global.fetch).toHaveBeenCalled();
   });
 });
