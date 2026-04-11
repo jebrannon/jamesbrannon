@@ -7,7 +7,7 @@ from unittest.mock import patch
 from PIL import Image
 
 import app.services.image as image_module
-from app.services.image import _inject_dark_mode
+from app.services.image import _inject_dark_mode, _make_previews
 
 
 def _make_jpeg_bytes() -> bytes:
@@ -84,6 +84,57 @@ def test_handles_three_char_hex():
     result = _inject_dark_mode(svg).decode("utf-8")
     assert "prefers-color-scheme" in result
     assert "#FBFBFB" in result
+
+
+# ── _make_previews ────────────────────────────────────────────────────────────
+
+def test_make_previews_dark_svg_light_is_original():
+    """Dark SVG: light preview is the original (dark fills visible on white)."""
+    light, _ = _make_previews(_DARK_SVG)
+    assert light == _DARK_SVG
+
+
+def test_make_previews_dark_svg_dark_flips_to_light():
+    """Dark SVG: dark preview has fills replaced with light colour."""
+    _, dark = _make_previews(_DARK_SVG)
+    decoded = dark.decode("utf-8")
+    assert "#FBFBFB" in decoded
+    assert "prefers-color-scheme" not in decoded
+
+
+def test_make_previews_light_svg_dark_is_original():
+    """Light SVG: dark preview is the original (light fills visible on dark bg)."""
+    _, dark = _make_previews(_LIGHT_SVG)
+    assert dark == _LIGHT_SVG
+
+
+def test_make_previews_light_svg_light_flips_to_dark():
+    """Light SVG: light preview has fills replaced with dark colour."""
+    light, _ = _make_previews(_LIGHT_SVG)
+    decoded = light.decode("utf-8")
+    assert "#2D2D2D" in decoded
+    assert "prefers-color-scheme" not in decoded
+
+
+def test_make_previews_no_fills_returns_original_for_both():
+    """SVG with no detectable fills: both previews are the original unchanged."""
+    light, dark = _make_previews(_NO_FILLS)
+    assert light == _NO_FILLS
+    assert dark == _NO_FILLS
+
+
+def test_make_previews_invalid_utf8_returns_original_for_both():
+    bad = b"\xff\xfe invalid bytes"
+    light, dark = _make_previews(bad)
+    assert light == bad
+    assert dark == bad
+
+
+def test_make_previews_no_media_query_in_either_preview():
+    """Neither preview should contain a media query — fills are hardcoded."""
+    light, dark = _make_previews(_DARK_SVG)
+    assert b"prefers-color-scheme" not in light
+    assert b"prefers-color-scheme" not in dark
 
 
 # ── save_hero_image ───────────────────────────────────────────────────────────

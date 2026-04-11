@@ -12,6 +12,7 @@
   --jb-light:         #FBFBFB;
   --jb-primary:       #0FCE8F;   /* primary / accent */
   --jb-secondary:     #FF6E70;   /* errors / warnings */
+  --jb-grey-midnight: #393939;
   --jb-grey-dark:     #424242;
   --jb-grey-mild:     #929292;   /* placeholder text */
   --jb-grey-light:    #F1F1F1;
@@ -48,6 +49,12 @@
   --fw-bold:   700;
   --fw-anchor: 600;
 
+  --fs-anchor: 1rem;
+  --lh-anchor: 1.5rem;
+  --fs-btn:    1rem;
+  --lh-btn:    1rem;
+  --fw-btn:    var(--fw-medium);
+
   /* ── Letter spacing ──────────────────────────────────────────────────────── */
   --ls-h1: 0.02em;
   --ls-h5: 0.02em;
@@ -74,10 +81,10 @@
 
   /* ── Buttons ─────────────────────────────────────────────────────────────── */
   --jb-btn-radius:    var(--jb-radius);
-  --jb-btn-font:      var(--font);       /* Barlow Semi Condensed */
-  --jb-btn-fs:        1rem;              /* 16px */
-  --jb-btn-lh:        1;                 /* 16px / 16px */
-  --jb-btn-fw:        var(--fw-medium);  /* 500 */
+  --jb-btn-font:      var(--font);
+  --jb-btn-fs:        var(--fs-btn);
+  --jb-btn-lh:        var(--lh-btn);
+  --jb-btn-fw:        var(--fw-btn);
   --jb-btn-padding:   0.75rem 1rem;     /* 12px 16px */
   --jb-btn-transform: none;
 
@@ -106,8 +113,8 @@
   --jb-btn-danger-hover-text:      var(--jb-dark);
 
   /* Disabled — applies to all button variants */
-  --jb-btn-disabled-bg:            var(--jb-dark);
-  --jb-btn-disabled-border:        var(--jb-dark);
+  --jb-btn-disabled-bg:            var(--jb-grey-midnight);
+  --jb-btn-disabled-border:        var(--jb-grey-midnight);
   --jb-btn-disabled-text:          var(--jb-grey-mild);
 
   /* Dialog / modal backdrop */

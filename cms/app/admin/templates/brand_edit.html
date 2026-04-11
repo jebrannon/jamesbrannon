@@ -61,7 +61,7 @@
 
                 {# ── Logo ─────────────────────────────────────────────────── #}
                 {% if field.name == 'logo' %}
-                <div class="mb-4">
+                <div class="mb-3">
                     <label class="form-label jb-field-label">{{ field.label }}</label>
                     {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None, current_url=raw_obj.logo_url, preview_type='logo', dark_mode=true, saved_dark_mode=raw_obj.logo_dark_mode %}
                         {% include field.form_template %}
@@ -70,7 +70,7 @@
 
                 {# ── Favicon ───────────────────────────────────────────────── #}
                 {% elif field.name == 'favicon' %}
-                <div class="mb-4">
+                <div class="mb-3">
                     <label class="form-label jb-field-label">{{ field.label }}</label>
                     {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None, current_url=raw_obj.favicon_url, preview_type='favicon', dark_mode=true, saved_dark_mode=raw_obj.favicon_dark_mode %}
                         {% include field.form_template %}

@@ -32,6 +32,7 @@
   --tblr-body-bg:                      var(--jb-dark);
   --tblr-bg-surface:                   var(--jb-dark);
   --tblr-navbar-bg:                    var(--jb-dark);
+  --tblr-navbar-width:                 240px;
   --tblr-body-color:                   var(--jb-light);
   --tblr-body-color-rgb:               251, 251, 251;
   --tblr-emphasis-color:               var(--jb-light);
@@ -55,18 +56,36 @@
 
 /* ── 2. Typography ────────────────────────────────────────────────────────── */
 
+::selection {
+  background: var(--jb-light);
+  color:      var(--jb-dark);
+}
+
 body {
   font-family: var(--font);
   font-size:   var(--fs-body);
   font-weight: var(--fw-body);
   line-height: var(--lh-body);
   color:       var(--jb-light);
+  min-width:   1280px;
+  overflow:    auto;
 }
 
 p { color: var(--jb-light); }
 
-a       { color: var(--jb-light); }
-a:hover { color: var(--jb-light); }
+a {
+  color:           var(--jb-light);
+  font-size:       var(--fs-anchor);
+  line-height:     var(--lh-anchor);
+  font-weight:     var(--fw-anchor);
+  font-style:      italic;
+  text-decoration: underline;
+}
+
+a:hover {
+  color:           var(--jb-light);
+  text-decoration: none;
+}
 
 b, strong { font-weight: var(--fw-medium); }
 
@@ -168,14 +187,6 @@ details summary { color: var(--jb-light) !important; }
   flex: 1;
 }
 
-/* Responsive — tighten side padding on small screens */
-@media (max-width: 768px) {
-  .jb-page-header,
-  .jb-page-body {
-    padding-left:  var(--page-padding-sm);
-    padding-right: var(--page-padding-sm);
-  }
-}
 
 /* Neutralise the container-fluid > row > col-12 starlette-admin injects */
 .jb-page-body > .container-fluid {
@@ -215,12 +226,21 @@ details summary { color: var(--jb-light) !important; }
   background-color: var(--jb-grey-dark);
   border-color:     var(--jb-grey-dark);
   color:            var(--jb-light);
+  font-family:      var(--font);
+  font-size:        var(--fs-body);
+  font-weight:      var(--fw-body);
+  line-height:      var(--lh-body);
+  padding:          0.375rem 0.75rem;
 }
 .form-control::placeholder,
 textarea::placeholder,
 input::placeholder {
   color:   var(--jb-grey-mild);
   opacity: 1;
+}
+.form-control:hover,
+.form-select:hover {
+  border-color: var(--jb-grey-mild);
 }
 .form-control:focus,
 .form-select:focus {
@@ -265,8 +285,9 @@ small {
   text-transform: none !important;
 }
 
-/* Field labels with extra top spacing (e.g. Brand upload fields) */
-.jb-field-label { margin-top: .5rem; }
+.jb-field-label { margin-top: 0; }
+
+fieldset > *:last-child { margin-bottom: 0 !important; }
 
 /* Fieldset legends — h4 scale */
 legend {
@@ -307,13 +328,19 @@ legend {
 
 /* ── Buttons ── */
 .btn {
-  border-radius:  var(--jb-btn-radius);
-  padding:        var(--jb-btn-padding);
-  font-family:    var(--jb-btn-font);
-  font-size:      var(--jb-btn-fs);
-  line-height:    var(--jb-btn-lh);
-  font-weight:    var(--jb-btn-fw);
-  text-transform: var(--jb-btn-transform);
+  border-radius:   var(--jb-btn-radius);
+  padding:         var(--jb-btn-padding);
+  font-family:     var(--jb-btn-font);
+  font-size:       var(--jb-btn-fs);
+  line-height:     var(--jb-btn-lh);
+  font-weight:     var(--jb-btn-fw);
+  text-transform:  var(--jb-btn-transform);
+  text-decoration: none;
+  font-style:      normal;
+}
+.btn:hover {
+  text-decoration: none;
+  font-style:      normal;
 }
 
 .btn-primary {
@@ -859,6 +886,8 @@ thead th,
 .jb-upload-modal .form-check-label {
   color: var(--jb-light);
 }
+
+.jb-upload .form-hint      { margin-top: 0.5rem; }
 
 /* Uploaded image preview (hero, block images) */
 .jb-image-upload-preview {

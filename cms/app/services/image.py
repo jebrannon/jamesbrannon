@@ -192,6 +192,55 @@ def _inject_dark_mode(svg_bytes: bytes) -> bytes:
     return svg_str.encode("utf-8")
 
 
+def _make_previews(svg_bytes: bytes):
+    """
+    Return (light_preview, dark_preview) — two SVG byte strings with fills hardcoded
+    (no media query) so each renders correctly on its respective background regardless
+    of OS colour scheme.
+
+    - light_preview: how the SVG should look on a light background (light mode)
+    - dark_preview:  how the SVG should look on a dark background (dark mode)
+    """
+    try:
+        svg_str = svg_bytes.decode("utf-8")
+    except UnicodeDecodeError:
+        return svg_bytes, svg_bytes
+
+    colours = re.findall(
+        r'(?:fill|stroke)\s*[=:]\s*["\']?\s*(#[0-9a-fA-F]{3,6})\b',
+        svg_str,
+        re.IGNORECASE,
+    )
+    if not colours:
+        return svg_bytes, svg_bytes
+
+    def _luminance(h: str) -> float:
+        h = h.lstrip("#")
+        if len(h) == 3:
+            h = h[0] * 2 + h[1] * 2 + h[2] * 2
+        r, g, b = int(h[0:2], 16), int(h[2:4], 16), int(h[4:6], 16)
+        return (0.299 * r + 0.587 * g + 0.114 * b) / 255
+
+    def _with_fill(colour: str) -> bytes:
+        style = (
+            "<style>"
+            f"path, circle, rect, polygon, ellipse {{ fill: {colour}; }}"
+            "</style>"
+        )
+        result = re.sub(r"(<svg\b[^>]*>)", rf"\1{style}", svg_str, count=1, flags=re.IGNORECASE)
+        return result.encode("utf-8")
+
+    avg = sum(_luminance(c) for c in colours) / len(colours)
+    is_light = avg >= 0.5
+
+    if is_light:
+        # Light SVG (e.g. white logo): dark fills for light bg, original for dark bg
+        return _with_fill("#2D2D2D"), svg_bytes
+    else:
+        # Dark SVG (e.g. black logo): original for light bg, light fills for dark bg
+        return svg_bytes, _with_fill("#FBFBFB")
+
+
 def save_logo(svg_bytes: bytes, inject_dark_mode: bool = True) -> str:
     """
     Save the site logo SVG, optionally injecting dark-mode support.

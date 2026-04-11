@@ -52,7 +52,7 @@
   </div>
 
   {% if field.help_text %}
-    <small class="form-hint mt-1 d-block">{{ field.help_text }}</small>
+    <small class="form-hint d-block">{{ field.help_text }}</small>
   {% endif %}
 
   {# ── Preview modal ── #}
@@ -79,7 +79,7 @@
                 <img :src="modalPreview" alt="">
               </div>
               <div class="jb-upload-swatch jb-upload-swatch--dark">
-                <img :src="modalPreview" alt="">
+                <img :src="modalPreviewDark" alt="">
               </div>
             </div>
 
@@ -140,7 +140,8 @@
       stagedDarkMode: savedDarkMode || false,
 
       // ── Modal state (reactive — drives the template) ──────────────────────
-      modalPreview: null,
+      modalPreview:     null,
+      modalPreviewDark: null,
       addDarkMode:  false,
       fetchingDark: false,
       modalError:   null,
@@ -191,7 +192,8 @@
           });
           if (!resp.ok) throw new Error('server');
           const json = await resp.json();
-          this.modalPreview = json.preview;
+          this.modalPreview     = json.preview;
+          this.modalPreviewDark = json.preview_dark;
         } catch (err) {
           if (err.name !== 'AbortError') {
             this.modalError   = 'Could not generate dark mode preview. Please try again.';
@@ -232,6 +234,7 @@
         _pendingFile                 = null;
         _rawDataUrl                  = null;
         this.modalPreview            = null;
+        this.modalPreviewDark        = null;
         this.addDarkMode             = false;
         this.modalError              = null;
         this.$refs.fileInput.value   = '';

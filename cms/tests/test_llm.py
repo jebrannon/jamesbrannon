@@ -5,6 +5,40 @@ from unittest.mock import AsyncMock, MagicMock, patch
 import httpx
 
 
+# ── _strip_html ───────────────────────────────────────────────────────────────
+
+class TestStripHtml:
+    def test_removes_html_tags(self):
+        from app.services.llm import _strip_html
+        assert _strip_html("<p>Hello world</p>") == "Hello world"
+
+    def test_decodes_html_entities(self):
+        from app.services.llm import _strip_html
+        assert _strip_html("&amp; &lt;p&gt;") == "& <p>"
+
+    def test_collapses_whitespace(self):
+        from app.services.llm import _strip_html
+        result = _strip_html("<p>Hello</p>   <p>World</p>")
+        assert "  " not in result
+        assert "Hello" in result
+        assert "World" in result
+
+    def test_empty_string(self):
+        from app.services.llm import _strip_html
+        assert _strip_html("") == ""
+
+    def test_plain_text_unchanged(self):
+        from app.services.llm import _strip_html
+        assert _strip_html("Just plain text.") == "Just plain text."
+
+    def test_nested_tags(self):
+        from app.services.llm import _strip_html
+        result = _strip_html("<div><strong>Bold</strong> and <em>italic</em></div>")
+        assert "Bold" in result
+        assert "italic" in result
+        assert "<" not in result
+
+
 @pytest.mark.asyncio
 async def test_generate_excerpt_returns_text():
     from app.services.llm import generate_excerpt

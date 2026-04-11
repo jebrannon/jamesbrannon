@@ -172,3 +172,40 @@ class TestToggleField:
         from starlette_admin.fields import BooleanField
         field = ToggleField("no_index", label="No Index")
         assert isinstance(field, BooleanField)
+
+
+# ── _as_obj ───────────────────────────────────────────────────────────────────
+
+class TestAsObj:
+    def test_none_returns_none(self):
+        from app.admin.views import _as_obj
+        assert _as_obj(None) is None
+
+    def test_flat_dict(self):
+        from app.admin.views import _as_obj
+        obj = _as_obj({"slug": "test", "title": "Test"})
+        assert obj.slug == "test"
+        assert obj.title == "Test"
+
+    def test_nested_dict_is_wrapped(self):
+        from app.admin.views import _as_obj
+        obj = _as_obj({"blog": {"headline": "Hi", "limit": 3}})
+        assert obj.blog.headline == "Hi"
+        assert obj.blog.limit == 3
+
+    def test_list_of_dicts_is_wrapped(self):
+        from app.admin.views import _as_obj
+        obj = _as_obj({"items": [{"name": "X"}, {"name": "Y"}]})
+        assert obj.items[0].name == "X"
+        assert obj.items[1].name == "Y"
+
+    def test_list_of_primitives_unchanged(self):
+        from app.admin.views import _as_obj
+        obj = _as_obj({"tags": ["a", "b"]})
+        assert obj.tags == ["a", "b"]
+
+    def test_empty_dict(self):
+        from app.admin.views import _as_obj
+        from types import SimpleNamespace
+        obj = _as_obj({})
+        assert isinstance(obj, SimpleNamespace)

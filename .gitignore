@@ -59,3 +59,9 @@ desktop.ini
 *.log
 npm-debug.log*
 yarn-error.log
+
+# Claude Code local configuration
+.claude/
+
+# Generated static assets (Tabler desktop override, rebuilt from source)
+cms/static/tabler.desktop.css
