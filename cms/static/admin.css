@@ -1,64 +1,85 @@
 /*
  *  File:   admin.css
- *  Info:   CMS admin UI styles — layered on top of Tabler CSS.
- *          Tokens are defined in admin-tokens.css.
- *          Load order: tabler.min.css → admin-tokens.css → admin.css
+ *  Info:   CMS admin UI styles — sits on top of tabler.desktop.css.
+ *          Design tokens live in admin-tokens.css (--jj-* prefix).
+ *          Load order: tabler.desktop.css → admin-tokens.css → admin.css
  *
- *  Layers:
- *    1. Tabler remap     — override Tabler/Bootstrap CSS custom properties
- *    2. Typography       — body, headings, text utilities
- *    3. Layout           — page structure, navbar, sidebar
- *    4. Forms            — inputs, labels, cards, fieldsets
- *    5. Components       — buttons, badges, tables, icons
- *    6. Singleton pages  — singleton edit page overrides
- *    7. Block editor     — rich text and block editor
- *    8. Upload           — SVG and image upload components
+ *  Prefix rules:
+ *    --jj-*   Our design tokens (defined in admin-tokens.css). Only edit here.
+ *    --tblr-* Tabler's internal tokens. Remapped in the Tabler remap section
+ *             below to apply our palette — that is Tabler's intended theming API.
+ *             Never define --tblr-* tokens anywhere except that section.
+ *
+ *  Sections:
+ *    Tabler remap    — set --tblr-* tokens to pull in our --jj-* palette
+ *    Typography      — body, headings, text utilities
+ *    Layout          — page structure, navbar, sidebar
+ *    Forms           — inputs, labels, cards, fieldsets
+ *    Components      — buttons, badges, tables, icons
+ *    Singleton pages — singleton edit page overrides (.jj-singleton)
+ *    Block editor    — rich text and block editor
+ *    Upload          — SVG and image upload components
  */
 
 
-/* ── 1. Tabler remap ──────────────────────────────────────────────────────── */
+/* ── Tabler remap ──────────────────────────────────────────────────────── */
 /*
- * Remap Tabler's CSS custom properties to our palette.
- * This is the preferred way to theme Tabler — override their tokens
- * rather than fighting their selectors with !important.
+ * Set Tabler's CSS custom properties to our palette values.
+ * This is the only place --tblr-* tokens should be written.
  */
 
 :root {
   --tblr-font-sans-serif: 'Barlow Semi Condensed', -apple-system, BlinkMacSystemFont, sans-serif;
-  --tblr-border-radius:   var(--jb-radius);
+  --tblr-border-radius:   var(--jj-radius);
 }
 
+/* Remap spacing scale — level 5 = 2rem (Bootstrap default is 3rem) */
+.m-5  { margin:         2rem !important; }
+.mt-5 { margin-top:     2rem !important; }
+.mb-5 { margin-bottom:  2rem !important; }
+.ms-5 { margin-left:    2rem !important; }
+.me-5 { margin-right:   2rem !important; }
+.mx-5 { margin-left:    2rem !important; margin-right:  2rem !important; }
+.my-5 { margin-top:     2rem !important; margin-bottom: 2rem !important; }
+.p-5  { padding:        2rem !important; }
+.pt-5 { padding-top:    2rem !important; }
+.pb-5 { padding-bottom: 2rem !important; }
+.ps-5 { padding-left:   2rem !important; }
+.pe-5 { padding-right:  2rem !important; }
+.px-5 { padding-left:   2rem !important; padding-right:  2rem !important; }
+.py-5 { padding-top:    2rem !important; padding-bottom: 2rem !important; }
+
 [data-bs-theme=dark] {
-  --tblr-body-bg:                      var(--jb-dark);
-  --tblr-bg-surface:                   var(--jb-dark);
-  --tblr-navbar-bg:                    var(--jb-dark);
+  --tblr-body-bg:                      var(--jj-dark);
+  --tblr-bg-surface:                   var(--jj-dark);
+  --tblr-navbar-bg:                    var(--jj-dark);
   --tblr-navbar-width:                 240px;
-  --tblr-body-color:                   var(--jb-light);
+  --tblr-body-color:                   var(--jj-light);
   --tblr-body-color-rgb:               251, 251, 251;
-  --tblr-emphasis-color:               var(--jb-light);
-  --tblr-link-color:                   var(--jb-primary);
-  --tblr-link-hover-color:             var(--jb-primary);
-  --tblr-primary:                      var(--jb-primary);
+  --tblr-emphasis-color:               var(--jj-light);
+  --tblr-link-color:                   var(--jj-primary);
+  --tblr-link-hover-color:             var(--jj-primary);
+  --tblr-primary:                      var(--jj-primary);
   --tblr-primary-rgb:                  15, 206, 143;
   --tblr-primary-lt:                   rgba(15, 206, 143, .1);
-  --tblr-danger:                       var(--jb-secondary);
+  --tblr-danger:                       var(--jj-secondary);
   --tblr-danger-rgb:                   255, 110, 112;
   --tblr-danger-lt:                    rgba(255, 110, 112, .1);
-  --tblr-border-color:                 var(--jb-grey-dark);
-  --tblr-border-color-translucent:     var(--jb-grey-dark);
-  --tblr-border-active-color:          var(--jb-grey-light);
-  --tblr-border-dark-color:            var(--jb-grey-light);
+  --tblr-border-color:                 var(--jj-grey-dark);
+  --tblr-border-color-translucent:     var(--jj-grey-dark);
+  --tblr-border-active-color:          var(--jj-grey-light);
+  --tblr-border-dark-color:            var(--jj-grey-light);
 }
 
 /* Alpine.js — hide elements before initialisation */
 [x-cloak] { display: none !important; }
 
 
-/* ── 2. Typography ────────────────────────────────────────────────────────── */
+/* ── Typography ────────────────────────────────────────────────────────── */
 
 ::selection {
-  background: var(--jb-light);
-  color:      var(--jb-dark);
+  background: var(--jj-light);
+  color:      var(--jj-dark);
 }
 
 body {
@@ -66,15 +87,15 @@ body {
   font-size:   var(--fs-body);
   font-weight: var(--fw-body);
   line-height: var(--lh-body);
-  color:       var(--jb-light);
+  color:       var(--jj-light);
   min-width:   1280px;
   overflow:    auto;
 }
 
-p { color: var(--jb-light); }
+p { color: var(--jj-light); }
 
 a {
-  color:           var(--jb-light);
+  color:           var(--jj-light);
   font-size:       var(--fs-anchor);
   line-height:     var(--lh-anchor);
   font-weight:     var(--fw-anchor);
@@ -83,7 +104,7 @@ a {
 }
 
 a:hover {
-  color:           var(--jb-light);
+  color:           var(--jj-light);
   text-decoration: none;
 }
 
@@ -139,14 +160,14 @@ h5, h6 {
 }
 
 /* Utility text colours */
-.text-muted     { color: var(--jb-grey-light) !important; }
-.text-secondary { color: var(--jb-light) !important; }
+.text-muted     { color: var(--jj-grey-light) !important; }
+.text-secondary { color: var(--jj-light) !important; }
 
 /* SEO settings panel summary label */
-details summary { color: var(--jb-light) !important; }
+details summary { color: var(--jj-light) !important; }
 
 
-/* ── 3. Layout ────────────────────────────────────────────────────────────── */
+/* ── Layout ────────────────────────────────────────────────────────────── */
 
 /* Brand logo in sidebar */
 .navbar-logo {
@@ -177,38 +198,57 @@ details summary { color: var(--jb-light) !important; }
 }
 
 /* Page header — top/side padding, reduced bottom before content */
-.jb-page-header {
-  padding: var(--page-padding) var(--page-padding) var(--page-padding-sm);
+.jj-page-header {
+  padding: 2rem;
+}
+
+.jj-page-header h1 {
+  margin: 0;
+}
+
+/* Breadcrumb */
+.breadcrumb-item a {
+  font-size:       var(--fs-anchor);
+  line-height:     var(--lh-anchor);
+  font-weight:     var(--fw-anchor);
+  font-style:      italic;
+  text-decoration: underline;
+  color:           var(--jj-light);
+}
+.breadcrumb-item a:hover {
+  text-decoration: none;
+  color:           var(--jj-light);
+}
+.breadcrumb-item + .breadcrumb-item::before {
+  color: var(--jj-light);
+}
+.breadcrumb-item.active {
+  color: var(--jj-primary);
 }
 
 /* Page body — fills remaining height */
-.jb-page-body {
-  padding: 0 var(--page-padding) var(--page-padding);
+.jj-page-body {
+  padding: 1.5rem 2rem 2rem 2rem;
   flex: 1;
 }
 
 
-/* Neutralise the container-fluid > row > col-12 starlette-admin injects */
-.jb-page-body > .container-fluid {
-  --tblr-gutter-x: 0;
-  padding: 0;
-}
 
 /* List page toolbar */
-.jb-list-toolbar {
+.jj-list-toolbar {
   display:         flex;
   align-items:     center;
   justify-content: space-between;
   gap:             1rem;
   margin-bottom:   1rem;
 }
-.jb-list-toolbar-left {
+.jj-list-toolbar-left {
   display:     flex;
   align-items: center;
   gap:         .75rem;
   flex:        1;
 }
-.jb-list-toolbar-left .input-icon {
+.jj-list-toolbar-left .input-icon {
   flex:      1;
   max-width: 320px;
 }
@@ -218,14 +258,14 @@ details summary { color: var(--jb-light) !important; }
 .dataTables_wrapper .dataTables_info     { padding: .75rem 0; }
 
 
-/* ── 4. Forms ─────────────────────────────────────────────────────────────── */
+/* ── Forms ─────────────────────────────────────────────────────────────── */
 
 /* Inputs and selects */
 .form-control,
 .form-select {
-  background-color: var(--jb-grey-dark);
-  border-color:     var(--jb-grey-dark);
-  color:            var(--jb-light);
+  background-color: var(--jj-grey-dark);
+  border-color:     var(--jj-grey-dark);
+  color:            var(--jj-light);
   font-family:      var(--font);
   font-size:        var(--fs-body);
   font-weight:      var(--fw-body);
@@ -235,35 +275,35 @@ details summary { color: var(--jb-light) !important; }
 .form-control::placeholder,
 textarea::placeholder,
 input::placeholder {
-  color:   var(--jb-grey-mild);
+  color:   var(--jj-grey-mild);
   opacity: 1;
 }
 .form-control:hover,
 .form-select:hover {
-  border-color: var(--jb-grey-mild);
+  border-color: var(--jj-grey-mild);
 }
 .form-control:focus,
 .form-select:focus {
-  background-color: var(--jb-grey-dark);
-  border-color:     var(--jb-light);
-  color:            var(--jb-light);
+  background-color: var(--jj-grey-dark);
+  border-color:     var(--jj-light);
+  color:            var(--jj-light);
   box-shadow:       none;
 }
 .form-control:-webkit-autofill {
-  -webkit-text-fill-color: var(--jb-light);
-  box-shadow: 0 0 0 1000px var(--jb-grey-dark) inset;
+  -webkit-text-fill-color: var(--jj-light);
+  box-shadow: 0 0 0 1000px var(--jj-grey-dark) inset;
 }
 
 /* Checkboxes and radio inputs */
 .form-check-input {
-  background-color: var(--jb-light);
-  border-color:     var(--jb-light);
+  background-color: var(--jj-light);
+  border-color:     var(--jj-light);
 }
 
 /* Labels — !important required to override Bootstrap's utility specificity */
 .form-label,
 label {
-  color:          var(--jb-light) !important;
+  color:          var(--jj-light) !important;
   font-size:      var(--fs-h5) !important;
   font-weight:    var(--fw-h5) !important;
   font-style:     italic !important;
@@ -276,7 +316,7 @@ label {
 .form-hint,
 .form-text,
 small {
-  color:          var(--jb-light) !important;
+  color:          var(--jj-light) !important;
   font-size:      var(--fs-small) !important;
   font-weight:    var(--fw-body) !important;
   font-style:     normal !important;
@@ -285,14 +325,29 @@ small {
   text-transform: none !important;
 }
 
-.jb-field-label { margin-top: 0; }
+.jj-field-label { margin-top: 0; }
 
 fieldset > *:last-child { margin-bottom: 0 !important; }
+
+/* Fieldset positioning — legend sits above the border */
+fieldset {
+  position:     relative;
+  padding-top:  1.5rem;
+}
+
+fieldset legend {
+  position:   absolute;
+  left:       1rem;
+  top:        -1rem;
+  float:      none;
+  background: var(--jj-dark);
+  width:      auto;
+}
 
 /* Fieldset legends — h4 scale */
 legend {
   margin-bottom:  0;
-  color:          var(--jb-light);
+  color:          var(--jj-light);
   font-size:      var(--fs-h4);
   font-weight:    var(--fw-h4);
   font-style:     italic;
@@ -324,17 +379,17 @@ legend {
 }
 
 
-/* ── 5. Components ────────────────────────────────────────────────────────── */
+/* ── Components ────────────────────────────────────────────────────────── */
 
 /* ── Buttons ── */
 .btn {
-  border-radius:   var(--jb-btn-radius);
-  padding:         var(--jb-btn-padding);
-  font-family:     var(--jb-btn-font);
-  font-size:       var(--jb-btn-fs);
-  line-height:     var(--jb-btn-lh);
-  font-weight:     var(--jb-btn-fw);
-  text-transform:  var(--jb-btn-transform);
+  border-radius:   var(--jj-btn-radius);
+  padding:         var(--jj-btn-padding);
+  font-family:     var(--jj-btn-font);
+  font-size:       var(--jj-btn-fs);
+  line-height:     var(--jj-btn-lh);
+  font-weight:     var(--jj-btn-fw);
+  text-transform:  var(--jj-btn-transform);
   text-decoration: none;
   font-style:      normal;
 }
@@ -344,78 +399,78 @@ legend {
 }
 
 .btn-primary {
-  --tblr-btn-bg:             var(--jb-btn-primary-bg);
-  --tblr-btn-border-color:   var(--jb-btn-primary-bg);
-  --tblr-btn-color:          var(--jb-btn-primary-text);
-  --tblr-btn-hover-bg:       var(--jb-btn-primary-hover-bg);
-  --tblr-btn-hover-color:    var(--jb-btn-primary-hover-text);
-  --tblr-btn-active-bg:      var(--jb-btn-primary-hover-bg);
-  --tblr-btn-active-color:   var(--jb-btn-primary-hover-text);
-  --tblr-btn-disabled-color: var(--jb-btn-primary-text);
+  --tblr-btn-bg:             var(--jj-btn-primary-bg);
+  --tblr-btn-border-color:   var(--jj-btn-primary-bg);
+  --tblr-btn-color:          var(--jj-btn-primary-text);
+  --tblr-btn-hover-bg:       var(--jj-btn-primary-hover-bg);
+  --tblr-btn-hover-color:    var(--jj-btn-primary-hover-text);
+  --tblr-btn-active-bg:      var(--jj-btn-primary-hover-bg);
+  --tblr-btn-active-color:   var(--jj-btn-primary-hover-text);
+  --tblr-btn-disabled-color: var(--jj-btn-primary-text);
 }
 
 .btn-secondary {
-  --tblr-btn-bg:                 var(--jb-btn-secondary-bg);
-  --tblr-btn-border-color:       var(--jb-btn-secondary-border);
-  --tblr-btn-color:              var(--jb-btn-secondary-text);
-  --tblr-btn-hover-bg:           var(--jb-btn-secondary-hover-bg);
-  --tblr-btn-hover-color:        var(--jb-btn-secondary-hover-text);
-  --tblr-btn-hover-border-color: var(--jb-btn-secondary-border);
-  --tblr-btn-active-bg:          var(--jb-btn-secondary-hover-bg);
-  --tblr-btn-active-color:       var(--jb-btn-secondary-hover-text);
+  --tblr-btn-bg:                 var(--jj-btn-secondary-bg);
+  --tblr-btn-border-color:       var(--jj-btn-secondary-border);
+  --tblr-btn-color:              var(--jj-btn-secondary-text);
+  --tblr-btn-hover-bg:           var(--jj-btn-secondary-hover-bg);
+  --tblr-btn-hover-color:        var(--jj-btn-secondary-hover-text);
+  --tblr-btn-hover-border-color: var(--jj-btn-secondary-border);
+  --tblr-btn-active-bg:          var(--jj-btn-secondary-hover-bg);
+  --tblr-btn-active-color:       var(--jj-btn-secondary-hover-text);
 }
 
 .btn-danger {
-  --tblr-btn-bg:                 var(--jb-btn-danger-bg);
+  --tblr-btn-bg:                 var(--jj-btn-danger-bg);
   --tblr-btn-border-color:       transparent;
-  --tblr-btn-color:              var(--jb-btn-danger-text);
-  --tblr-btn-hover-bg:           var(--jb-btn-danger-hover-bg);
-  --tblr-btn-hover-color:        var(--jb-btn-danger-hover-text);
+  --tblr-btn-color:              var(--jj-btn-danger-text);
+  --tblr-btn-hover-bg:           var(--jj-btn-danger-hover-bg);
+  --tblr-btn-hover-color:        var(--jj-btn-danger-hover-text);
   --tblr-btn-hover-border-color: transparent;
-  --tblr-btn-active-bg:          var(--jb-btn-danger-hover-bg);
-  --tblr-btn-active-color:       var(--jb-btn-danger-hover-text);
-  background-color: var(--jb-btn-danger-bg);
+  --tblr-btn-active-bg:          var(--jj-btn-danger-hover-bg);
+  --tblr-btn-active-color:       var(--jj-btn-danger-hover-text);
+  background-color: var(--jj-btn-danger-bg);
   border-color:     transparent;
-  color:            var(--jb-btn-danger-text);
+  color:            var(--jj-btn-danger-text);
 }
 
 /* Disabled — all variants */
 .btn:disabled,
 .btn.disabled {
-  background-color: var(--jb-btn-disabled-bg)   !important;
-  border-color:     var(--jb-btn-disabled-border) !important;
-  color:            var(--jb-btn-disabled-text)  !important;
+  background-color: var(--jj-btn-disabled-bg)   !important;
+  border-color:     var(--jj-btn-disabled-border) !important;
+  color:            var(--jj-btn-disabled-text)  !important;
   opacity:          1 !important;
 }
 
 /* Default — transparent bg, light border */
 .btn:not(.btn-primary):not(.btn-secondary):not(.btn-danger):not(.btn-success) {
-  --tblr-btn-color:              var(--jb-btn-default-text);
-  --tblr-btn-border-color:       var(--jb-btn-default-border);
-  --tblr-btn-hover-color:        var(--jb-btn-default-text);
-  --tblr-btn-hover-border-color: var(--jb-btn-default-hover-border);
-  color:        var(--jb-btn-default-text);
-  border-color: var(--jb-btn-default-border);
+  --tblr-btn-color:              var(--jj-btn-default-text);
+  --tblr-btn-border-color:       var(--jj-btn-default-border);
+  --tblr-btn-hover-color:        var(--jj-btn-default-text);
+  --tblr-btn-hover-border-color: var(--jj-btn-default-hover-border);
+  color:        var(--jj-btn-default-text);
+  border-color: var(--jj-btn-default-border);
 }
 .btn:not(.btn-primary):not(.btn-secondary):not(.btn-danger):hover {
-  border-color: var(--jb-btn-default-hover-border) !important; /* Tabler specificity */
+  border-color: var(--jj-btn-default-hover-border) !important; /* Tabler specificity */
 }
 
 /* btn-success is not in our system — remap globally to primary */
 .btn-success {
-  --tblr-btn-bg:           var(--jb-btn-primary-bg);
-  --tblr-btn-border-color: var(--jb-btn-primary-bg);
-  --tblr-btn-color:        var(--jb-btn-primary-text);
-  --tblr-btn-hover-bg:     var(--jb-btn-primary-hover-bg);
-  --tblr-btn-hover-color:  var(--jb-btn-primary-hover-text);
-  background-color: var(--jb-btn-primary-bg);
-  border-color:     var(--jb-btn-primary-bg);
-  color:            var(--jb-btn-primary-text);
+  --tblr-btn-bg:           var(--jj-btn-primary-bg);
+  --tblr-btn-border-color: var(--jj-btn-primary-bg);
+  --tblr-btn-color:        var(--jj-btn-primary-text);
+  --tblr-btn-hover-bg:     var(--jj-btn-primary-hover-bg);
+  --tblr-btn-hover-color:  var(--jj-btn-primary-hover-text);
+  background-color: var(--jj-btn-primary-bg);
+  border-color:     var(--jj-btn-primary-bg);
+  color:            var(--jj-btn-primary-text);
 }
 .btn-success:hover {
-  background-color: var(--jb-btn-primary-hover-bg);
-  border-color:     var(--jb-btn-primary-hover-bg);
-  color:            var(--jb-btn-primary-hover-text);
+  background-color: var(--jj-btn-primary-hover-bg);
+  border-color:     var(--jj-btn-primary-hover-bg);
+  color:            var(--jj-btn-primary-hover-text);
 }
 
 /* ── Badges ── */
@@ -428,25 +483,25 @@ legend {
   text-transform: uppercase !important;
 }
 .badge.bg-warning {
-  background-color: var(--jb-secondary) !important;
-  color:            var(--jb-dark) !important;
+  background-color: var(--jj-secondary) !important;
+  color:            var(--jj-dark) !important;
 }
 .badge.bg-success {
-  background-color: var(--jb-primary) !important;
-  color:            var(--jb-dark) !important;
+  background-color: var(--jj-primary) !important;
+  color:            var(--jj-dark) !important;
 }
 
 /* ── Tables ── */
 thead th,
 .table > thead > tr > th {
-  background-color: var(--jb-grey-dark) !important;
-  color:            var(--jb-light) !important;
+  background-color: var(--jj-grey-dark) !important;
+  color:            var(--jj-light) !important;
 }
 .card-footer {
-  background-color: var(--jb-grey-dark);
+  background-color: var(--jj-grey-dark);
 }
 .disabled > .page-link {
-  color: var(--jb-grey-light) !important;
+  color: var(--jj-grey-light) !important;
 }
 
 /* ── Sidebar icons — replace FontAwesome glyphs with brand SVGs ── */
@@ -467,24 +522,23 @@ thead th,
 .fa-sign-out { background-image: url('/static/icons/logout.svg'); }
 
 /* ── Muted icon colour (used on placeholder SVGs e.g. analytics chart) ── */
-.jb-icon-muted { color: var(--jb-grey-light); }
+.jj-icon-muted { color: var(--jj-grey-light); }
 
 
-/* ── 6. Singleton pages ───────────────────────────────────────────────────── */
+/* ── Singleton pages ───────────────────────────────────────────────────── */
 /*
  * Singleton edit pages (Brand, SEO, Profile etc.) don't need a card header
  * or the extra "Save and add another" / "Save and continue editing" buttons.
  */
-.jb-singleton .card-header                { display: none !important; }
-.jb-singleton button[name="_add_another"],
-.jb-singleton button[name="_continue_editing"] { display: none !important; }
+.jj-singleton button[name="_add_another"],
+.jj-singleton button[name="_continue_editing"] { display: none !important; }
 
 
-/* ── 7. Block editor ──────────────────────────────────────────────────────── */
+/* ── Block editor ──────────────────────────────────────────────────────── */
 
-.jb-blocks-editor { margin-bottom: 1rem; }
+.jj-blocks-editor { margin-bottom: 1rem; }
 
-.jb-block {
+.jj-block {
   border:        1px solid var(--tblr-border-color);
   border-radius: 6px;
   margin-bottom: .75rem;
@@ -492,151 +546,151 @@ thead th,
   background:    var(--tblr-bg-surface);
   transition:    opacity .2s;
 }
-.jb-block--dragging { opacity: .4; }
+.jj-block--dragging { opacity: .4; }
 
-.jb-block-header {
+.jj-block-header {
   display:       flex;
   align-items:   center;
   gap:           .4rem;
   margin-bottom: .5rem;
 }
 
-.jb-drag-handle { cursor: grab; font-size: 1.1rem; color: var(--jb-grey-light); }
+.jj-drag-handle { cursor: grab; font-size: 1.1rem; color: var(--jj-grey-light); }
 
-.jb-block-num {
+.jj-block-num {
   flex:           1;
   font-size:      var(--fs-h5);
-  color:          var(--jb-grey-light);
+  color:          var(--jj-grey-light);
   text-transform: uppercase;
   letter-spacing: .04em;
 }
 
-.jb-block-media  { margin-top: .5rem; }
+.jj-block-media  { margin-top: .5rem; }
 
-.jb-media-item {
+.jj-media-item {
   border:        1px solid var(--tblr-border-color);
-  border-radius: var(--jb-btn-radius);
+  border-radius: var(--jj-btn-radius);
   padding:       .5rem;
   margin-bottom: .4rem;
-  background:    var(--jb-dark);
+  background:    var(--jj-dark);
 }
-.jb-media-item-header {
+.jj-media-item-header {
   display:         flex;
   align-items:     center;
   justify-content: space-between;
   margin-bottom:   .4rem;
 }
-.jb-media-item-label {
+.jj-media-item-label {
   font-size:      .7rem;
   text-transform: uppercase;
   letter-spacing: .06em;
-  color:          var(--jb-grey-light);
+  color:          var(--jj-grey-light);
 }
 
-.jb-image-preview { max-width: 100%; max-height: 200px; border-radius: var(--jb-btn-radius); display: block; }
+.jj-image-preview { max-width: 100%; max-height: 200px; border-radius: var(--jj-btn-radius); display: block; }
 
-.jb-add-media { display: flex; gap: .35rem; margin-top: .35rem; }
+.jj-add-media { display: flex; gap: .35rem; margin-top: .35rem; }
 
 /* Rich text editor */
-.jb-rich-text { margin-bottom: .5rem; }
+.jj-rich-text { margin-bottom: .5rem; }
 
-.jb-toolbar { display: flex; gap: .25rem; margin-bottom: .35rem; }
+.jj-toolbar { display: flex; gap: .25rem; margin-bottom: .35rem; }
 
-.jb-text-body {
+.jj-text-body {
   min-height: 80px;
   padding:    .5rem;
   border:     1px solid var(--tblr-border-color);
-  border-radius: var(--jb-btn-radius);
-  background: var(--jb-grey-dark);
-  color:      var(--jb-light);
+  border-radius: var(--jj-btn-radius);
+  background: var(--jj-grey-dark);
+  color:      var(--jj-light);
   outline:    none;
   line-height: var(--lh-body);
 }
-.jb-text-body:focus { border-color: var(--jb-light); }
-.jb-text-body:empty:before {
+.jj-text-body:focus { border-color: var(--jj-light); }
+.jj-text-body:empty:before {
   content:        attr(placeholder);
-  color:          var(--jb-grey-light);
+  color:          var(--jj-grey-light);
   pointer-events: none;
 }
 
 /* Small utility buttons (move ↑↓, ✕, + Image) */
-.jb-btn-sm {
+.jj-btn-sm {
   padding:       .15rem .45rem;
   font-size:     var(--fs-h5);
-  font-weight:   var(--jb-btn-fw);
-  border:        1px solid var(--jb-btn-default-border);
-  border-radius: var(--jb-btn-radius);
+  font-weight:   var(--jj-btn-fw);
+  border:        1px solid var(--jj-btn-default-border);
+  border-radius: var(--jj-btn-radius);
   background:    transparent;
   color:         inherit;
   cursor:        pointer;
-  line-height:   var(--jb-btn-lh);
+  line-height:   var(--jj-btn-lh);
 }
-.jb-btn-sm:disabled { opacity: .4; cursor: not-allowed; }
-.jb-btn-sm.active {
-  background:   var(--jb-btn-primary-bg);
-  color:        var(--jb-btn-primary-text);
-  border-color: var(--jb-btn-primary-bg);
+.jj-btn-sm:disabled { opacity: .4; cursor: not-allowed; }
+.jj-btn-sm.active {
+  background:   var(--jj-btn-primary-bg);
+  color:        var(--jj-btn-primary-text);
+  border-color: var(--jj-btn-primary-bg);
 }
 
 /* Danger modifier for small buttons */
-.jb-btn-danger {
-  border-color: var(--jb-secondary);
-  color:        var(--jb-secondary);
+.jj-btn-danger {
+  border-color: var(--jj-secondary);
+  color:        var(--jj-secondary);
 }
 
 /* Toolbar formatting buttons (B, I, H2 …) */
-.jb-toolbar-btn {
+.jj-toolbar-btn {
   padding:       .15rem .45rem;
-  font-size:     var(--jb-btn-fs);
-  font-weight:   var(--jb-btn-fw);
-  border:        1px solid var(--jb-btn-default-border);
-  border-radius: var(--jb-btn-radius);
+  font-size:     var(--jj-btn-fs);
+  font-weight:   var(--jj-btn-fw);
+  border:        1px solid var(--jj-btn-default-border);
+  border-radius: var(--jj-btn-radius);
   background:    transparent;
   color:         inherit;
   cursor:        pointer;
   min-width:     2rem;
-  line-height:   var(--jb-btn-lh);
+  line-height:   var(--jj-btn-lh);
 }
-.jb-toolbar-btn:hover {
-  background:   var(--jb-btn-primary-bg);
-  color:        var(--jb-btn-primary-text);
-  border-color: var(--jb-btn-primary-bg);
+.jj-toolbar-btn:hover {
+  background:   var(--jj-btn-primary-bg);
+  color:        var(--jj-btn-primary-text);
+  border-color: var(--jj-btn-primary-bg);
 }
 
 /* Add section button */
-.jb-add-block {
+.jj-add-block {
   width:          100%;
   padding:        .5rem;
-  border:         1px solid var(--jb-btn-secondary-bg);
+  border:         1px solid var(--jj-btn-secondary-bg);
   border-radius:  6px;
-  background:     var(--jb-btn-secondary-bg);
-  color:          var(--jb-btn-secondary-text);
+  background:     var(--jj-btn-secondary-bg);
+  color:          var(--jj-btn-secondary-text);
   cursor:         pointer;
-  font-size:      var(--jb-btn-fs);
-  font-weight:    var(--jb-btn-fw);
+  font-size:      var(--jj-btn-fs);
+  font-weight:    var(--jj-btn-fw);
   text-align:     center;
 }
-.jb-add-block:hover { border-color: var(--jb-btn-secondary-border); }
+.jj-add-block:hover { border-color: var(--jj-btn-secondary-border); }
 
 
-/* ── 8. Upload components ─────────────────────────────────────────────────── */
+/* ── Upload ─────────────────────────────────────────────────── */
 
 /* Progress bar */
-.jb-upload-progress {
+.jj-upload-progress {
   height:        3px;
   border-radius: 2px;
   background:    var(--tblr-border-color);
   overflow:      hidden;
   margin-top:    .5rem;
 }
-.jb-upload-progress-bar {
+.jj-upload-progress-bar {
   height:     100%;
-  background: var(--jb-primary);
+  background: var(--jj-primary);
   transition: width .1s linear;
 }
 
 /* Preview row */
-.jb-upload-preview-row {
+.jj-upload-preview-row {
   display:     flex;
   align-items: flex-end;
   gap:         .75rem;
@@ -644,63 +698,63 @@ thead th,
 }
 
 /* Swatch container */
-.jb-upload-swatch {
+.jj-upload-swatch {
   display:         flex;
   align-items:     center;
   justify-content: center;
-  border-radius:   var(--jb-btn-radius);
+  border-radius:   var(--jj-btn-radius);
   flex-shrink:     0;
   padding:         .5rem;
 }
-.jb-upload-swatch img { object-fit: contain; }
+.jj-upload-swatch img { object-fit: contain; }
 
 /* Light / dark swatch variants */
-.jb-upload-swatch--light { background: var(--jb-light); }
-.jb-upload-swatch--dark  { background: var(--jb-dark); }
-.jb-upload-swatch--dark img { filter: invert(1); }
+.jj-upload-swatch--light { background: var(--jj-light); }
+.jj-upload-swatch--dark  { background: var(--jj-dark); }
+.jj-upload-swatch--dark img { filter: invert(1); }
 
 /* Neutral swatch — no background, for SVGs uploaded without dark mode support */
-.jb-upload-swatch--neutral {
+.jj-upload-swatch--neutral {
   background:  transparent;
-  border:      1px dashed var(--jb-grey-dark);
+  border:      1px dashed var(--jj-grey-dark);
 }
 
 /* Pixel-rendering for small PNG previews */
-.jb-pixel-preview { image-rendering: pixelated; }
+.jj-pixel-preview { image-rendering: pixelated; }
 
 /* Logo preview — 80px height */
-.jb-upload-preview-row--logo .jb-upload-swatch img {
+.jj-upload-preview-row--logo .jj-upload-swatch img {
   height: 80px;
   width:  auto;
 }
 
 /* Favicon preview — 24px height */
-.jb-upload-preview-row--favicon .jb-upload-swatch img {
+.jj-upload-preview-row--favicon .jj-upload-swatch img {
   height: 24px;
   width:  auto;
 }
 
-/* ── Shared dialog (.jb-dialog) ───────────────────────────────────────────── */
+/* ── Shared dialog (.jj-dialog) ───────────────────────────────────────────── */
 
 .modal-backdrop {
   background-color: #000;
 }
 .modal-backdrop.show {
-  opacity: 0.75; /* matches --jb-backdrop */
+  opacity: 0.75; /* matches --jj-backdrop */
 }
 
-.jb-dialog .modal-dialog {
+.jj-dialog .modal-dialog {
   min-width: 480px;
 }
 
-.jb-dialog .modal-content {
-  background:    var(--jb-dark);
-  border:        1px solid var(--jb-grey-dark);
-  border-radius: var(--jb-radius);
-  color:         var(--jb-light);
+.jj-dialog .modal-content {
+  background:    var(--jj-dark);
+  border:        1px solid var(--jj-grey-dark);
+  border-radius: var(--jj-radius);
+  color:         var(--jj-light);
 }
 
-.jb-dialog .modal-header {
+.jj-dialog .modal-header {
   border-bottom:   none;
   padding:         1rem;
   background:      none;
@@ -709,37 +763,37 @@ thead th,
   justify-content: space-between;
 }
 
-.jb-dialog .modal-body {
+.jj-dialog .modal-body {
   padding:     1rem;
   background:  none;
   font-size:   var(--fs-body);
   font-weight: var(--fw-body);
   line-height: var(--lh-body);
-  color:       var(--jb-light);
+  color:       var(--jj-light);
 }
 
-.jb-dialog .modal-footer {
+.jj-dialog .modal-footer {
   border-top:  none;
   padding:     1rem;
   gap:         1rem;
-  background:  var(--jb-dark) !important;
+  background:  var(--jj-dark) !important;
 }
-.jb-dialog .modal-footer .btn {
+.jj-dialog .modal-footer .btn {
   margin: 0;
 }
 
 
-.jb-dialog .modal-title {
+.jj-dialog .modal-title {
   font-size:      var(--fs-h4) !important;
   font-weight:    var(--fw-h4) !important;
   line-height:    var(--lh-h4) !important;
   text-transform: none !important;
   letter-spacing: normal !important;
   font-style:     italic;
-  color:          var(--jb-light);
+  color:          var(--jj-light);
 }
 
-.jb-dialog .btn-close {
+.jj-dialog .btn-close {
   background-image:    url('/static/icons/close.svg') !important;
   background-size:     16px 16px !important;
   background-position: center !important;
@@ -755,14 +809,14 @@ thead th,
   flex-shrink:         0;
   align-self:          flex-start;
 }
-.jb-dialog .btn-close:hover {
+.jj-dialog .btn-close:hover {
   opacity: 1;
 }
 
-.jb-dialog-body {
+.jj-dialog-body {
   font-size:   var(--fs-body);
   line-height: var(--lh-body);
-  color:       var(--jb-light);
+  color:       var(--jj-light);
   margin:      0;
   opacity:     0.85;
 }
@@ -773,7 +827,7 @@ thead th,
   width:             36px;
   height:            20px;
   border-radius:     999px;
-  background-color:  var(--jb-light);
+  background-color:  var(--jj-light);
   border:            none;
   cursor:            pointer;
   background-image:  url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%232D2D2D'/%3e%3c/svg%3e");
@@ -785,8 +839,8 @@ thead th,
   background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='-4 -4 8 8'%3e%3ccircle r='3' fill='%232D2D2D'/%3e%3c/svg%3e");
 }
 .form-switch .form-check-input:checked {
-  background-color:  var(--jb-primary);
-  border-color:      var(--jb-primary);
+  background-color:  var(--jj-primary);
+  border-color:      var(--jj-primary);
 }
 .form-switch .form-check-input:focus {
   box-shadow: none;
@@ -798,31 +852,31 @@ thead th,
 }
 
 /* Toggle + label side-by-side layout */
-.jb-toggle-row {
+.jj-toggle-row {
   display:     flex;
   align-items: flex-start;
   gap:         1rem;
 }
 
-.jb-toggle-row .form-check {
+.jj-toggle-row .form-check {
   flex-shrink: 0;
   padding:     3px 0 0 0;
   min-height:  0;
   width:       36px;
   height:      auto;
 }
-.jb-toggle-row .form-check-input {
+.jj-toggle-row .form-check-input {
   margin-left: 0 !important;
   margin-top:  0 !important;
   float:       none !important;
 }
 
-.jb-toggle-label {
+.jj-toggle-label {
   font-size:      var(--fs-body) !important;
   font-weight:    var(--fw-body) !important;
   font-style:     normal !important;
   line-height:    var(--lh-body) !important;
-  color:          var(--jb-light) !important;
+  color:          var(--jj-light) !important;
   text-transform: none !important;
   letter-spacing: normal !important;
   cursor:         pointer;
@@ -830,69 +884,69 @@ thead th,
 }
 
 
-/* ── Upload modal (extends .jb-dialog) ────────────────────────────────────── */
+/* ── Upload modal (extends .jj-dialog) ────────────────────────────────────── */
 
 /* Preview area inside modal */
-.jb-upload-modal-preview {
+.jj-upload-modal-preview {
   display:         flex;
   align-items:     stretch;
   justify-content: center;
   min-height:      200px;
-  background:      var(--jb-grey-dark);
-  border-radius:   var(--jb-radius);
+  background:      var(--jj-grey-dark);
+  border-radius:   var(--jj-radius);
   padding:         1rem;
 }
 
-.jb-upload-modal-preview img {
+.jj-upload-modal-preview img {
   max-width:  100%;
   max-height: 160px;
   object-fit: contain;
 }
 
 /* Dual swatch row inside modal — shown when dark mode is on */
-.jb-upload-modal-swatches {
+.jj-upload-modal-swatches {
   display: flex;
   gap:     1rem;
   width:   100%;
 }
-.jb-upload-modal-swatches .jb-upload-swatch {
+.jj-upload-modal-swatches .jj-upload-swatch {
   flex:           1;
   align-items:    center;
   justify-content: center;
 }
-.jb-upload-modal-swatches .jb-upload-swatch img {
+.jj-upload-modal-swatches .jj-upload-swatch img {
   max-width:  100%;
   max-height: 160px;
   object-fit: contain;
 }
 
 /* Spinner row */
-.jb-upload-modal-spinner {
+.jj-upload-modal-spinner {
   display:     flex;
   align-items: center;
-  color:       var(--jb-light);
+  color:       var(--jj-light);
 }
 
-.jb-upload-modal-spinner .spinner-border {
-  color: var(--jb-primary) !important;
+.jj-upload-modal-spinner .spinner-border {
+  color: var(--jj-primary) !important;
 }
 
 /* Dark mode toggle */
-.jb-upload-modal .form-check-input:checked {
-  background-color: var(--jb-primary);
-  border-color:     var(--jb-primary);
+.jj-upload-modal .form-check-input:checked {
+  background-color: var(--jj-primary);
+  border-color:     var(--jj-primary);
 }
 
-.jb-upload-modal .form-check-label {
-  color: var(--jb-light);
+.jj-upload-modal .form-check-label {
+  color: var(--jj-light);
 }
 
-.jb-upload .form-hint      { margin-top: 0.5rem; }
+.jj-upload .form-hint      { margin-top: 0.5rem; }
 
 /* Uploaded image preview (hero, block images) */
-.jb-image-upload-preview {
+.jj-image-upload-preview {
   max-width:     100%;
   max-height:    200px;
-  border-radius: var(--jb-btn-radius);
+  border-radius: var(--jj-btn-radius);
   display:       block;
 }

@@ -115,7 +115,7 @@ jamesbrannon/
 │   │   ├── views.py     # Starlette Admin ModelView subclasses + custom field types
 │   │   ├── auth.py      # SimpleAuthProvider + rate limiting
 │   │   └── templates/   # Custom Jinja2 admin templates
-│   │       ├── layout.html          # Base layout; injects jbDialog + jbFormState
+│   │       ├── layout.html          # Base layout; injects jjDialog + jjFormState
 │   │       ├── brand_edit.html      # Brand-specific edit page (pair hints script)
 │   │       ├── includes/publish_controls.html  # Save Draft / Publish button logic
 │   │       ├── modals/actions.html  # Overrides Starlette Admin delete confirmation
@@ -319,18 +319,18 @@ Static files served by FastAPI at `/static/`.
 
 ---
 
-## Shared Dialog Component (jbDialog)
+## Shared Dialog Component (jjDialog)
 
 A singleton Alpine component that provides a reusable confirmation dialog throughout the admin UI.
 
 **Files:**
 - Singleton HTML + script: `cms/app/admin/templates/layout.html` (injected once into every page)
 - Action modal override: `cms/app/admin/templates/modals/actions.html` (overrides Starlette Admin's delete confirmation — keeps same IDs so `actions.js` wiring is untouched)
-- CSS class: `.jb-dialog` (`cms/static/admin.css`, layer 5/components)
+- CSS class: `.jj-dialog` (`cms/static/admin.css`, components section)
 
 **Usage from any page:**
 ```js
-window.jbDialog.open({
+window.jjDialog.open({
   title: 'Are you sure?',       // optional, defaults to 'Are you sure?'
   body:  'This cannot be undone.',
   onConfirm: () => { /* ... */ },
@@ -339,14 +339,14 @@ window.jbDialog.open({
 
 **Alpine config (global singleton):**
 ```js
-jbDialog() // exposed as window.jbDialog via init() lifecycle hook
+jjDialog() // exposed as window.jjDialog via init() lifecycle hook
 // State: title, body (reactive — drives the template)
 // Methods: open({ title, body, onConfirm }), confirm(), cancel()
 ```
 
-**CSS class `.jb-dialog`:** dark background (`--jb-dark`), no header/footer dividers, 1rem padding all around, 480px min-width, H4 modal title (italic bold), custom close icon (`/static/icons/close.svg`).
+**CSS class `.jj-dialog`:** dark background (`--jj-dark`), no header/footer dividers, 1rem padding all around, 480px min-width, H4 modal title (italic bold), custom close icon (`/static/icons/close.svg`).
 
-**Modal backdrop:** controlled by `.modal-backdrop.show { opacity: 0.75 }`. Token: `--jb-backdrop: rgba(0, 0, 0, 0.75)` (defined in `admin-tokens.css`; the `.show` opacity rule is what actually applies it).
+**Modal backdrop:** controlled by `.modal-backdrop.show { opacity: 0.75 }`. Token: `--jj-backdrop: rgba(0, 0, 0, 0.75)` (defined in `admin-tokens.css`; the `.show` opacity rule is what actually applies it).
 
 ---
 
@@ -357,7 +357,7 @@ The **CustomUploader** is the reusable file upload component for the admin UI. C
 **Files:**
 - Template: `cms/app/admin/templates/forms/asset_upload.html`
 - Alpine component: `window.assetUpload` (defined inline in the template, registered once via IIFE guard)
-- CSS classes: `jb-upload-*` prefix (`cms/static/admin.css`, layer 8)
+- CSS classes: `jj-upload-*` prefix (`cms/static/admin.css`, upload section)
 - Preview endpoint: `POST /api/preview-svg` (`cms/app/main.py`)
 
 **Alpine config shape:**
@@ -394,20 +394,20 @@ A hidden input `<input type="hidden" name="{field_id}_dark_mode" value="true|fal
 Set `field.form_template = "forms/asset_upload.html"` in the field's `__post_init__`.
 
 **CSS classes:**
-- `.jb-upload` — root wrapper
-- `.jb-upload-preview-row` — flex row of swatches
-- `.jb-upload-preview-row--logo` / `--favicon` — size variants (80px / 24px)
-- `.jb-upload-swatch--light` / `--dark` — background variants
-- `.jb-upload-modal` — upload modal (extends `.jb-dialog`)
-- `.jb-upload-modal-preview` — preview area inside modal (dark bg, `align-items: stretch`)
-- `.jb-upload-modal-swatches` — dual side-by-side light/dark swatch layout (dark mode on)
-- `.jb-upload-progress` / `.jb-upload-progress-bar` — file read progress
+- `.jj-upload` — root wrapper
+- `.jj-upload-preview-row` — flex row of swatches
+- `.jj-upload-preview-row--logo` / `--favicon` — size variants (80px / 24px)
+- `.jj-upload-swatch--light` / `--dark` — background variants
+- `.jj-upload-modal` — upload modal (extends `.jj-dialog`)
+- `.jj-upload-modal-preview` — preview area inside modal (dark bg, `align-items: stretch`)
+- `.jj-upload-modal-swatches` — dual side-by-side light/dark swatch layout (dark mode on)
+- `.jj-upload-progress` / `.jj-upload-progress-bar` — file read progress
 
 **`POST /api/preview-svg`:** Auth-gated (session required). Accepts `multipart/form-data` with `file` field. Returns `{"preview": "data:image/svg+xml;base64,..."}`. Validates SVG by checking content starts with `<`. Nothing is saved.
 
 ---
 
-## Admin Form State Tracking (jbFormState)
+## Admin Form State Tracking (jjFormState)
 
 All edit forms start with their primary save button **disabled**. The button enables when the form is dirty — i.e. the current field values differ from the snapshot taken on page load. Create forms are skipped and start enabled (server validation handles required fields on submit).
 
@@ -415,20 +415,20 @@ All edit forms start with their primary save button **disabled**. The button ena
 
 **How it works:**
 
-- `jbFormState` lives in `layout.html` and runs on every admin page
+- `jjFormState` lives in `layout.html` and runs on every admin page
 - It fires in `requestAnimationFrame` after `DOMContentLoaded` — this is load-bearing: it ensures both Alpine (loaded via `defer`) and `publish_controls.html` (synchronous `DOMContentLoaded`) have fully run before the snapshot is taken
 - It detects create pages via `pathname.indexOf('/create')` and exits early, leaving buttons at their default (enabled) state
-- The primary button is identified by the `data-jb-primary` attribute — re-queried on each state change, not cached at init
+- The primary button is identified by the `data-jj-primary` attribute — re-queried on each state change, not cached at init
 - Standard HTML fields (`input`, `select`, `textarea`) are tracked automatically via `input` and `change` DOM events
 - File inputs set a one-way `_hasFile` flag on `change` (file paths cannot be read by JS, so a flag is used)
-- Custom Alpine fields signal changes via the `jb:field:change` custom event dispatched on `document`
+- Custom Alpine fields signal changes via the `jj:field:change` custom event dispatched on `document`
 
 **Convention — custom Alpine fields:**
 
-Any Alpine component that manages form state outside standard HTML fields must dispatch `jb:field:change` when its committed value changes:
+Any Alpine component that manages form state outside standard HTML fields must dispatch `jj:field:change` when its committed value changes:
 
 ```js
-document.dispatchEvent(new CustomEvent('jb:field:change'));
+document.dispatchEvent(new CustomEvent('jj:field:change'));
 ```
 
 Current implementations:
@@ -437,9 +437,9 @@ Current implementations:
 
 **Convention — primary buttons added dynamically:**
 
-Any script that creates the primary submit button programmatically must add `data-jb-primary` to it. The tracker re-queries this attribute on each state change, so dynamically added buttons work without any extra wiring.
+Any script that creates the primary submit button programmatically must add `data-jj-primary` to it. The tracker re-queries this attribute on each state change, so dynamically added buttons work without any extra wiring.
 
-Current implementation: `publish_controls.html` adds `data-jb-primary` to the Publish / Update button it creates. The default starlette-admin save button (on singleton forms) is auto-marked by `jbFormState` itself at init time.
+Current implementation: `publish_controls.html` adds `data-jj-primary` to the Publish / Update button it creates. The default starlette-admin save button (on singleton forms) is auto-marked by `jjFormState` itself at init time.
 
 **Brand comms pair hints:**
 
@@ -464,33 +464,33 @@ Font: Barlow Semi Condensed (Google Fonts). Loaded via Google Fonts CDN in both 
 
 ### Admin CSS architecture
 
-Load order: `tabler.min.css` (CDN) → `admin-tokens.css` → `admin.css`. This order is critical — our files must load after Tabler to override it.
+Load order: `tabler.desktop.css` → `admin-tokens.css` → `admin.css`. This order is critical — our files must load after Tabler to override it.
 
-**Token ownership rule:** every `var(--jb-*)` is ours (defined in `admin-tokens.css`); every `var(--tblr-*)` is Tabler's API. These two prefixes are the complete distinction.
+**Token ownership rule:** `--jj-*` is ours (defined in `admin-tokens.css`); `--tblr-*` is Tabler's internal API (remapped in the Tabler remap section of `admin.css`). Never write `--tblr-*` tokens in `admin-tokens.css`.
 
 **`admin-tokens.css`** defines all custom design tokens:
-- `--jb-dark/light/primary/secondary/grey-dark/grey-mild/grey-light` — brand palette
+- `--jj-dark/light/primary/secondary/grey-dark/grey-mild/grey-light` — brand palette
 - `--font`, `--fs-*`, `--lh-*`, `--fw-*`, `--ls-*` — typography scale
-- `--jb-btn-radius/font/fs/lh/fw/padding/transform` — button base
-- `--jb-btn-primary/secondary/default/danger-*` — button variants (bg, text, hover-bg, hover-text)
-- `--jb-btn-disabled-bg/border/text` — disabled state (dark bg, dark border, mild-grey text)
-- `--jb-icon-close/home/logout/message` — icon path strings (NOT `url()` — CSS vars can't interpolate inside `url()`)
-- `--jb-backdrop` — modal overlay: `rgba(0, 0, 0, 0.75)`
-- `--jb-radius` — 0.25rem; applied to inputs, buttons, UI components
+- `--jj-btn-radius/font/fs/lh/fw/padding/transform` — button base
+- `--jj-btn-primary/secondary/default/danger-*` — button variants (bg, text, hover-bg, hover-text)
+- `--jj-btn-disabled-bg/border/text` — disabled state (dark bg, dark border, mild-grey text)
+- `--jj-icon-close/home/logout/message` — icon path strings (NOT `url()` — CSS vars can't interpolate inside `url()`)
+- `--jj-backdrop` — modal overlay: `rgba(0, 0, 0, 0.75)`
+- `--jj-radius` — 0.25rem; applied to inputs, buttons, UI components
 
-**`admin.css`** is structured in 8 explicit layers:
-1. **Tabler remap** — override `--tblr-*` tokens to apply our palette (the intended Tabler theming API)
-2. **Typography** — body, headings, text utilities (`b/strong` use `--fw-medium`)
-3. **Layout** — navbar, sidebar, page header/body, list toolbar
-4. **Forms** — inputs, labels, fieldset legends, card chrome; toggle component (`.jb-toggle-row`)
-5. **Components** — buttons (incl. disabled state), badges, tables, sidebar icons; shared dialog (`.jb-dialog`)
-6. **Singleton pages** — scoped via `.jb-singleton` class (added to `<body>` by `singleton_edit.html`)
-7. **Block editor** — all `.jb-block*` and rich-text editor styles
-8. **Upload** — SVG/image upload components (`.jb-upload-*`), swatch variants, modal extends `.jb-dialog`
+**`admin.css`** is structured in descriptive sections:
+**Tabler remap** — override `--tblr-*` tokens to apply our palette (the intended Tabler theming API)
+**Typography** — body, headings, text utilities (`b/strong` use `--fw-medium`)
+**Layout** — navbar, sidebar, page header/body, list toolbar
+**Forms** — inputs, labels, fieldset legends, card chrome; toggle component (`.jj-toggle-row`)
+**Components** — buttons (incl. disabled state), badges, tables, sidebar icons; shared dialog (`.jj-dialog`)
+**Singleton pages** — scoped via `.jj-singleton` class (added to `<body>` by `singleton_edit.html`)
+**Block editor** — all `.jj-block*` and rich-text editor styles
+**Upload** — SVG/image upload components (`.jj-upload-*`), swatch variants, modal extends `.jj-dialog`
 
 **`!important` discipline:** only used where Tabler's high-specificity selectors cannot be beaten by token remapping alone. Always accompanied by a comment explaining why.
 
-**No inline styles in templates.** BEM modifier classes handle variants (`.jb-upload-swatch--light`, `.jb-upload-swatch--dark`, `.jb-pixel-preview`). If you find yourself writing `style=` in a template, add a class to `admin.css` instead.
+**No inline styles in templates.** BEM modifier classes handle variants (`.jj-upload-swatch--light`, `.jj-upload-swatch--dark`, `.jj-pixel-preview`). If you find yourself writing `style=` in a template, add a class to `admin.css` instead.
 
 ---
 

@@ -8,36 +8,36 @@
 })();
 </script>
 
-<div class="jb-blocks-editor" id="{{ fid }}-root"
+<div class="jj-blocks-editor" id="{{ fid }}-root"
      x-data="blocksEditor(window.__jbBlocksInit[{{ fid | tojson }}])">
 
   <template x-for="(block, index) in blocks" :key="block.id">
-    <div class="jb-block"
+    <div class="jj-block"
          draggable="true"
          @dragstart="dragStart(index)"
          @dragover.prevent="dragOver(index)"
          @drop.prevent="drop(index)"
          @dragend="dragEnd()"
-         :class="{ 'jb-block--dragging': dragIndex === index }">
+         :class="{ 'jj-block--dragging': dragIndex === index }">
 
-      <div class="jb-block-header">
-        <span class="jb-drag-handle" title="Drag to reorder">⠿</span>
-        <button type="button" class="jb-btn-sm" @click="moveUp(index)" :disabled="index === 0">↑</button>
-        <button type="button" class="jb-btn-sm" @click="moveDown(index)" :disabled="index === blocks.length - 1">↓</button>
-        <span class="jb-block-num" x-text="'Block ' + (index + 1)"></span>
-        <button type="button" class="jb-btn-sm jb-btn-danger" @click="removeBlock(index)">✕</button>
+      <div class="jj-block-header">
+        <span class="jj-drag-handle" title="Drag to reorder">⠿</span>
+        <button type="button" class="jj-btn-sm" @click="moveUp(index)" :disabled="index === 0">↑</button>
+        <button type="button" class="jj-btn-sm" @click="moveDown(index)" :disabled="index === blocks.length - 1">↓</button>
+        <span class="jj-block-num" x-text="'Block ' + (index + 1)"></span>
+        <button type="button" class="jj-btn-sm jj-btn-danger" @click="removeBlock(index)">✕</button>
       </div>
 
-      <div class="jb-block-text">
-        <div class="jb-toolbar">
-          <button type="button" class="jb-toolbar-btn" @click.prevent="format('bold')" title="Bold"><strong>B</strong></button>
-          <button type="button" class="jb-toolbar-btn" @click.prevent="format('italic')" title="Italic"><em>I</em></button>
-          <button type="button" class="jb-toolbar-btn" @click.prevent="format('h2')" title="Heading 2">H2</button>
-          <button type="button" class="jb-toolbar-btn" @click.prevent="format('h3')" title="Heading 3">H3</button>
-          <button type="button" class="jb-toolbar-btn" @click.prevent="format('ul')" title="Bullet list">•</button>
-          <button type="button" class="jb-toolbar-btn" @click.prevent="format('ol')" title="Numbered list">1.</button>
+      <div class="jj-block-text">
+        <div class="jj-toolbar">
+          <button type="button" class="jj-toolbar-btn" @click.prevent="format('bold')" title="Bold"><strong>B</strong></button>
+          <button type="button" class="jj-toolbar-btn" @click.prevent="format('italic')" title="Italic"><em>I</em></button>
+          <button type="button" class="jj-toolbar-btn" @click.prevent="format('h2')" title="Heading 2">H2</button>
+          <button type="button" class="jj-toolbar-btn" @click.prevent="format('h3')" title="Heading 3">H3</button>
+          <button type="button" class="jj-toolbar-btn" @click.prevent="format('ul')" title="Bullet list">•</button>
+          <button type="button" class="jj-toolbar-btn" @click.prevent="format('ol')" title="Numbered list">1.</button>
         </div>
-        <div class="jb-text-body"
+        <div class="jj-text-body"
              contenteditable="true"
              @focus="focusedBlock = block"
              @input="updateText(block, $event)"
@@ -45,17 +45,17 @@
              placeholder="Start typing…"></div>
       </div>
 
-      <div class="jb-block-media">
+      <div class="jj-block-media">
 
         <template x-for="(mi, mIdx) in block.media" :key="mi.id">
-          <div class="jb-media-item">
-            <div class="jb-media-item-header">
-              <span class="jb-media-item-label" x-text="mi.type === 'image' ? '🖼 Image' : '▶ Video'"></span>
-              <button type="button" class="jb-btn-sm jb-btn-danger" @click="removeMedia(block, mi)">✕</button>
+          <div class="jj-media-item">
+            <div class="jj-media-item-header">
+              <span class="jj-media-item-label" x-text="mi.type === 'image' ? '🖼 Image' : '▶ Video'"></span>
+              <button type="button" class="jj-btn-sm jj-btn-danger" @click="removeMedia(block, mi)">✕</button>
             </div>
 
             <template x-if="mi.type === 'image'">
-              <div class="jb-media-image">
+              <div class="jj-media-image">
                 <div x-data="{ filename: null, pick() { $refs.imgInput.click() } }" class="mb-2">
                   <input type="file" x-ref="imgInput" accept="image/*" class="d-none"
                          @change="filename = $event.target.files[0]?.name; uploadImage(mi, $event)">
@@ -65,7 +65,7 @@
                   </div>
                 </div>
                 <template x-if="mi.url">
-                  <img :src="mi.url" class="jb-image-preview mb-2">
+                  <img :src="mi.url" class="jj-image-preview mb-2">
                 </template>
                 <input type="text" placeholder="Alt text" x-model="mi.alt" class="form-control mb-1">
                 <input type="text" placeholder="Caption (optional)" x-model="mi.caption" class="form-control">
@@ -73,7 +73,7 @@
             </template>
 
             <template x-if="mi.type === 'video'">
-              <div class="jb-media-video">
+              <div class="jj-media-video">
                 <input type="text" placeholder="Video URL (YouTube, Vimeo…)" x-model="mi.url" class="form-control mb-1">
                 <input type="text" placeholder="Caption (optional)" x-model="mi.caption" class="form-control">
               </div>
@@ -81,16 +81,16 @@
           </div>
         </template>
 
-        <div class="jb-add-media">
-          <button type="button" class="jb-btn-sm" @click="addMedia(block, 'image')">+ Image</button>
-          <button type="button" class="jb-btn-sm" @click="addMedia(block, 'video')">+ Video</button>
+        <div class="jj-add-media">
+          <button type="button" class="jj-btn-sm" @click="addMedia(block, 'image')">+ Image</button>
+          <button type="button" class="jj-btn-sm" @click="addMedia(block, 'video')">+ Video</button>
         </div>
 
       </div>
     </div>
   </template>
 
-  <button type="button" class="jb-add-block" @click="addBlock()">+ Add section</button>
+  <button type="button" class="jj-add-block" @click="addBlock()">+ Add section</button>
 
   <input type="hidden" :name="'{{ fid }}'" :value="JSON.stringify(blocks)">
 </div>
@@ -116,7 +116,7 @@ function blocksEditor(initial) {
 
     init: function () {
       this.$watch('blocks', function () {
-        document.dispatchEvent(new CustomEvent('jb:field:change'));
+        document.dispatchEvent(new CustomEvent('jj:field:change'));
       });
     },
 
@@ -152,7 +152,7 @@ function blocksEditor(initial) {
 
     updateText: function (block, evt) {
       block.text = evt.target.innerHTML;
-      document.dispatchEvent(new CustomEvent('jb:blocks-changed', {
+      document.dispatchEvent(new CustomEvent('jj:blocks-changed', {
         detail: { text: this.blocks.map(function (b) { return b.text || ''; }).join(' ') }
       }));
     },

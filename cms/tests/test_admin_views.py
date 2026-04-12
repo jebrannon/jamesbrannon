@@ -1063,8 +1063,8 @@ def test_profile_edit_form_has_rich_text_editor(admin_client):
 def test_profile_edit_form_has_rich_text_toolbar(admin_client):
     """Profile edit form must include the 6-button rich-text toolbar."""
     response = admin_client.get("/admin/profile/edit/PROFILE")
-    assert "jb-toolbar" in response.text
-    assert "jb-text-body" in response.text
+    assert "jj-toolbar" in response.text
+    assert "jj-text-body" in response.text
 
 
 def test_profile_summary_xss_stripped_on_save(admin_client, aws_mock):
@@ -1738,22 +1738,22 @@ async def test_brand_save_favicon_rejects_non_svg(aws_mock):
             await view._save_favicon(fake_file, "")
 
 
-# ── jbFormState dirty tracker ─────────────────────────────────────────────────
+# ── jjFormState dirty tracker ─────────────────────────────────────────────────
 
 def test_form_state_tracker_present_on_edit_pages(admin_client):
-    """jbFormState script is injected via layout.html on all admin pages."""
+    """jjFormState script is injected via layout.html on all admin pages."""
     resp = admin_client.get('/admin/brand/edit/BRAND')
-    assert 'jbFormState' in resp.text
+    assert 'jjFormState' in resp.text
 
 
 def test_form_state_tracker_present_on_singleton_seo(admin_client):
     resp = admin_client.get('/admin/seo/edit/SEO')
-    assert 'jbFormState' in resp.text
+    assert 'jjFormState' in resp.text
 
 
 def test_form_state_tracker_present_on_post_create(admin_client):
     resp = admin_client.get('/admin/post/create')
-    assert 'jbFormState' in resp.text
+    assert 'jjFormState' in resp.text
 
 
 def test_form_state_skips_create_via_pathname_check(admin_client):
@@ -1763,31 +1763,31 @@ def test_form_state_skips_create_via_pathname_check(admin_client):
 
 
 def test_publish_controls_marks_primary_button(admin_client):
-    """publish_controls.html adds data-jb-primary to the Publish/Update button."""
+    """publish_controls.html adds data-jj-primary to the Publish/Update button."""
     resp = admin_client.get('/admin/post/create')
-    assert "data-jb-primary" in resp.text
+    assert "data-jj-primary" in resp.text
 
 
 def test_publish_controls_primary_on_edit(admin_client, aws_mock):
-    """data-jb-primary is present on post edit pages too."""
+    """data-jj-primary is present on post edit pages too."""
     from app.db import put_content
     from .conftest import make_post
     put_content("POST", make_post(slug="dirty-edit-test"))
     resp = admin_client.get('/admin/post/edit/dirty-edit-test')
     assert resp.status_code == 200
-    assert "data-jb-primary" in resp.text
+    assert "data-jj-primary" in resp.text
 
 
 def test_blocks_editor_dispatches_field_change(admin_client):
-    """Block editor init() dispatches jb:field:change via $watch."""
+    """Block editor init() dispatches jj:field:change via $watch."""
     resp = admin_client.get('/admin/post/create')
-    assert 'jb:field:change' in resp.text
+    assert 'jj:field:change' in resp.text
 
 
 def test_asset_upload_dispatches_field_change_on_confirm(admin_client):
-    """Asset uploader confirmModal() dispatches jb:field:change."""
+    """Asset uploader confirmModal() dispatches jj:field:change."""
     resp = admin_client.get('/admin/brand/edit/BRAND')
-    assert 'jb:field:change' in resp.text
+    assert 'jj:field:change' in resp.text
 
 
 def test_brand_edit_includes_pair_hints_script(admin_client):

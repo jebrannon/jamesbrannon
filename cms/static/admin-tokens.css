@@ -1,21 +1,25 @@
 /*
  *  File:   admin-tokens.css
- *  Info:   Design tokens for the CMS admin UI.
+ *  Info:   Design tokens for the CMS admin UI. All tokens use --jj-* prefix.
+ *          This is the single source of truth for all design decisions in the admin.
  *          Independent of the Site — do not treat these as shared.
  *          Site tokens live in src/less/_base/colours.less and src/less/_base/typography.less.
+ *
+ *  Prefix: --jj-* (all ours). Tabler's own tokens use --tblr-* and are remapped
+ *          in admin.css. Never write --tblr-* tokens here.
  */
 
 :root {
 
   /* ── Colour palette ─────────────────────────────────────────────────────── */
-  --jb-dark:          #2D2D2D;
-  --jb-light:         #FBFBFB;
-  --jb-primary:       #0FCE8F;   /* primary / accent */
-  --jb-secondary:     #FF6E70;   /* errors / warnings */
-  --jb-grey-midnight: #393939;
-  --jb-grey-dark:     #424242;
-  --jb-grey-mild:     #929292;   /* placeholder text */
-  --jb-grey-light:    #F1F1F1;
+  --jj-dark:          #2D2D2D;
+  --jj-light:         #FBFBFB;
+  --jj-primary:       #0FCE8F;   /* primary / accent */
+  --jj-secondary:     #FF6E70;   /* errors / warnings */
+  --jj-grey-midnight: #393939;
+  --jj-grey-dark:     #424242;
+  --jj-grey-mild:     #929292;   /* placeholder text */
+  --jj-grey-light:    #F1F1F1;
 
   /* ── Font family ─────────────────────────────────────────────────────────── */
   --font: 'Barlow Semi Condensed', sans-serif;
@@ -68,56 +72,56 @@
   --navbar-logo-h: 64px;
 
   /* ── Sidebar ─────────────────────────────────────────────────────────────── */
-  --sidebar-hover-bg: color-mix(in srgb, var(--jb-dark) 80%, black);
+  --sidebar-hover-bg: color-mix(in srgb, var(--jj-dark) 80%, black);
 
   /* ── Icons ───────────────────────────────────────────────────────────────── */
-  --jb-icon-close:   '/static/icons/close.svg';
-  --jb-icon-home:    '/static/icons/home.svg';
-  --jb-icon-logout:  '/static/icons/logout.svg';
-  --jb-icon-message: '/static/icons/message.svg';
+  --jj-icon-close:   '/static/icons/close.svg';
+  --jj-icon-home:    '/static/icons/home.svg';
+  --jj-icon-logout:  '/static/icons/logout.svg';
+  --jj-icon-message: '/static/icons/message.svg';
 
   /* ── Radius ──────────────────────────────────────────────────────────────── */
-  --jb-radius: 0.25rem;   /* 4px — applied to inputs, buttons, and UI components */
+  --jj-radius: 0.25rem;   /* 4px — applied to inputs, buttons, and UI components */
 
   /* ── Buttons ─────────────────────────────────────────────────────────────── */
-  --jb-btn-radius:    var(--jb-radius);
-  --jb-btn-font:      var(--font);
-  --jb-btn-fs:        var(--fs-btn);
-  --jb-btn-lh:        var(--lh-btn);
-  --jb-btn-fw:        var(--fw-btn);
-  --jb-btn-padding:   0.75rem 1rem;     /* 12px 16px */
-  --jb-btn-transform: none;
+  --jj-btn-radius:    var(--jj-radius);
+  --jj-btn-font:      var(--font);
+  --jj-btn-fs:        var(--fs-btn);
+  --jj-btn-lh:        var(--lh-btn);
+  --jj-btn-fw:        var(--fw-btn);
+  --jj-btn-padding:   0.75rem 1rem;     /* 12px 16px */
+  --jj-btn-transform: none;
 
   /* Primary — green fill, dark text */
-  --jb-btn-primary-bg:           var(--jb-primary);
-  --jb-btn-primary-text:         var(--jb-dark);
-  --jb-btn-primary-hover-bg:     var(--jb-light);
-  --jb-btn-primary-hover-text:   var(--jb-dark);
+  --jj-btn-primary-bg:           var(--jj-primary);
+  --jj-btn-primary-text:         var(--jj-dark);
+  --jj-btn-primary-hover-bg:     var(--jj-light);
+  --jj-btn-primary-hover-text:   var(--jj-dark);
 
   /* Secondary — dark grey fill, light text, no border */
-  --jb-btn-secondary-bg:           var(--jb-grey-dark);
-  --jb-btn-secondary-text:         var(--jb-light);
-  --jb-btn-secondary-hover-bg:     var(--jb-light);
-  --jb-btn-secondary-hover-text:   var(--jb-dark);
-  --jb-btn-secondary-border:       transparent;
+  --jj-btn-secondary-bg:           var(--jj-grey-dark);
+  --jj-btn-secondary-text:         var(--jj-light);
+  --jj-btn-secondary-hover-bg:     var(--jj-light);
+  --jj-btn-secondary-hover-text:   var(--jj-dark);
+  --jj-btn-secondary-border:       transparent;
 
   /* Default — transparent, light border */
-  --jb-btn-default-text:           var(--jb-light);
-  --jb-btn-default-border:         var(--jb-grey-dark);
-  --jb-btn-default-hover-border:   var(--jb-light);
+  --jj-btn-default-text:           var(--jj-light);
+  --jj-btn-default-border:         var(--jj-grey-dark);
+  --jj-btn-default-hover-border:   var(--jj-light);
 
   /* Danger — red fill, dark text; light on hover */
-  --jb-btn-danger-bg:              var(--jb-secondary);
-  --jb-btn-danger-text:            var(--jb-dark);
-  --jb-btn-danger-hover-bg:        var(--jb-light);
-  --jb-btn-danger-hover-text:      var(--jb-dark);
+  --jj-btn-danger-bg:              var(--jj-secondary);
+  --jj-btn-danger-text:            var(--jj-dark);
+  --jj-btn-danger-hover-bg:        var(--jj-light);
+  --jj-btn-danger-hover-text:      var(--jj-dark);
 
   /* Disabled — applies to all button variants */
-  --jb-btn-disabled-bg:            var(--jb-grey-midnight);
-  --jb-btn-disabled-border:        var(--jb-grey-midnight);
-  --jb-btn-disabled-text:          var(--jb-grey-mild);
+  --jj-btn-disabled-bg:            var(--jj-grey-midnight);
+  --jj-btn-disabled-border:        var(--jj-grey-midnight);
+  --jj-btn-disabled-text:          var(--jj-grey-mild);
 
   /* Dialog / modal backdrop */
-  --jb-backdrop:                   rgba(0, 0, 0, 0.75);
+  --jj-backdrop:                   rgba(0, 0, 0, 0.75);
 
 }

@@ -81,7 +81,7 @@ document.addEventListener('DOMContentLoaded', function () {
       var el = document.getElementById(id);
       if (el) el.addEventListener('input', fillDesc);
     });
-    document.addEventListener('jb:blocks-changed', function (e) {
+    document.addEventListener('jj:blocks-changed', function (e) {
       _blockText = stripTags((e.detail && e.detail.text) || '').trim();
       fillDesc();
     });

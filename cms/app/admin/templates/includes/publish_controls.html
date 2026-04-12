@@ -18,14 +18,14 @@
     var cardTitle = document.querySelector('.card-header .card-title');
     if (cardTitle) {
         var badge = document.createElement('span');
-        badge.id = 'jb-status-badge';
+        badge.id = 'jj-status-badge';
         badge.className = badgeClass(isPublished);
         badge.textContent = isPublished ? 'Published' : 'Draft';
         cardTitle.appendChild(badge);
     }
 
     function updateBadge(published) {
-        var b = document.getElementById('jb-status-badge');
+        var b = document.getElementById('jj-status-badge');
         if (b) {
             b.className = badgeClass(published);
             b.textContent = published ? 'Published' : 'Draft';
@@ -45,7 +45,7 @@
         var btn = document.createElement('button');
         btn.type = 'button';
         btn.className = 'btn' + (isPrimary ? ' btn-primary' : ' btn-secondary');
-        if (isPrimary) btn.setAttribute('data-jb-primary', '');
+        if (isPrimary) btn.setAttribute('data-jj-primary', '');
         btn.textContent = label;
         btn.addEventListener('click', function () {
             cb.checked = publishedValue;

@@ -53,8 +53,8 @@
     {%- set all_fields = model.get_fields_list(request, 'EDIT' | ra) -%}
 
     {# ── Brand fieldset ────────────────────────────────────────────────────── #}
-    <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2">Brand</legend>
+    <fieldset class="border rounded p-3 mb-5 pt-4">
+        <legend class="px-2">Brand</legend>
 
         {% for field in all_fields %}
             {% if field.name not in comms_fields %}
@@ -62,7 +62,7 @@
                 {# ── Logo ─────────────────────────────────────────────────── #}
                 {% if field.name == 'logo' %}
                 <div class="mb-3">
-                    <label class="form-label jb-field-label">{{ field.label }}</label>
+                    <label class="form-label jj-field-label">{{ field.label }}</label>
                     {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None, current_url=raw_obj.logo_url, preview_type='logo', dark_mode=true, saved_dark_mode=raw_obj.logo_dark_mode %}
                         {% include field.form_template %}
                     {% endwith %}
@@ -71,7 +71,7 @@
                 {# ── Favicon ───────────────────────────────────────────────── #}
                 {% elif field.name == 'favicon' %}
                 <div class="mb-3">
-                    <label class="form-label jb-field-label">{{ field.label }}</label>
+                    <label class="form-label jj-field-label">{{ field.label }}</label>
                     {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None, current_url=raw_obj.favicon_url, preview_type='favicon', dark_mode=true, saved_dark_mode=raw_obj.favicon_dark_mode %}
                         {% include field.form_template %}
                     {% endwith %}
@@ -93,8 +93,8 @@
 
     {# ── LinkedIn fieldset ─────────────────────────────────────────────────── #}
     {%- set linkedin_fields = ['linkedin', 'linkedin_text'] -%}
-    <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2">LinkedIn</legend>
+    <fieldset class="border rounded p-3 mb-5 pt-4">
+        <legend class="px-2">LinkedIn</legend>
         {% for field in all_fields %}
             {% if field.name in linkedin_fields %}
                 <div class="mb-3">
@@ -109,8 +109,8 @@
 
     {# ── Instagram fieldset ────────────────────────────────────────────────── #}
     {%- set instagram_fields = ['instagram', 'instagram_text'] -%}
-    <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2">Instagram</legend>
+    <fieldset class="border rounded p-3 mb-5 pt-4">
+        <legend class="px-2">Instagram</legend>
         {% for field in all_fields %}
             {% if field.name in instagram_fields %}
                 <div class="mb-3">
@@ -125,8 +125,8 @@
 
     {# ── Email fieldset ────────────────────────────────────────────────────── #}
     {%- set email_fields = ['email', 'email_text'] -%}
-    <fieldset class="border rounded p-3 mb-3">
-        <legend class="float-none w-auto px-2">Email</legend>
+    <fieldset class="border rounded p-3 mb-5 pt-4">
+        <legend class="px-2">Email</legend>
         {% for field in all_fields %}
             {% if field.name in email_fields %}
                 <div class="mb-3">

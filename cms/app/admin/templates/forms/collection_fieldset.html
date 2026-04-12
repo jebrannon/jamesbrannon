@@ -1,5 +1,5 @@
-<fieldset class="border rounded p-3 mb-3">
-    <legend class="float-none w-auto px-2">{{ field.label }}</legend>
+<fieldset class="border rounded p-3 mb-5 pt-4">
+    <legend class="px-2">{{ field.label }}</legend>
     {% for field in field.get_fields_list(request, action) %}
         <div class="form-group row mb-3">
             <label class="col-3 col-form-label {% if field.required %}required{% endif %}"

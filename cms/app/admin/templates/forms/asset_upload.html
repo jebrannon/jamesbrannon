@@ -4,15 +4,15 @@
 {% set upload_dark_mode = dark_mode | default(true) %}
 {% set upload_saved_dark_mode = saved_dark_mode | default(false) %}
 
-<div x-data="assetUpload({{ {'currentUrl': upload_current_url, 'previewType': upload_preview_type, 'darkMode': upload_dark_mode, 'savedDarkMode': upload_saved_dark_mode} | tojson }})" class="jb-upload">
+<div x-data="assetUpload({{ {'currentUrl': upload_current_url, 'previewType': upload_preview_type, 'darkMode': upload_dark_mode, 'savedDarkMode': upload_saved_dark_mode} | tojson }})" class="jj-upload">
 
   {# ── Confirmed preview — saved asset on load, updates after modal confirm ── #}
 
   {# No dark mode — single neutral swatch, no background treatment #}
   <div x-show="preview && (isNew ? !stagedDarkMode : !savedDarkMode)" x-cloak
-       class="jb-upload-preview-row {{ ('jb-upload-preview-row--' ~ upload_preview_type) if upload_preview_type }} mb-3">
+       class="jj-upload-preview-row {{ ('jj-upload-preview-row--' ~ upload_preview_type) if upload_preview_type }} mb-3">
     <div class="text-center">
-      <div class="jb-upload-swatch jb-upload-swatch--neutral">
+      <div class="jj-upload-swatch jj-upload-swatch--neutral">
         <img :src="preview" alt="">
       </div>
     </div>
@@ -20,15 +20,15 @@
 
   {# Dark mode — light + dark swatches #}
   <div x-show="preview && (isNew ? stagedDarkMode : savedDarkMode)" {% if not upload_current_url %}x-cloak{% endif %}
-       class="jb-upload-preview-row {{ ('jb-upload-preview-row--' ~ upload_preview_type) if upload_preview_type }} mb-3">
+       class="jj-upload-preview-row {{ ('jj-upload-preview-row--' ~ upload_preview_type) if upload_preview_type }} mb-3">
     <div class="text-center">
-      <div class="jb-upload-swatch jb-upload-swatch--light">
+      <div class="jj-upload-swatch jj-upload-swatch--light">
         <img :src="preview" alt="">
       </div>
       <small class="text-muted d-block mt-1">Light</small>
     </div>
     <div class="text-center">
-      <div class="jb-upload-swatch jb-upload-swatch--dark">
+      <div class="jj-upload-swatch jj-upload-swatch--dark">
         <img :src="preview" alt="">
       </div>
       <small class="text-muted d-block mt-1">Dark</small>
@@ -56,7 +56,7 @@
   {% endif %}
 
   {# ── Preview modal ── #}
-  <div class="modal fade jb-dialog jb-upload-modal" id="{{ fid }}_modal" x-ref="modal"
+  <div class="modal fade jj-dialog jj-upload-modal" id="{{ fid }}_modal" x-ref="modal"
        tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
       <div class="modal-content">
@@ -67,24 +67,24 @@
         </div>
 
         <div class="modal-body">
-          <div class="jb-upload-modal-preview mb-3">
+          <div class="jj-upload-modal-preview mb-3">
 
             {# Single preview — dark mode off #}
             <img :src="modalPreview" alt=""
                  x-show="modalPreview && !fetchingDark && !addDarkMode">
 
             {# Dual swatches — dark mode on #}
-            <div class="jb-upload-modal-swatches" x-show="modalPreview && !fetchingDark && addDarkMode" x-cloak>
-              <div class="jb-upload-swatch jb-upload-swatch--light">
+            <div class="jj-upload-modal-swatches" x-show="modalPreview && !fetchingDark && addDarkMode" x-cloak>
+              <div class="jj-upload-swatch jj-upload-swatch--light">
                 <img :src="modalPreview" alt="">
               </div>
-              <div class="jb-upload-swatch jb-upload-swatch--dark">
+              <div class="jj-upload-swatch jj-upload-swatch--dark">
                 <img :src="modalPreviewDark" alt="">
               </div>
             </div>
 
             {# Spinner #}
-            <div class="jb-upload-modal-spinner" x-show="fetchingDark" x-cloak>
+            <div class="jj-upload-modal-spinner" x-show="fetchingDark" x-cloak>
               <div class="spinner-border spinner-border-sm" role="status"></div>
               <small class="ms-2">Processing&hellip;</small>
             </div>
@@ -92,14 +92,14 @@
           </div>
 
           {% if upload_dark_mode %}
-          <div class="jb-toggle-row">
+          <div class="jj-toggle-row">
             <div class="form-check form-switch mb-0">
               <input class="form-check-input" type="checkbox" id="{{ fid }}_dm_toggle"
                      x-model="addDarkMode"
                      @change="onDarkModeToggle()"
                      :disabled="fetchingDark">
             </div>
-            <label class="jb-toggle-label" for="{{ fid }}_dm_toggle">
+            <label class="jj-toggle-label" for="{{ fid }}_dm_toggle">
               <strong>Dark + light mode support</strong> — Selecting this embeds a colour-scheme media query so the SVG adapts automatically to light and dark modes.
             </label>
           </div>
@@ -221,7 +221,7 @@
         this.stagedDarkMode = this.addDarkMode;
         _pendingFile        = null;
         _rawDataUrl         = null;
-        document.dispatchEvent(new CustomEvent('jb:field:change'));
+        document.dispatchEvent(new CustomEvent('jj:field:change'));
         this._modal().hide();
       },
 

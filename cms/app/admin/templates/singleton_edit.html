@@ -1,6 +1,38 @@
-{% extends "@starlette-admin/edit.html" %}
+{% extends "edit.html" %}
 
 {% block head_css %}
     {{ super() }}
-    <script>document.addEventListener('DOMContentLoaded', function () { document.body.classList.add('jb-singleton'); });</script>
+    <script>document.addEventListener('DOMContentLoaded', function () { document.body.classList.add('jj-singleton'); });</script>
+{% endblock %}
+
+{% block content %}
+<div class="card">
+    <form action="{{ request.url | safe }}"
+          method="POST"
+          enctype="multipart/form-data">
+        <div class="card-body">
+            {% block edit_form %}
+                {% for field in model.get_fields_list(request, 'EDIT' | ra) %}
+                    <div class="mb-3">
+                        {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+                            {% include field.label_template %}
+                            {% include field.form_template %}
+                        {% endwith %}
+                    </div>
+                {% endfor %}
+            {% endblock %}
+        </div>
+        <div class="card-footer text-black">
+            <div class="btn-list ms-auto justify-content-end">
+                <a href="{{ url_for(__name__ ~ ':index') }}"
+                   class="btn btn-danger">{{ _("Cancel") }}</a>
+                <button type="submit" name="_add_another"
+                        class="btn">{{ _("Save and add another") }}</button>
+                <button type="submit" name="_continue_editing"
+                        class="btn">{{ _("Save and continue editing") }}</button>
+                <button type="submit" class="btn btn-success">{{ _("Save") }}</button>
+            </div>
+        </div>
+    </form>
+</div>
 {% endblock %}

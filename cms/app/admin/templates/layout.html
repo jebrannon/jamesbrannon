@@ -1,23 +1,23 @@
 {% extends "@starlette-admin/layout.html" %}
 
 {# ── Override full page body — keep sidebar via super(), replace page-wrapper
-     internals with clean jb-page-header / jb-page-body divs, eliminating the
+     internals with clean jj-page-header / jj-page-body divs, eliminating the
      container-fluid > row > row-deck > row-cards nesting from starlette-admin ─ #}
 {% block body %}
 <div class="page">
     {% block sidebar %}{{ super() }}{% endblock %}
     <div class="page-wrapper">
-        <div class="jb-page-header">
+        <div class="jj-page-header">
             {% block header %}{% endblock %}
         </div>
-        <div class="jb-page-body">
+        <div class="jj-page-body">
             {% block content %}{% endblock %}
         </div>
         {% block modal %}{% endblock %}
 
-        {# ── Shared jbDialog singleton — open via window.jbDialog.open({...}) ── #}
-        <div x-data="jbDialog()" x-cloak>
-          <div class="modal fade jb-dialog" x-ref="modal" tabindex="-1" aria-hidden="true">
+        {# ── Shared jjDialog singleton — open via window.jjDialog.open({...}) ── #}
+        <div x-data="jjDialog()" x-cloak>
+          <div class="modal fade jj-dialog" x-ref="modal" tabindex="-1" aria-hidden="true">
             <div class="modal-dialog modal-dialog-centered">
               <div class="modal-content">
 
@@ -27,7 +27,7 @@
                 </div>
 
                 <div class="modal-body">
-                  <p class="jb-dialog-body" x-text="body"></p>
+                  <p class="jj-dialog-body" x-text="body"></p>
                 </div>
 
                 <div class="modal-footer">
@@ -46,12 +46,12 @@
 {% block script %}
 {{ super() }}
 <script>
-/* ── jbFormState — dirty-state tracker ───────────────────────────────────────
-   Disables [data-jb-primary] buttons on edit forms until the form is dirty.
+/* ── jjFormState — dirty-state tracker ───────────────────────────────────────
+   Disables [data-jj-primary] buttons on edit forms until the form is dirty.
    Create forms are skipped — they start enabled, server validates on submit.
 
    Standard fields (input/select/textarea) are tracked automatically via DOM
-   events. Custom Alpine fields must dispatch `jb:field:change` on document
+   events. Custom Alpine fields must dispatch `jj:field:change` on document
    when their committed value changes (see blocks.html, asset_upload.html).
 
    Timing: runs in requestAnimationFrame so it fires after all DOMContentLoaded
@@ -70,7 +70,7 @@
       // Mark all default starlette-admin save buttons not already marked
       // (singleton forms have three: Save / Save and continue / Save and add another)
       form.querySelectorAll('.card-footer button[type="submit"]').forEach(function (btn) {
-        if (!btn.hasAttribute('data-jb-primary')) btn.setAttribute('data-jb-primary', '');
+        if (!btn.hasAttribute('data-jj-primary')) btn.setAttribute('data-jj-primary', '');
       });
 
       var _hasFile = false;
@@ -83,7 +83,7 @@
         if (e.target.type === 'file') _hasFile = true;
         _onchange();
       });
-      document.addEventListener('jb:field:change', _onchange);
+      document.addEventListener('jj:field:change', _onchange);
 
       function _snap() {
         var parts = [];
@@ -103,7 +103,7 @@
       }
 
       function _setBtn(enabled) {
-        form.querySelectorAll('[data-jb-primary]').forEach(function (btn) {
+        form.querySelectorAll('[data-jj-primary]').forEach(function (btn) {
           btn.disabled = !enabled;
         });
       }
@@ -112,7 +112,7 @@
 })();
 </script>
 <script>
-window.jbDialog = function () {
+window.jjDialog = function () {
   let _bsModal   = null;
   let _onConfirm = null;
 
@@ -122,8 +122,8 @@ window.jbDialog = function () {
 
     init() {
       // Replace the factory with the live Alpine-bound instance so that
-      // non-Alpine code can call window.jbDialog.open(...) directly.
-      window.jbDialog = this;
+      // non-Alpine code can call window.jjDialog.open(...) directly.
+      window.jjDialog = this;
     },
 
     _modal() {

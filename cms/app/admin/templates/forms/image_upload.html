@@ -1,5 +1,5 @@
 {% set fid = field.id %}
-<div x-data="imageUpload()" class="jb-image-upload">
+<div x-data="imageUpload()" class="jj-image-upload">
 
   {# ── Hidden file input, triggered by button ── #}
   <input type="file"
@@ -24,13 +24,13 @@
 
   {# ── Live preview on selection ── #}
   <div x-show="preview" x-cloak class="mt-3">
-    <img :src="preview" class="jb-image-upload-preview" alt="">
+    <img :src="preview" class="jj-image-upload-preview" alt="">
   </div>
 
 </div>
 
 <style>
-.jb-image-upload-preview {
+.jj-image-upload-preview {
   max-width: 100%;
   max-height: 200px;
   border-radius: var(--btn-radius);
