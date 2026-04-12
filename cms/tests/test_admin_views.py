@@ -742,8 +742,8 @@ def test_logo_css_sizing(admin_client):
     tokens_css = Path(__file__).parent.parent / "static" / "admin-tokens.css"
     assert tokens_css.exists()
     tokens_content = tokens_css.read_text()
-    assert "--navbar-logo-w: 48px" in tokens_content
-    assert "--navbar-logo-h: 64px" in tokens_content
+    assert "--navbar-logo-w: 4.5rem" in tokens_content
+    assert "--navbar-logo-h: 6rem" in tokens_content
 
     # Verify the selector that applies them is in admin.css
     admin_css = Path(__file__).parent.parent / "static" / "admin.css"
@@ -755,13 +755,10 @@ def test_logo_css_sizing(admin_client):
 
 
 def test_mobile_user_icon_hidden(admin_client):
-    """Mobile user-icon dropdown should be suppressed via CSS rule in admin.css."""
-    from pathlib import Path
-    # The hide rule lives in admin.css (external file), not inline in the response
-    admin_css = Path(__file__).parent.parent / "static" / "admin.css"
-    assert admin_css.exists()
-    content = admin_css.read_text()
-    assert "flex-row.d-lg-none" in content  # our CSS hide rule is present
+    """Mobile user-icon dropdown is not rendered — sidebar HTML is owned (desktop-only)."""
+    resp = admin_client.get("/admin/")
+    assert resp.status_code == 200
+    assert "d-lg-none" not in resp.text  # mobile dropdown not in DOM
 
 
 # ── UI: logo and favicon ──────────────────────────────────────────────────────

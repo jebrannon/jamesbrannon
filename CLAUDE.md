@@ -66,7 +66,7 @@ cd cms && source .venv/bin/activate && python seed.py
 ```bash
 npm test                              # Frontend only (alias for npx vitest run)
 npx vitest run                        # Frontend only (~156 tests)
-cd cms && pytest tests/ -v            # Backend only (~350 tests, 4 skipped)
+cd cms && .venv/bin/python -m pytest tests/ -v  # Backend only (~350 tests, 4 skipped)
 npm run test:coverage                 # Frontend with coverage report
 ```
 
@@ -131,6 +131,10 @@ jamesbrannon/
 │                        #   test_posts.py, test_settings.py, test_startup.py,
 │                        #   test_upload.py, test_views_helpers.py
 ├── src/tests/           # Vitest — *.test.js (happy-dom)
+├── cms/static/
+│   ├── admin-tokens.css # Admin CSS custom properties (--jj-* tokens)
+│   ├── admin.css        # Admin component styles
+│   └── icons/           # SVG icons for admin sidebar (close, dashboard, home, logout, message)
 ├── cms/.env.example     # Local dev env template (committed)
 ├── cms/.env.production.example  # Production env template (committed)
 ├── vite.config.js       # Dev server :3000, proxies /api + /admin → :8000
@@ -160,14 +164,14 @@ All PK/SK constants are in `cms/app/constants.py`.
 - `Page` — slug, title, blocks, published + SEOMixin + ContentBase
 - `Category` — slug, name, page_headline, max_items + ContentBase
 - `BrandSettings` — display_name, role_title, logo_url, logo_dark_mode, favicon_url (single SVG with embedded dark-mode media query), favicon_dark_mode, linkedin, linkedin_text, instagram, instagram_text, email, email_text
-- `SeoSettings` — inherits SEOMixin (seo_title, seo_description, og_image, og_type, canonical_url, no_index)
+- `SeoSettings` — site_name, seo_description, og_image, og_site_name, no_index (does NOT inherit SEOMixin; no og_type)
 - `ProfileSettings` — headline, tagline, summary, blog feed config (BlogSettings), strengths (StrengthsSection), experience (ExperienceSection)
 - `BlogSettings` — headline, category, limit (homepage blog feed)
 - `StrengthsSection` / `StrengthItem` — headline, items list (name, description)
 - `ExperienceSection` / `ExperienceItem` — headline, items list (job_title, company, dates, summary, page_link)
 - `BlogPageSettings` — page_headline (stored under SETTINGS_BLOG key)
 - `ContentBase` — theme_mode (dark/light), theme_style (professional/thoughts) + SEOMixin
-- `SEOMixin` — seo_title, seo_description, og_image, og_type, canonical_url, no_index
+- `SEOMixin` — seo_title, seo_description, og_image, canonical_url, no_index (no og_type — only Post carries og_type directly)
 
 **Enums:** `ThemeMode` (dark/light), `ThemeStyle` (professional/thoughts), `OGType` (website/article/profile)
 
@@ -310,6 +314,7 @@ URL: `/admin` (Starlette Admin)
 - `save_favicon(svg_bytes, save_name, inject_dark_mode=True)` — saves SVG + generates PNG variants at 16, 32, 192, 512 px via cairosvg (optional); returns SVG URL
 - `save_logo(svg_bytes, inject_dark_mode=True)` — saves site logo SVG; returns URL
 - `_inject_dark_mode(svg_bytes)` — injects `@media (prefers-color-scheme: dark)` into SVG if not present; samples dominant fill colour to determine flip direction
+- `_make_previews(svg_bytes)` — returns `(light_bytes, dark_bytes)` with hardcoded fills (no media query); used by `POST /api/preview-svg` to generate side-by-side previews
 - `ensure_s3_bucket_exists()` — called on lifespan startup; creates bucket if missing (no-op when S3 not configured)
 
 **Local:** saved to `cms/static/post-images/` (images), `cms/static/favicons/` (favicons), `cms/static/logos/` (logo)
@@ -403,7 +408,7 @@ Set `field.form_template = "forms/asset_upload.html"` in the field's `__post_ini
 - `.jj-upload-modal-swatches` — dual side-by-side light/dark swatch layout (dark mode on)
 - `.jj-upload-progress` / `.jj-upload-progress-bar` — file read progress
 
-**`POST /api/preview-svg`:** Auth-gated (session required). Accepts `multipart/form-data` with `file` field. Returns `{"preview": "data:image/svg+xml;base64,..."}`. Validates SVG by checking content starts with `<`. Nothing is saved.
+**`POST /api/preview-svg`:** Auth-gated (session required). Accepts `multipart/form-data` with `file` field. Returns `{"preview": "data:image/svg+xml;base64,...", "preview_dark": "data:image/svg+xml;base64,..."}`. Validates SVG by checking content starts with `<`. Nothing is saved.
 
 ---
 
@@ -474,19 +479,21 @@ Load order: `tabler.desktop.css` → `admin-tokens.css` → `admin.css`. This or
 - `--jj-btn-radius/font/fs/lh/fw/padding/transform` — button base
 - `--jj-btn-primary/secondary/default/danger-*` — button variants (bg, text, hover-bg, hover-text)
 - `--jj-btn-disabled-bg/border/text` — disabled state (dark bg, dark border, mild-grey text)
-- `--jj-icon-close/home/logout/message` — icon path strings (NOT `url()` — CSS vars can't interpolate inside `url()`)
+- `--jj-icon-close/dashboard/home/logout/message` — icon path strings (NOT `url()` — CSS vars can't interpolate inside `url()`)
 - `--jj-backdrop` — modal overlay: `rgba(0, 0, 0, 0.75)`
 - `--jj-radius` — 0.25rem; applied to inputs, buttons, UI components
 
 **`admin.css`** is structured in descriptive sections:
 **Tabler remap** — override `--tblr-*` tokens to apply our palette (the intended Tabler theming API)
 **Typography** — body, headings, text utilities (`b/strong` use `--fw-medium`)
-**Layout** — navbar, sidebar, page header/body, list toolbar
+**Layout** — navbar, sidebar, page header/body, list toolbar. Nav link padding is `--jj-nav-padding: 0.75rem` (all sides). `.jj-sidebar-footer .nav-link` shares the same nav token styles as `.navbar-nav .nav-link`.
 **Forms** — inputs, labels, fieldset legends, card chrome; toggle component (`.jj-toggle-row`)
-**Components** — buttons (incl. disabled state), badges, tables, sidebar icons; shared dialog (`.jj-dialog`)
+**Components** — buttons (incl. disabled state), badges, tables, sidebar icons (mask-image approach); shared dialog (`.jj-dialog`)
 **Singleton pages** — scoped via `.jj-singleton` class (added to `<body>` by `singleton_edit.html`)
 **Block editor** — all `.jj-block*` and rich-text editor styles
 **Upload** — SVG/image upload components (`.jj-upload-*`), swatch variants, modal extends `.jj-dialog`
+
+**Sidebar icons (mask-image approach):** Icon SVG files in `cms/static/icons/` are applied via `mask-image` + `background-color: currentColor`. The icon shape acts as a stencil so it automatically inherits the nav-link text colour in all states (default, hover, active) — no per-state colour overrides needed. Both `mask-image` and `-webkit-mask-image` (Safari) are set. The `.fa-*` class names from the starlette-admin `icon=` API are remapped to SVG masks in `admin.css`.
 
 **`!important` discipline:** only used where Tabler's high-specificity selectors cannot be beaten by token remapping alone. Always accompanied by a comment explaining why.
 

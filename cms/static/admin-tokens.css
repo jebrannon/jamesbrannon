@@ -68,17 +68,30 @@
   --page-padding-sm: 1rem;
 
   /* ── Navbar ──────────────────────────────────────────────────────────────── */
-  --navbar-logo-w: 48px;
-  --navbar-logo-h: 64px;
+  --navbar-logo-w: 4.5rem;
+  --navbar-logo-h: 6rem;
+
+  /* ── Sidebar nav items ───────────────────────────────────────────────────── */
+  --jj-nav-padding:       0.75rem;        /* 12px all sides — matches Tabler's nav-link override */
+  --jj-nav-bg:            var(--jj-dark);
+  --jj-nav-color:         var(--jj-light);
+  --jj-nav-hover-bg:      var(--jj-grey-dark);
+  --jj-nav-active-bg:     var(--jj-primary);
+  --jj-nav-active-color:  var(--jj-dark);
+  --jj-nav-radius:        0 var(--jj-radius) var(--jj-radius) 0; /* top-right + bottom-right only */
+  --jj-nav-icon-gap:      1rem;
+  --jj-nav-icon-color:    var(--jj-nav-color);
+  --jj-nav-icon-hover:    var(--jj-nav-color);
+  --jj-nav-icon-active:   var(--jj-nav-active-color);
 
   /* ── Sidebar ─────────────────────────────────────────────────────────────── */
-  --sidebar-hover-bg: color-mix(in srgb, var(--jj-dark) 80%, black);
 
   /* ── Icons ───────────────────────────────────────────────────────────────── */
-  --jj-icon-close:   '/static/icons/close.svg';
-  --jj-icon-home:    '/static/icons/home.svg';
-  --jj-icon-logout:  '/static/icons/logout.svg';
-  --jj-icon-message: '/static/icons/message.svg';
+  --jj-icon-close:     '/static/icons/close.svg';
+  --jj-icon-dashboard: '/static/icons/dashboard.svg';
+  --jj-icon-home:      '/static/icons/home.svg';
+  --jj-icon-logout:    '/static/icons/logout.svg';
+  --jj-icon-message:   '/static/icons/message.svg';
 
   /* ── Radius ──────────────────────────────────────────────────────────────── */
   --jj-radius: 0.25rem;   /* 4px — applied to inputs, buttons, and UI components */

@@ -177,24 +177,80 @@ details summary { color: var(--jj-light) !important; }
   margin:  0;
 }
 
-/* Tabler uses 3-class specificity on .navbar-brand — match it to override */
+/* Override Tabler's navbar-brand padding */
 .navbar-vertical.navbar-expand-lg .navbar-brand {
   align-self:      flex-start;
   justify-content: flex-start;
-  padding:         var(--page-padding) var(--page-padding-sm) var(--page-padding-sm);
+  padding:         2rem 1rem;
 }
 
-/* Hide mobile user-icon dropdown — logout is in the sidebar nav */
-.navbar-vertical .navbar-nav.flex-row.d-lg-none {
-  display: none !important;
+/* Sidebar collapse — flex column so logout can pin to bottom */
+.navbar-vertical .navbar-collapse {
+  display:        flex !important;
+  flex-direction: column;
+  height:         100%;
 }
 
-/* Sidebar nav — hover and active states */
-.navbar-vertical .nav-link:hover,
-.navbar-vertical .nav-link.active,
-.navbar-vertical .dropdown-item:hover,
-.navbar-vertical .dropdown-item.active {
-  background-color: var(--sidebar-hover-bg);
+.navbar-vertical .navbar-nav {
+  flex: 1;
+}
+
+/* Logout — pinned to bottom, flows up when nav items push it */
+.jj-sidebar-footer {
+  margin-top: auto;
+}
+
+/* Sidebar nav items */
+.navbar-vertical .navbar-nav .nav-link-icon {
+  margin-right: 0;
+  width:        1rem;
+  height:       1rem;
+}
+
+.navbar-vertical .navbar-nav .nav-item {
+  margin-bottom: 0.25rem;
+}
+
+.navbar-vertical .navbar-nav .nav-link,
+.navbar-vertical .jj-sidebar-footer .nav-link {
+  display:          flex;
+  align-items:      center;
+  padding:          var(--jj-nav-padding);
+  background-color: var(--jj-nav-bg);
+  color:            var(--jj-nav-color);
+  font-family:      var(--font);
+  font-size:        var(--fs-btn);
+  line-height:      var(--lh-btn);
+  font-weight:      var(--fw-btn);
+  font-style:       normal;
+  text-decoration:  none;
+  border-radius:    var(--jj-nav-radius);
+  gap:              var(--jj-nav-icon-gap);
+}
+.navbar-vertical .navbar-nav .nav-link i,
+.navbar-vertical .navbar-nav .nav-link svg,
+.navbar-vertical .jj-sidebar-footer .nav-link i,
+.navbar-vertical .jj-sidebar-footer .nav-link svg {
+  color: var(--jj-nav-icon-color);
+}
+.navbar-vertical .navbar-nav .nav-link:hover,
+.navbar-vertical .jj-sidebar-footer .nav-link:hover {
+  background-color: var(--jj-nav-hover-bg);
+  color:            var(--jj-nav-color);
+}
+.navbar-vertical .navbar-nav .nav-link:hover i,
+.navbar-vertical .navbar-nav .nav-link:hover svg,
+.navbar-vertical .jj-sidebar-footer .nav-link:hover i,
+.navbar-vertical .jj-sidebar-footer .nav-link:hover svg {
+  color: var(--jj-nav-icon-hover);
+}
+.navbar-vertical .navbar-nav .nav-link.active {
+  background-color: var(--jj-nav-active-bg);
+  color:            var(--jj-nav-active-color);
+}
+.navbar-vertical .navbar-nav .nav-link.active i,
+.navbar-vertical .navbar-nav .nav-link.active svg {
+  color: var(--jj-nav-icon-active);
 }
 
 /* Page header — top/side padding, reduced bottom before content */
@@ -504,22 +560,32 @@ thead th,
   color: var(--jj-grey-light) !important;
 }
 
-/* ── Sidebar icons — replace FontAwesome glyphs with brand SVGs ── */
+/* ── Sidebar icons — replace FontAwesome glyphs with brand SVGs ──
+   mask-image approach: icon shape acts as a stencil over background-color:currentColor,
+   so the icon automatically inherits the nav-link text colour in all states
+   (default, hover, active) with no filter hacks needed.
+   -webkit-mask-image prefix required for Safari. ── */
 .fa-home::before,
 .fa-pencil::before,
 .fa-sign-out::before { content: '' !important; }
 .fa-home,
 .fa-pencil,
 .fa-sign-out {
-  display:        inline-block !important;
-  width:          16px;
-  height:         16px;
-  background:     center / contain no-repeat;
-  vertical-align: -3px;
+  display:               inline-block !important;
+  width:                 16px;
+  height:                16px;
+  background-color:      currentColor;
+  mask-size:             contain;
+  mask-repeat:           no-repeat;
+  mask-position:         center;
+  -webkit-mask-size:     contain;
+  -webkit-mask-repeat:   no-repeat;
+  -webkit-mask-position: center;
+  vertical-align:        -3px;
 }
-.fa-home     { background-image: url('/static/icons/home.svg'); }
-.fa-pencil   { background-image: url('/static/icons/message.svg'); }
-.fa-sign-out { background-image: url('/static/icons/logout.svg'); }
+.fa-home     { mask-image: url('/static/icons/dashboard.svg'); -webkit-mask-image: url('/static/icons/dashboard.svg'); }
+.fa-pencil   { mask-image: url('/static/icons/message.svg');   -webkit-mask-image: url('/static/icons/message.svg'); }
+.fa-sign-out { mask-image: url('/static/icons/logout.svg');    -webkit-mask-image: url('/static/icons/logout.svg'); }
 
 /* ── Muted icon colour (used on placeholder SVGs e.g. analytics chart) ── */
 .jj-icon-muted { color: var(--jj-grey-light); }

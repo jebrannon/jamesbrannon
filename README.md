@@ -100,7 +100,7 @@ npm test
 npx vitest run
 
 # Backend only
-cd cms && source .venv/bin/activate && pytest tests/ -v
+cd cms && .venv/bin/python -m pytest tests/ -v
 ```
 
 ~506 tests: ~156 Vitest (Site) + ~350 pytest (CMS, 4 skipped). CI runs on every push via GitHub Actions.
@@ -139,6 +139,10 @@ npm run preview    # serve dist/ locally for a final check
 │   │   ├── models.py       # Pydantic models
 │   │   ├── handler.py      # AWS Lambda entry point (Mangum)
 │   │   └── main.py         # FastAPI app, middleware, startup
+│   ├── static/
+│   │   ├── admin-tokens.css  # --jj-* design tokens
+│   │   ├── admin.css         # admin component styles
+│   │   └── icons/            # SVG icons for admin sidebar
 │   ├── tests/
 │   ├── .env.example              # local dev env template (committed)
 │   ├── .env.production.example   # production env template (committed)

@@ -1,11 +1,40 @@
 {% extends "@starlette-admin/layout.html" %}
 
-{# ── Override full page body — keep sidebar via super(), replace page-wrapper
-     internals with clean jj-page-header / jj-page-body divs, eliminating the
-     container-fluid > row > row-deck > row-cards nesting from starlette-admin ─ #}
+{# ── Override full page body — owns sidebar HTML (SA 0.16.0) and page-wrapper
+     internals. Mobile scaffolding (toggler, collapse, d-lg-none dropdown)
+     stripped — desktop-only layout. Check SA sidebar diff on upgrades. ─────── #}
 {% block body %}
 <div class="page">
-    {% block sidebar %}{{ super() }}{% endblock %}
+    {% block sidebar %}
+    <aside class="navbar navbar-vertical navbar-expand-lg" data-bs-theme="dark">
+        <div class="container-fluid">
+            <h1 class="navbar-brand navbar-brand-autodark">
+                <a class="brand-link" href="{{ url_for(__name__ ~ ':index') }}">
+                    {% if logo_url %}
+                        <img src="{{ logo_url }}" class="navbar-logo"/>
+                    {% else %}
+                        <h3>{{ app_title }}</h3>
+                    {% endif %}
+                </a>
+            </h1>
+            <div class="navbar-collapse" id="sidebar-menu">
+                <ul class="navbar-nav">
+                    {% for view in views if view.is_accessible(request) %}
+                        {% if (view | is_link) %}
+                            {{ macros.extern_link(view) }}
+                        {% elif (view | is_custom_view) and view.add_to_menu %}
+                            {{ macros.custom_link(view) }}
+                        {% elif (view | is_model) %}
+                            {{ macros.model_link(view) }}
+                        {% elif (view | is_dropdown) %}
+                            {{ macros.dropdown_link(view) }}
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </aside>
+    {% endblock %}
     <div class="page-wrapper">
         <div class="jj-page-header">
             {% block header %}{% endblock %}
@@ -155,11 +184,12 @@ document.addEventListener('DOMContentLoaded', function () {
     var nav = document.querySelector('#sidebar-menu .navbar-nav');
     if (!nav) return;
 
-    // Append logout link
-    var li = document.createElement('li');
-    li.className = 'nav-item mt-3';
-    li.innerHTML = '<a class="nav-link" href="{{ request.url_for(__name__ ~ ":logout") | safe }}"><i class="fa fa-sign-out me-2"></i>{{ _("Logout") }}</a>';
-    nav.appendChild(li);
+    // Append logout link — appended to collapse container (not ul) so it pins to bottom
+    var collapse = document.getElementById('sidebar-menu');
+    var logout = document.createElement('div');
+    logout.className = 'jj-sidebar-footer py-3';
+    logout.innerHTML = '<a class="nav-link" href="{{ request.url_for(__name__ ~ ":logout") | safe }}"><i class="fa fa-sign-out"></i>{{ _("Logout") }}</a>';
+    collapse.appendChild(logout);
 
     // Mark Dashboard link active when on /admin or /admin/
     var path = window.location.pathname.replace(/\/$/, '') || '/';
