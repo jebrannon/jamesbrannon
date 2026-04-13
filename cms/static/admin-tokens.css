@@ -85,7 +85,7 @@
   --jj-nav-icon-active:  var(--jj-nav-active-color);
 
   /* ── Dropdown ────────────────────────────────────────────────────────────── */
-  --jj-dropdown-padding-y: 0.25rem;
+  --jj-dropdown-padding-y: 0.5rem;
   --jj-dropdown-padding-x: 0.5rem;
 
   /* ── Sidebar ─────────────────────────────────────────────────────────────── */
