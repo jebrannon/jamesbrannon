@@ -107,3 +107,33 @@ def test_preview_svg_light_svg_dark_preview_is_original(auth_client):
     assert dark_raw == light_svg
     assert b"#2D2D2D" in light_raw
     assert b"prefers-color-scheme" not in light_raw
+
+
+# ── /api/preview-og-image ────────────────────────────────────────────────────
+
+def test_preview_og_image_unauthenticated(client):
+    data = {"file": ("photo.jpg", _make_jpeg_bytes(), "image/jpeg")}
+    resp = client.post("/api/preview-og-image", files=data)
+    assert resp.status_code == 403
+    assert resp.json()["error"] == "Unauthorized"
+
+
+def test_preview_og_image_returns_jpeg_data_url(auth_client):
+    """Response includes a single JPEG data URL cropped to 1200×630."""
+    import base64
+    data = {"file": ("photo.jpg", _make_jpeg_bytes(), "image/jpeg")}
+    resp = auth_client.post("/api/preview-og-image", files=data)
+    assert resp.status_code == 200
+    body = resp.json()
+    assert "preview" in body
+    assert body["preview"].startswith("data:image/jpeg;base64,")
+    raw = base64.b64decode(body["preview"].split(",", 1)[1])
+    img = Image.open(io.BytesIO(raw))
+    assert img.width == 1200
+    assert img.height == 630
+
+
+def test_preview_og_image_empty_file_returns_400(auth_client):
+    data = {"file": ("empty.jpg", b"", "image/jpeg")}
+    resp = auth_client.post("/api/preview-og-image", files=data)
+    assert resp.status_code == 400

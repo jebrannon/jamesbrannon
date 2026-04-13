@@ -211,3 +211,30 @@ def test_save_logo_s3(aws_mock):
     """S3 path: save_logo uploads to S3 and returns a URL."""
     url = image_module.save_logo(_LOGO_SVG, inject_dark_mode=False)
     assert "logo.svg" in url
+
+
+# ── save_og_image ─────────────────────────────────────────────────────────────
+
+def test_save_og_image_local_returns_static_url(tmp_path, monkeypatch):
+    """Local path: save_og_image writes file and returns /static/og-images/og-image.jpg."""
+    monkeypatch.setattr(image_module, "_USE_S3", False)
+    monkeypatch.setattr(image_module, "OG_IMAGE_DIR", tmp_path)
+    url = image_module.save_og_image(_make_jpeg_bytes())
+    assert url == "/static/og-images/og-image.jpg"
+    assert (tmp_path / "og-image.jpg").exists()
+
+
+def test_save_og_image_crops_to_1200x630(tmp_path, monkeypatch):
+    """save_og_image always outputs a 1200×630 JPEG regardless of input dimensions."""
+    monkeypatch.setattr(image_module, "_USE_S3", False)
+    monkeypatch.setattr(image_module, "OG_IMAGE_DIR", tmp_path)
+    image_module.save_og_image(_make_jpeg_bytes())
+    img = Image.open(tmp_path / "og-image.jpg")
+    assert img.width == 1200
+    assert img.height == 630
+
+
+def test_save_og_image_s3(aws_mock):
+    """S3 path: save_og_image uploads to S3 and returns a URL."""
+    url = image_module.save_og_image(_make_jpeg_bytes())
+    assert "og-images/og-image.jpg" in url

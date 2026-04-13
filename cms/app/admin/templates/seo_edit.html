@@ -1,0 +1,61 @@
+{% extends "singleton_edit.html" %}
+
+{% block head_css %}
+{{ super() }}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.css">
+<style>
+  .cropper-bg { background-image: none; background-color: var(--jj-grey-dark); }
+  .cropper-view-box { outline-color: var(--jj-light); }
+  .cropper-line { background-color: var(--jj-light); }
+  .cropper-point { background-color: var(--jj-light); }
+</style>
+{% endblock %}
+
+{% block script %}
+{{ super() }}
+<script src="https://cdn.jsdelivr.net/npm/cropperjs@1.6.2/dist/cropper.min.js"></script>
+{% endblock %}
+
+{% block edit_form %}
+{% set fields_map = {} %}
+{% for field in model.get_fields_list(request, 'EDIT' | ra) %}
+    {% set _ = fields_map.update({field.name: field}) %}
+{% endfor %}
+
+{# ── Search & Browser ──────────────────────────────────────────────── #}
+<fieldset class="border rounded p-3 mb-5 pt-4">
+    <legend class="px-2">Search + Browser</legend>
+
+    {% for fname in ['seo_title', 'seo_description'] %}
+    {% set field = fields_map[fname] %}
+    <div class="mb-3">
+        {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+            {% include field.label_template %}
+            {% include field.form_template %}
+        {% endwith %}
+    </div>
+    {% endfor %}
+</fieldset>
+
+{# ── Social Sharing ────────────────────────────────────────────────── #}
+<fieldset class="border rounded p-3 mb-5 pt-4">
+    <legend class="px-2">Sharing</legend>
+
+    {% for fname in ['site_name', 'og_image'] %}
+    {% set field = fields_map[fname] %}
+    <div class="mb-3">
+        {% if fname == 'og_image' %}
+        {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None, current_url=raw_obj.og_image %}
+            {% include field.label_template %}
+            {% include field.form_template %}
+        {% endwith %}
+        {% else %}
+        {% with action=('EDIT' | ra), data=obj[field.name], error=errors.get(field.name, None) if errors else None %}
+            {% include field.label_template %}
+            {% include field.form_template %}
+        {% endwith %}
+        {% endif %}
+    </div>
+    {% endfor %}
+</fieldset>
+{% endblock %}

@@ -1,14 +1,26 @@
 {% set fid = field.id %}
-{% set upload_current_url = current_url | default('') %}
-{% set upload_preview_type = preview_type | default('') %}
-{% set upload_dark_mode = dark_mode | default(true) %}
-{% set upload_saved_dark_mode = saved_dark_mode | default(false) %}
+{% set upload_current_url     = current_url       | default('') %}
+{% set upload_preview_type    = preview_type      | default('') %}
+{% set upload_dark_mode       = dark_mode         | default(true) %}
+{% set upload_saved_dark_mode = saved_dark_mode   | default(false) %}
+{% set upload_mode            = field.upload_mode | default('svg') %}
 
-<div x-data="assetUpload({{ {'currentUrl': upload_current_url, 'previewType': upload_preview_type, 'darkMode': upload_dark_mode, 'savedDarkMode': upload_saved_dark_mode} | tojson }})" class="jj-upload">
+<div x-data="assetUpload({{ {'currentUrl': upload_current_url, 'previewType': upload_preview_type, 'darkMode': upload_dark_mode, 'savedDarkMode': upload_saved_dark_mode, 'mode': upload_mode} | tojson }})" class="jj-upload">
 
-  {# ── Confirmed preview — saved asset on load, updates after modal confirm ── #}
+  {# ── Confirmed inline preview ─────────────────────────────────────────────── #}
 
-  {# No dark mode — single neutral swatch, no background treatment #}
+  {% if upload_mode == 'social' %}
+  <div x-show="preview" x-cloak class="jj-upload-social-frame mb-3">
+    <img :src="preview" alt="">
+  </div>
+
+  {% elif upload_mode == 'image' %}
+  <div x-show="preview" x-cloak class="mb-3">
+    <img :src="preview" alt="" class="jj-upload-image-preview">
+  </div>
+
+  {% else %}
+  {# SVG — neutral swatch or light+dark swatches #}
   <div x-show="preview && (isNew ? !stagedDarkMode : !savedDarkMode)" x-cloak
        class="jj-upload-preview-row {{ ('jj-upload-preview-row--' ~ upload_preview_type) if upload_preview_type }} mb-3">
     <div class="text-center">
@@ -17,8 +29,6 @@
       </div>
     </div>
   </div>
-
-  {# Dark mode — light + dark swatches #}
   <div x-show="preview && (isNew ? stagedDarkMode : savedDarkMode)" {% if not upload_current_url %}x-cloak{% endif %}
        class="jj-upload-preview-row {{ ('jj-upload-preview-row--' ~ upload_preview_type) if upload_preview_type }} mb-3">
     <div class="text-center">
@@ -34,17 +44,25 @@
       <small class="text-muted d-block mt-1">Dark</small>
     </div>
   </div>
+  {% endif %}
 
-  {# ── Hidden file input and dark mode flag ── #}
+  {# ── Hidden file input ── #}
   <input type="file"
          x-ref="fileInput"
          name="{{ fid }}"
          id="{{ fid }}"
-         accept=".svg,image/svg+xml"
+         {% if upload_mode == 'social' %}accept="image/jpeg,image/png"
+         {% elif upload_mode == 'image' %}accept="image/*"
+         {% else %}accept=".svg,image/svg+xml"{% endif %}
          class="d-none"
          @change="onFile($event)"
          {{ 'required' if field.required else '' }}>
+  {% if upload_mode == 'svg' %}
   <input type="hidden" name="{{ fid }}_dark_mode" :value="stagedDarkMode ? 'true' : 'false'">
+  {% endif %}
+  {% if upload_mode == 'social' %}
+  <input type="hidden" name="{{ fid }}_cropped" :value="croppedData">
+  {% endif %}
 
   <div class="d-flex align-items-center gap-2">
     <button type="button" class="btn btn-secondary btn-sm" @click="$refs.fileInput.click()"
@@ -58,23 +76,39 @@
   {# ── Preview modal ── #}
   <div class="modal fade jj-dialog jj-upload-modal" id="{{ fid }}_modal" x-ref="modal"
        tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-dialog modal-dialog-centered {% if upload_mode == 'social' %}modal-lg{% endif %}">
       <div class="modal-content">
 
         <div class="modal-header">
-          <h5 class="modal-title">Uploader</h5>
+          <h5 class="modal-title">
+            {%- if upload_mode == 'social' %}Position Your Crop
+            {%- elif upload_mode == 'image' %}Image Preview
+            {%- else %}Uploader{%- endif %}
+          </h5>
           <button type="button" class="btn-close" @click="cancelModal()"></button>
         </div>
 
         <div class="modal-body">
+
+          {% if upload_mode == 'social' %}
+          <div class="jj-upload-crop-container" x-show="modalPreview" x-cloak
+               :style="{ opacity: cropperReady ? 1 : 0, transition: 'opacity 0.25s ease' }">
+            <img x-ref="cropImage" :src="modalPreview" alt="">
+          </div>
+          <p class="mt-3 mb-0" x-show="modalPreview" x-cloak>
+            Drag to reposition &mdash; the 1.91:1 frame is what will appear in social card previews.
+          </p>
+
+          {% elif upload_mode == 'image' %}
           <div class="jj-upload-modal-preview mb-3">
+            <img :src="modalPreview" alt="" x-show="modalPreview" class="jj-upload-image-preview">
+          </div>
 
-            {# Single preview — dark mode off #}
+          {% else %}
+          <div class="jj-upload-modal-preview mb-3">
             <img :src="modalPreview" alt=""
-                 x-show="modalPreview && !fetchingDark && !addDarkMode">
-
-            {# Dual swatches — dark mode on #}
-            <div class="jj-upload-modal-swatches" x-show="modalPreview && !fetchingDark && addDarkMode" x-cloak>
+                 x-show="modalPreview && !fetchingPreview && !addDarkMode">
+            <div class="jj-upload-modal-swatches" x-show="modalPreview && !fetchingPreview && addDarkMode" x-cloak>
               <div class="jj-upload-swatch jj-upload-swatch--light">
                 <img :src="modalPreview" alt="">
               </div>
@@ -82,34 +116,34 @@
                 <img :src="modalPreviewDark" alt="">
               </div>
             </div>
-
-            {# Spinner #}
-            <div class="jj-upload-modal-spinner" x-show="fetchingDark" x-cloak>
+            <div class="jj-upload-modal-spinner" x-show="fetchingPreview" x-cloak>
               <div class="spinner-border spinner-border-sm" role="status"></div>
               <small class="ms-2">Processing&hellip;</small>
             </div>
-
           </div>
+          {% endif %}
 
-          {% if upload_dark_mode %}
+          {% if upload_mode == 'svg' and upload_dark_mode %}
           <div class="jj-toggle-row">
             <div class="form-check form-switch mb-0">
               <input class="form-check-input" type="checkbox" id="{{ fid }}_dm_toggle"
                      x-model="addDarkMode"
                      @change="onDarkModeToggle()"
-                     :disabled="fetchingDark">
+                     :disabled="fetchingPreview">
             </div>
             <label class="jj-toggle-label" for="{{ fid }}_dm_toggle">
               <strong>Dark + light mode support</strong> — Selecting this embeds a colour-scheme media query so the SVG adapts automatically to light and dark modes.
             </label>
           </div>
-          <div x-show="modalError" x-cloak class="mt-1 text-danger small" x-text="modalError"></div>
           {% endif %}
+
+          <div x-show="modalError" x-cloak class="mt-1 text-danger small" x-text="modalError"></div>
+
         </div>
 
         <div class="modal-footer">
           <button type="button" class="btn btn-danger" @click="cancelModal()">Cancel</button>
-          <button type="button" class="btn btn-secondary" :disabled="fetchingDark"
+          <button type="button" class="btn btn-secondary" :disabled="fetchingPreview"
                   @click="confirmModal()">Use this file</button>
         </div>
 
@@ -122,39 +156,47 @@
 <script>
 (function () {
   if (window.assetUpload) return;
-  window.assetUpload = function ({ currentUrl, previewType, darkMode, savedDarkMode }) {
+  window.assetUpload = function ({ currentUrl, previewType, darkMode, savedDarkMode, mode }) {
 
-    // Non-reactive internal state — kept outside Alpine's Proxy so complex
-    // objects (Bootstrap Modal, AbortController, File) are never deep-proxied.
+    mode = mode || 'svg';
+
     let _bsModal     = null;
     let _abortCtrl   = null;
     let _pendingFile = null;
     let _rawDataUrl  = null;
+    let _cropper     = null;
+    let _confirmed   = false;
 
     return {
-      // ── Confirmed state (shown inline) ────────────────────────────────────
-      cacheTs:        Date.now(),
+      // ── Confirmed state ───────────────────────────────────────────────────────
       preview:        currentUrl ? currentUrl + '?v=' + Date.now() : null,
       isNew:          false,
       filename:       null,
       stagedDarkMode: savedDarkMode || false,
+      croppedData:    null,
+      cropperReady:   false,
 
-      // ── Modal state (reactive — drives the template) ──────────────────────
+      // ── Modal state ───────────────────────────────────────────────────────────
       modalPreview:     null,
       modalPreviewDark: null,
-      addDarkMode:  false,
-      fetchingDark: false,
-      modalError:   null,
+      addDarkMode:      false,
+      fetchingPreview:  false,
+      modalError:       null,
 
-      previewType:    previewType    || '',
-      darkMode:       darkMode       || false,
-      savedDarkMode:  savedDarkMode  || false,
+      previewType:   previewType   || '',
+      darkMode:      darkMode      || false,
+      savedDarkMode: savedDarkMode || false,
 
       _modal() {
         if (!_bsModal) {
           _bsModal = new bootstrap.Modal(this.$refs.modal);
+          this.$refs.modal.addEventListener('hide.bs.modal', () => {
+            this.cropperReady = false;
+          });
           this.$refs.modal.addEventListener('hidden.bs.modal', () => {
-            if (_pendingFile) this._clearPending();
+            if (_cropper) { _cropper.destroy(); _cropper = null; }
+            if (!_confirmed) this._clearPending();
+            _confirmed = false;
           });
         }
         return _bsModal;
@@ -166,13 +208,41 @@
         _pendingFile = file;
         const reader = new FileReader();
         reader.onload = ev => {
-          _rawDataUrl       = ev.target.result;
-          this.modalPreview = ev.target.result;
-          this.addDarkMode  = false;
-          this.modalError   = null;
-          this._modal().show();
+          _rawDataUrl     = ev.target.result;
+          this.modalError = null;
+          if (mode === 'social') {
+            this.modalPreview = ev.target.result;
+            this._modal().show();
+            this.$refs.modal.addEventListener('shown.bs.modal', () => {
+              this._initCropper();
+            }, { once: true });
+          } else {
+            this.modalPreview = ev.target.result;
+            this.addDarkMode  = false;
+            this._modal().show();
+          }
         };
         reader.readAsDataURL(file);
+      },
+
+      _initCropper() {
+        if (_cropper) { _cropper.destroy(); _cropper = null; }
+        this.cropperReady = false;
+        const self = this;
+        _cropper = new Cropper(this.$refs.cropImage, {
+          aspectRatio:        1200 / 630,
+          viewMode:           1,
+          dragMode:           'move',
+          autoCropArea:       1,
+          restore:            false,
+          guides:             true,
+          center:             true,
+          highlight:          false,
+          cropBoxMovable:     true,
+          cropBoxResizable:   false,
+          toggleDragModeOnDblClick: false,
+          ready() { self.cropperReady = true; },
+        });
       },
 
       async onDarkModeToggle() {
@@ -181,8 +251,8 @@
           this.modalError   = null;
           return;
         }
-        this.fetchingDark = true;
-        this.modalError   = null;
+        this.fetchingPreview = true;
+        this.modalError      = null;
         _abortCtrl = new AbortController();
         try {
           const fd = new FormData();
@@ -196,48 +266,66 @@
           this.modalPreviewDark = json.preview_dark;
         } catch (err) {
           if (err.name !== 'AbortError') {
-            this.modalError   = 'Could not generate dark mode preview. Please try again.';
-            this.addDarkMode  = false;
-            this.modalPreview = _rawDataUrl;
+            this.modalError      = 'Could not generate dark mode preview. Please try again.';
+            this.addDarkMode     = false;
+            this.modalPreview    = _rawDataUrl;
           }
         } finally {
-          this.fetchingDark = false;
+          this.fetchingPreview = false;
           _abortCtrl = null;
         }
       },
 
       cancelFetch() {
         if (_abortCtrl) _abortCtrl.abort();
-        _abortCtrl        = null;
-        this.addDarkMode  = false;
-        this.modalPreview = _rawDataUrl;
-        this.fetchingDark = false;
+        _abortCtrl           = null;
+        this.addDarkMode     = false;
+        this.modalPreview    = _rawDataUrl;
+        this.fetchingPreview = false;
       },
 
       confirmModal() {
+        if (mode === 'social' && _cropper) {
+          const canvas = _cropper.getCroppedCanvas({ width: 1200, height: 630 });
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+          this.preview     = dataUrl;
+          this.croppedData = dataUrl;
+          this.isNew       = true;
+          this.filename    = _pendingFile ? _pendingFile.name : null;
+          _pendingFile     = null;
+          _rawDataUrl      = null;
+          // Cropper destroyed after animation in hidden.bs.modal
+          _confirmed = true;
+          document.dispatchEvent(new CustomEvent('jj:field:change'));
+          this._modal().hide();
+          return;
+        }
         this.preview        = this.modalPreview;
         this.isNew          = true;
-        this.filename       = _pendingFile.name;
+        this.filename       = _pendingFile ? _pendingFile.name : null;
         this.stagedDarkMode = this.addDarkMode;
         _pendingFile        = null;
         _rawDataUrl         = null;
+        _confirmed = true;
         document.dispatchEvent(new CustomEvent('jj:field:change'));
         this._modal().hide();
       },
 
       cancelModal() {
+        // _clearPending called by hidden.bs.modal after animation completes
         this._modal().hide();
-        this._clearPending();
       },
 
       _clearPending() {
-        _pendingFile                 = null;
-        _rawDataUrl                  = null;
-        this.modalPreview            = null;
-        this.modalPreviewDark        = null;
-        this.addDarkMode             = false;
-        this.modalError              = null;
-        this.$refs.fileInput.value   = '';
+        if (_cropper) { _cropper.destroy(); _cropper = null; }
+        this.cropperReady          = false;
+        _pendingFile               = null;
+        _rawDataUrl                = null;
+        this.modalPreview          = null;
+        this.modalPreviewDark      = null;
+        this.addDarkMode           = false;
+        this.modalError            = null;
+        this.$refs.fileInput.value = '';
       },
     };
   };

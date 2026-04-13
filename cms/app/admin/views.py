@@ -419,11 +419,20 @@ class SvgFileField(FileField):
 
 
 class ImageFileField(FileField):
-    """FileField with a styled Choose file button and single image preview."""
+    """FileField with modal confirm flow — image mode (any raster, no processing)."""
 
     def __post_init__(self) -> None:
         super().__post_init__()
-        self.form_template = "forms/image_upload.html"
+        self.form_template = "forms/asset_upload.html"
+        self.upload_mode = "image"
+
+
+class OgImageFileField(SvgFileField):
+    """Uploader for OG/social card images — auto-crops to 1200×630 on save."""
+
+    def __post_init__(self) -> None:
+        super().__post_init__()
+        self.upload_mode = "social"
 
 
 class SlugAutoFillField(StringField):
@@ -823,34 +832,95 @@ class SeoView(SingletonView):
     identity = "seo"
     name = "SEO"
     label = "SEO Metadata"
+    edit_template = "seo_edit.html"
     fields = [
         StringField(
-            "site_name", label="Site Name", required=False,
-            help_text="Used as the title suffix and og:site_name (e.g. 'James Brannon')",
+            "seo_title", label="Meta Title", required=False,
+            placeholder="eg. Chris P. Bacon / Soothsayer & Prophet",
+            help_text="Sets the default browser title shown in browser tabs and search results. Posts and pages override this with their own SEO title. ~60 characters.",
             exclude_from_list=True,
         ),
         TextAreaField(
-            "seo_description", label="Default Meta Description", required=False,
-            help_text="Fallback description when a page has no specific meta description (~155 chars)",
+            "seo_description", label="Meta Description", required=False,
+            placeholder="eg. Chris P. Bacon is a soothsayer and prophet helping you make sense of the unknown — readings, forecasts, and cosmic counsel.",
+            help_text="Sets the default description shown in Google search snippets and social card previews when a page has no description of its own. ~155 characters.",
             exclude_from_list=True,
         ),
         StringField(
-            "og_image", label="Default Social Image URL", required=False,
-            help_text="Fallback social sharing image when a page has no specific OG image (1200×630 px recommended)",
+            "site_name", label="Source Name", required=False,
+            placeholder="eg. Chris P. Bacon",
+            help_text="Sets the attribution text in social card previews and appears as the source when content is shared on LinkedIn, X, Facebook, or similar platforms.",
             exclude_from_list=True,
         ),
-        ToggleField("no_index", label="No Index (hide entire site from search engines)",
-                    exclude_from_list=True),
+        OgImageFileField(
+            "og_image", label="Thumbnail Image", required=False,
+            help_text="Sets the default social sharing image used in card previews when a page or post has no specific image set. Recommended: 1200×630px.",
+            exclude_from_list=True,
+        ),
     ]
 
     def _defaults(self) -> Dict:
         return {
             "key": self.SETTINGS_KEY,
-            "site_name": "",
+            "seo_title": "",
             "seo_description": "",
+            "site_name": "",
             "og_image": "",
-            "no_index": False,
         }
+
+    async def _save_og_image(self, field_value: Any, existing_url: str, form_data: Any = None) -> str:
+        """
+        Process the og_image field. Checks for client-side crop data first
+        (base64 JPEG from Cropper.js); falls back to direct file upload.
+        Returns the new URL or the existing one unchanged.
+        """
+        import base64 as _b64
+        if form_data is not None:
+            cropped = form_data.get("og_image_cropped") or ""
+            if cropped.startswith("data:image/jpeg;base64,"):
+                jpeg_bytes = _b64.b64decode(cropped.split(",", 1)[1])
+                from ..services.image import save_og_image
+                return save_og_image(jpeg_bytes)
+
+        file, should_delete = _unpack_file(field_value)
+        if should_delete:
+            return ""
+        if file and hasattr(file, "read") and getattr(file, "filename", ""):
+            content = await file.read()
+            if content:
+                from ..services.image import save_og_image
+                return save_og_image(content)
+        return existing_url
+
+    async def create(self, request: Request, data: Dict[str, Any]) -> Any:
+        existing  = get_setting(self.SETTINGS_KEY) or {}
+        form_data = await request.form()
+        data["og_image"] = await self._save_og_image(
+            data.pop("og_image", None),
+            existing.get("og_image", ""),
+            form_data=form_data,
+        )
+        data.pop("key", None)
+        normalised = _normalize(data)
+        put_setting(self.SETTINGS_KEY, normalised)
+        touch_last_updated()
+        normalised["key"] = self.SETTINGS_KEY
+        return _as_obj(normalised)
+
+    async def edit(self, request: Request, pk: Any, data: Dict[str, Any]) -> Any:
+        existing  = get_setting(self.SETTINGS_KEY) or {}
+        form_data = await request.form()
+        data["og_image"] = await self._save_og_image(
+            data.pop("og_image", None),
+            existing.get("og_image", ""),
+            form_data=form_data,
+        )
+        data.pop("key", None)
+        normalised = _normalize(data)
+        put_setting(self.SETTINGS_KEY, normalised)
+        touch_last_updated()
+        normalised["key"] = self.SETTINGS_KEY
+        return _as_obj(normalised)
 
 
 class ProfileView(SingletonView):

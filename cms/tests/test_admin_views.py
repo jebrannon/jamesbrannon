@@ -416,14 +416,15 @@ def test_seo_edit_persists_to_dynamodb(admin_client, aws_mock):
     admin_client.post(
         "/admin/seo/edit/SEO",
         data={
-            "site_name": "James Brannon",
+            "seo_title": "James Brannon",
             "seo_description": "Portfolio site",
-            "no_index": "",
+            "site_name": "James Brannon",
         },
     )
     item = get_setting("SEO")
     assert item is not None
     assert item["site_name"] == "James Brannon"
+    assert item["seo_title"] == "James Brannon"
 
 
 # ── Integration: dashboard ────────────────────────────────────────────────────

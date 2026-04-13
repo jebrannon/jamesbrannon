@@ -48,7 +48,7 @@ All resources to be created by CDK stack in `infra/`. Names are fixed — do not
 | Resource | Type | Name / ID |
 |---|---|---|
 | DynamoDB table | Table | `jamesbrannon-content` |
-| Media S3 bucket | S3 | `jamesbrannon-media` |
+| Media S3 bucket | S3 | `jamesbrannon-media` (paths: `post-images/`, `favicons/`, `logos/`, `og-images/`) |
 | Frontend S3 bucket | S3 | `jamesbrannon-frontend` |
 | Lambda function | Lambda | `jamesbrannon-cms` |
 | API Gateway | HTTP API | `jamesbrannon-api` |

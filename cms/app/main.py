@@ -268,6 +268,23 @@ async def preview_svg(request: Request, file: UploadFile = File(...)) -> JSONRes
     return JSONResponse({"preview": light_url, "preview_dark": dark_url})
 
 
+@app.post("/api/preview-og-image")
+async def preview_og_image(request: Request, file: UploadFile = File(...)) -> JSONResponse:
+    """Auth-gated OG image preview — crops to 1200×630 and returns a data URL. Nothing is saved."""
+    if not request.session.get("username"):
+        return JSONResponse({"error": "Unauthorized"}, status_code=403)
+
+    content = await file.read()
+    if not content:
+        return JSONResponse({"error": "Empty file"}, status_code=400)
+
+    import base64
+    from .services.image import _crop_to_og
+    jpeg_bytes = _crop_to_og(content)
+    preview_url = "data:image/jpeg;base64," + base64.b64encode(jpeg_bytes).decode()
+    return JSONResponse({"preview": preview_url})
+
+
 @app.post("/api/upload-image")
 async def upload_block_image(request: Request, file: UploadFile = File(...)) -> JSONResponse:
     """Auth-gated image upload for the block editor media slots."""

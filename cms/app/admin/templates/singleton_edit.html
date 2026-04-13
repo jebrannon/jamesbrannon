@@ -5,6 +5,8 @@
     <script>document.addEventListener('DOMContentLoaded', function () { document.body.classList.add('jj-singleton'); });</script>
 {% endblock %}
 
+{% block seo_script %}{% endblock %}
+
 {% block content %}
 <div class="card">
     <form action="{{ request.url | safe }}"

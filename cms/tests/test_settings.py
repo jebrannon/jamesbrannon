@@ -93,28 +93,20 @@ def test_seo_returns_settings_when_set(client):
 
 
 def test_seo_all_fields_stored(client):
-    """All six SEO fields are correctly stored and retrieved."""
+    """All four SEO fields are correctly stored and retrieved."""
     from app.db import put_setting
     put_setting("SEO", {
         "seo_title": "James Brannon",
         "seo_description": "Portfolio site",
+        "site_name": "James Brannon",
         "og_image": "https://jamesbrannon.co.uk/og.jpg",
-        "og_type": "website",
-        "canonical_url": "https://jamesbrannon.co.uk/",
-        "no_index": False,
     })
     response = client.get("/api/settings/seo")
     data = response.json()
+    assert data["seo_title"] == "James Brannon"
+    assert data["seo_description"] == "Portfolio site"
+    assert data["site_name"] == "James Brannon"
     assert data["og_image"] == "https://jamesbrannon.co.uk/og.jpg"
-    assert data["canonical_url"] == "https://jamesbrannon.co.uk/"
-    assert data["no_index"] is False
-
-
-def test_seo_no_index_true(client):
-    from app.db import put_setting
-    put_setting("SEO", {"no_index": True})
-    response = client.get("/api/settings/seo")
-    assert response.json()["no_index"] is True
 
 
 def test_homepage_endpoint_removed(client):

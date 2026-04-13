@@ -152,10 +152,11 @@ class TestSeoSettings:
     def test_empty_seo_is_valid(self):
         s = SeoSettings()
         assert s.site_name is None
+        assert s.seo_title is None
         assert s.seo_description is None
         assert s.og_image is None
-        assert s.og_site_name is None
-        assert s.no_index is False
+        assert not hasattr(s, 'og_site_name')
+        assert not hasattr(s, 'no_index')
 
     def test_site_name_can_be_set(self):
         s = SeoSettings(site_name="James Brannon")

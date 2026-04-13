@@ -50,6 +50,6 @@
 
 {% block script %}
 {{ super() }}
-{% include "includes/seo_section.html" %}
+{% block seo_script %}{% include "includes/seo_section.html" %}{% endblock %}
 {% include "includes/publish_controls.html" %}
 {% endblock %}

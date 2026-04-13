@@ -103,7 +103,7 @@ npx vitest run
 cd cms && .venv/bin/python -m pytest tests/ -v
 ```
 
-~506 tests: ~156 Vitest (Site) + ~350 pytest (CMS, 4 skipped). CI runs on every push via GitHub Actions.
+~515 tests: ~156 Vitest (Site) + ~355 pytest (CMS, 4 skipped). CI runs on every push via GitHub Actions.
 
 ---
 
@@ -147,6 +147,8 @@ npm run preview    # serve dist/ locally for a final check
 │   ├── .env.example              # local dev env template (committed)
 │   ├── .env.production.example   # production env template (committed)
 │   └── setup.sh
+├── start.sh
+├── reset.sh
 └── .github/workflows/ci.yml
 ```
 

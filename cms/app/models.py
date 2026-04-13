@@ -136,11 +136,10 @@ class BrandSettings(BaseModel):
 
 class SeoSettings(BaseModel):
     """Site-level SEO and Open Graph defaults."""
-    site_name: Optional[str] = None        # used as title suffix and og:site_name
+    site_name: Optional[str] = None        # brand name — used as og:site_name
+    seo_title: Optional[str] = None        # default <title> for homepage and unoverridden pages
     seo_description: Optional[str] = None  # fallback meta description
     og_image: Optional[str] = None         # fallback social image
-    og_site_name: Optional[str] = None     # explicit og:site_name (falls back to site_name)
-    no_index: bool = False                 # site-wide kill switch
 
 
 class BlogSettings(BaseModel):

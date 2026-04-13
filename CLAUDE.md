@@ -59,6 +59,11 @@ cd cms && docker compose up
 cd cms && source .venv/bin/activate && python seed.py
 ```
 
+**Reset local environment** (kills services, wipes uploaded assets, re-seeds, restarts everything):
+```bash
+bash reset.sh
+```
+
 ---
 
 ## Running Tests
@@ -66,7 +71,7 @@ cd cms && source .venv/bin/activate && python seed.py
 ```bash
 npm test                              # Frontend only (alias for npx vitest run)
 npx vitest run                        # Frontend only (~156 tests)
-cd cms && .venv/bin/python -m pytest tests/ -v  # Backend only (~350 tests, 4 skipped)
+cd cms && .venv/bin/python -m pytest tests/ -v  # Backend only (~355 tests, 4 skipped)
 npm run test:coverage                 # Frontend with coverage report
 ```
 
@@ -138,7 +143,8 @@ jamesbrannon/
 ├── cms/.env.example     # Local dev env template (committed)
 ├── cms/.env.production.example  # Production env template (committed)
 ├── vite.config.js       # Dev server :3000, proxies /api + /admin → :8000
-└── start.sh             # Starts moto + uvicorn + vite in one command
+├── start.sh             # Starts moto + uvicorn + vite in one command
+└── reset.sh             # Kills services, wipes uploaded assets, re-seeds, restarts
 ```
 
 ---
@@ -164,7 +170,7 @@ All PK/SK constants are in `cms/app/constants.py`.
 - `Page` — slug, title, blocks, published + SEOMixin + ContentBase
 - `Category` — slug, name, page_headline, max_items + ContentBase
 - `BrandSettings` — display_name, role_title, logo_url, logo_dark_mode, favicon_url (single SVG with embedded dark-mode media query), favicon_dark_mode, linkedin, linkedin_text, instagram, instagram_text, email, email_text
-- `SeoSettings` — site_name, seo_description, og_image, og_site_name, no_index (does NOT inherit SEOMixin; no og_type)
+- `SeoSettings` — site_name, seo_title, seo_description, og_image (does NOT inherit SEOMixin; no og_type, no no_index, no canonical_url)
 - `ProfileSettings` — headline, tagline, summary, blog feed config (BlogSettings), strengths (StrengthsSection), experience (ExperienceSection)
 - `BlogSettings` — headline, category, limit (homepage blog feed)
 - `StrengthsSection` / `StrengthItem` — headline, items list (name, description)
@@ -195,6 +201,7 @@ GET /api/settings/seo             # Site SEO settings
 GET /api/settings/profile         # Profile / homepage content
 POST /api/upload-image            # Auth-required; upload block editor image
 POST /api/preview-svg             # Auth-required; dark-mode inject preview (nothing saved)
+POST /api/preview-og-image        # Auth-required; crop image to 1200×630 preview (nothing saved)
 GET /health                       # Health check
 ```
 
@@ -299,7 +306,8 @@ URL: `/admin` (Starlette Admin)
 - `PageSelectField` — dynamic select from `/api/pages`; uses `forms/page_select.html`
 - `CategorySelectField` — dynamic select from `/api/categories`; uses `forms/category_select.html`
 - `SvgFileField` — SVG upload via CustomUploader modal (preview + optional dark mode injection); uses `forms/asset_upload.html`
-- `ImageFileField` — image upload with preview; uses `forms/image_upload.html`
+- `ImageFileField` — image upload with preview; uses `forms/asset_upload.html` (image mode)
+- `OgImageFileField` — OG/social card image uploader with drag-to-crop; auto-crops to 1200×630 on save; uses `forms/asset_upload.html` (social mode)
 
 **Custom form templates** (`cms/app/admin/templates/forms/`): `blocks.html`, `rich_text.html`, `toggle.html`, `enum_select.html`, `slug_autofill.html`, `collection_fieldset.html`, `page_select.html`, `category_select.html`, `asset_upload.html`, `image_upload.html`
 
@@ -311,14 +319,16 @@ URL: `/admin` (Starlette Admin)
 
 - `save_hero_image(image_bytes, slug, ext)` — saves original + generates 1200×630 JPEG thumbnail via Pillow; returns `(hero_url, thumbnail_url)`
 - `save_block_image(image_bytes, name, ext)` — saves block editor image; returns URL
+- `save_og_image(image_bytes)` — crops to 1200×630 JPEG and saves as site-level OG fallback image; always overwrites; returns URL
 - `save_favicon(svg_bytes, save_name, inject_dark_mode=True)` — saves SVG + generates PNG variants at 16, 32, 192, 512 px via cairosvg (optional); returns SVG URL
 - `save_logo(svg_bytes, inject_dark_mode=True)` — saves site logo SVG; returns URL
+- `_crop_to_og(image_bytes)` — crop/resize to 1200×630 JPEG; used by `save_og_image` and `POST /api/preview-og-image`
 - `_inject_dark_mode(svg_bytes)` — injects `@media (prefers-color-scheme: dark)` into SVG if not present; samples dominant fill colour to determine flip direction
 - `_make_previews(svg_bytes)` — returns `(light_bytes, dark_bytes)` with hardcoded fills (no media query); used by `POST /api/preview-svg` to generate side-by-side previews
 - `ensure_s3_bucket_exists()` — called on lifespan startup; creates bucket if missing (no-op when S3 not configured)
 
-**Local:** saved to `cms/static/post-images/` (images), `cms/static/favicons/` (favicons), `cms/static/logos/` (logo)
-**Production:** uploaded to `s3://{S3_BUCKET}/post-images/`, `s3://{S3_BUCKET}/favicons/`, `s3://{S3_BUCKET}/logos/` — switched automatically by presence of `S3_BUCKET` env var.
+**Local:** saved to `cms/static/post-images/` (images), `cms/static/favicons/` (favicons), `cms/static/logos/` (logo), `cms/static/og-images/` (OG image)
+**Production:** uploaded to `s3://{S3_BUCKET}/post-images/`, `s3://{S3_BUCKET}/favicons/`, `s3://{S3_BUCKET}/logos/`, `s3://{S3_BUCKET}/og-images/` — switched automatically by presence of `S3_BUCKET` env var.
 
 Static files served by FastAPI at `/static/`.
 
@@ -357,33 +367,62 @@ jjDialog() // exposed as window.jjDialog via init() lifecycle hook
 
 ## CustomUploader Component
 
-The **CustomUploader** is the reusable file upload component for the admin UI. Currently handles SVG uploads; designed to be extended for other media types.
+The **CustomUploader** is the reusable file upload component for the admin UI. Supports three modes: `svg` (logo/favicon), `image` (hero/block images), and `social` (OG image with drag-to-crop).
 
 **Files:**
 - Template: `cms/app/admin/templates/forms/asset_upload.html`
 - Alpine component: `window.assetUpload` (defined inline in the template, registered once via IIFE guard)
 - CSS classes: `jj-upload-*` prefix (`cms/static/admin.css`, upload section)
-- Preview endpoint: `POST /api/preview-svg` (`cms/app/main.py`)
+- SVG preview endpoint: `POST /api/preview-svg` (`cms/app/main.py`)
+- Cropper.js 1.6.2 — loaded via CDN in `seo_edit.html` (only needed for `social` mode)
 
 **Alpine config shape:**
 ```js
 assetUpload({
   currentUrl:  '/static/logos/logo.svg',  // saved asset URL or ''
-  previewType: 'logo',                    // 'logo' | 'favicon' | ''
-  darkMode:    true,                      // true only for SVG uploads
+  previewType: 'logo',                    // 'logo' | 'favicon' | '' (svg mode only)
+  darkMode:    true,                      // true only for svg mode
+  savedDarkMode: false,                   // persisted dark mode state (svg mode only)
+  mode:        'svg',                     // 'svg' | 'image' | 'social'
 })
 ```
 
-**Modal flow:**
+**Modes:**
+
+| Mode | Accept | Modal | Output |
+|---|---|---|---|
+| `svg` | `.svg` | Preview + optional dark mode toggle | SVG file + `_dark_mode` hidden input |
+| `image` | `image/*` | Preview (confirm/cancel) | Image file |
+| `social` | `image/jpeg,image/png` | Drag-to-crop (Cropper.js, fixed 1.91:1) | `_cropped` hidden input (base64 JPEG) |
+
+**Modal flow — svg:**
 1. User clicks "Choose file" → file picker opens
 2. File selected → Bootstrap modal opens with raw SVG preview
 3. If `darkMode: true`: toggle shown — "Add dark mode support?"
-4. Toggle on → `POST /api/preview-svg` → spinner shown (no cancel) → modal preview updates; dual light/dark swatches shown side by side when dark mode is on
+4. Toggle on → `POST /api/preview-svg` → spinner → dual light/dark swatches
 5. Confirm → file staged, inline preview updated, modal closes
-6. Cancel (or Escape/backdrop) → file selection cleared, saved asset preview restored
+6. Cancel → file selection cleared, saved asset preview restored
 
-**Dark mode flag:**
-A hidden input `<input type="hidden" name="{field_id}_dark_mode" value="true|false">` is submitted with the form. `BrandView._dark_mode_flag()` reads it and passes `inject_dark_mode` to `save_logo()`/`save_favicon()`.
+**Modal flow — image:**
+1. User clicks "Choose file" → file picker opens
+2. File selected → Bootstrap modal opens with image preview
+3. Confirm → file staged, inline preview updated, modal closes
+4. Cancel → file selection cleared
+
+**Modal flow — social:**
+1. User clicks "Choose file" → file picker opens
+2. File selected → Bootstrap modal (modal-lg) opens; Cropper.js initialises on `shown.bs.modal`
+3. Crop box fades in via `cropperReady` flag (set in Cropper's `ready()` callback) — eliminates jump-on-open
+4. User drags to position the 1200×630 crop window
+5. Confirm → canvas cropped to 1200×630 JPEG (quality 0.85) client-side; base64 stored in `croppedData` and submitted via hidden `_cropped` input; inline social frame preview updated
+6. Cancel → Cropper destroyed on `hidden.bs.modal` animation end; file cleared
+
+**Hidden inputs submitted with the form:**
+- `{field_id}_dark_mode` (`true|false`) — svg mode only; read by `BrandView._dark_mode_flag()`
+- `{field_id}_cropped` (base64 JPEG data URL) — social mode only; read by `SeoView._save_og_image()`
+
+**Server handling — social mode (`SeoView._save_og_image`):**
+Checks `{field_id}_cropped` base64 field first; decodes and saves via `save_og_image()`. Falls back to raw file upload if no cropped data present.
 
 **Using it in a new field:**
 ```jinja2
@@ -396,19 +435,25 @@ A hidden input `<input type="hidden" name="{field_id}_dark_mode" value="true|fal
     {% include field.form_template %}
 {% endwith %}
 ```
-Set `field.form_template = "forms/asset_upload.html"` in the field's `__post_init__`.
+Set `field.form_template = "forms/asset_upload.html"` and `self.upload_mode = 'svg'|'image'|'social'` in the field's `__post_init__`.
 
 **CSS classes:**
 - `.jj-upload` — root wrapper
-- `.jj-upload-preview-row` — flex row of swatches
+- `.jj-upload-preview-row` — flex row of swatches (svg mode)
 - `.jj-upload-preview-row--logo` / `--favicon` — size variants (80px / 24px)
 - `.jj-upload-swatch--light` / `--dark` — background variants
+- `.jj-upload-social-frame` — 1200:630 aspect-ratio inline preview (social mode)
+- `.jj-upload-image-preview` — natural-ratio inline preview capped at 200px (image mode)
 - `.jj-upload-modal` — upload modal (extends `.jj-dialog`)
 - `.jj-upload-modal-preview` — preview area inside modal (dark bg, `align-items: stretch`)
-- `.jj-upload-modal-swatches` — dual side-by-side light/dark swatch layout (dark mode on)
-- `.jj-upload-progress` / `.jj-upload-progress-bar` — file read progress
+- `.jj-upload-modal-swatches` — dual side-by-side light/dark swatch layout (svg dark mode on)
+- `.jj-upload-crop-container` — Cropper.js wrapper (max-height 420px, `--jj-grey-midnight` bg, social mode)
 
-**`POST /api/preview-svg`:** Auth-gated (session required). Accepts `multipart/form-data` with `file` field. Returns `{"preview": "data:image/svg+xml;base64,...", "preview_dark": "data:image/svg+xml;base64,..."}`. Validates SVG by checking content starts with `<`. Nothing is saved.
+**`POST /api/preview-svg`:** Auth-gated. Accepts `multipart/form-data` with `file` field. Returns `{"preview": "data:image/svg+xml;base64,...", "preview_dark": "data:image/svg+xml;base64,..."}`. Nothing is saved.
+
+**`POST /api/preview-og-image`:** Auth-gated. Accepts `multipart/form-data` with `file` field (JPEG/PNG). Crops to 1200×630 JPEG and returns `{"preview": "data:image/jpeg;base64,..."}`. Nothing is saved. Used by the social mode uploader to generate a live preview before the form is submitted.
+
+**Cropper.js dependency:** Only required on pages using `social` mode. Loaded via CDN in `seo_edit.html`'s `head_css` / `script` blocks. Crop border colour overrides (`.cropper-view-box`, `.cropper-line`, `.cropper-point`) and checkerboard suppression (`.cropper-bg`) are applied in an inline `<style>` in `seo_edit.html` immediately after the Cropper CSS `<link>` — this order is load-bearing since Cropper's stylesheet loads after `admin.css`.
 
 ---
 

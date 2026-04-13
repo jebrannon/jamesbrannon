@@ -17,6 +17,8 @@ FAVICON_DIR = Path(__file__).parent.parent.parent / "static" / "favicons"
 FAVICON_DIR.mkdir(parents=True, exist_ok=True)
 LOGO_DIR = Path(__file__).parent.parent.parent / "static" / "logos"
 LOGO_DIR.mkdir(parents=True, exist_ok=True)
+OG_IMAGE_DIR = Path(__file__).parent.parent.parent / "static" / "og-images"
+OG_IMAGE_DIR.mkdir(parents=True, exist_ok=True)
 
 THUMB_SIZE = (1200, 630)
 EXPECTED_FAVICON_SIZES = [16, 32, 192, 512]
@@ -239,6 +241,33 @@ def _make_previews(svg_bytes: bytes):
     else:
         # Dark SVG (e.g. black logo): original for light bg, light fills for dark bg
         return svg_bytes, _with_fill("#FBFBFB")
+
+
+def _crop_to_og(image_bytes: bytes) -> bytes:
+    """Crop and resize image to 1200×630 JPEG — the universal OG image size."""
+    buf = io.BytesIO()
+    img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+    img = ImageOps.fit(img, THUMB_SIZE, Image.LANCZOS)
+    img.save(buf, "JPEG", quality=85)
+    return buf.getvalue()
+
+
+def save_og_image(image_bytes: bytes) -> str:
+    """
+    Crop image to 1200×630 and save as the site-level OG fallback image.
+    Always outputs JPEG. Overwrites any previous OG image.
+
+    Returns:
+        Public URL of the saved image.
+    """
+    jpeg_bytes = _crop_to_og(image_bytes)
+
+    if _USE_S3:
+        return _upload_to_s3(jpeg_bytes, "og-images/og-image.jpg", "image/jpeg")
+
+    path = OG_IMAGE_DIR / "og-image.jpg"
+    path.write_bytes(jpeg_bytes)
+    return "/static/og-images/og-image.jpg"
 
 
 def save_logo(svg_bytes: bytes, inject_dark_mode: bool = True) -> str:

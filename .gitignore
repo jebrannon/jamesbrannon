@@ -37,6 +37,7 @@ release/
 cms/static/post-images/
 cms/static/favicons/
 cms/static/logos/
+cms/static/og-images/
 
 # AWS / CDK
 cdk.out/
