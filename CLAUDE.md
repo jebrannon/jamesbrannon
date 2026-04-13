@@ -479,21 +479,35 @@ Load order: `tabler.desktop.css` → `admin-tokens.css` → `admin.css`. This or
 - `--jj-btn-radius/font/fs/lh/fw/padding/transform` — button base
 - `--jj-btn-primary/secondary/default/danger-*` — button variants (bg, text, hover-bg, hover-text)
 - `--jj-btn-disabled-bg/border/text` — disabled state (dark bg, dark border, mild-grey text)
-- `--jj-icon-close/dashboard/home/logout/message` — icon path strings (NOT `url()` — CSS vars can't interpolate inside `url()`)
+- `--jj-navbar-logo-w/h` — sidebar logo dimensions (4.5rem / 6rem)
+- `--jj-nav-padding`, `--jj-nav-bg/color/hover-bg/active-bg/active-color/radius` — nav link base styles
+- `--jj-nav-item-gap` — vertical gap between nav items (0.25rem)
+- `--jj-nav-icon-gap` — space between icon and label (1rem)
+- `--jj-nav-icon-color` — icon colour for default and hover states (single token; hover inherits the same value)
+- `--jj-nav-icon-active` — icon colour when nav item is active
+- `--jj-dropdown-padding-y` / `--jj-dropdown-padding-x` — padding for the dropdown menu panel
+- `--jj-icon-chevron/close/dashboard/home/logout/message` — icon path strings (NOT `url()` — CSS vars can't interpolate inside `url()`)
 - `--jj-backdrop` — modal overlay: `rgba(0, 0, 0, 0.75)`
 - `--jj-radius` — 0.25rem; applied to inputs, buttons, UI components
 
 **`admin.css`** is structured in descriptive sections:
 **Tabler remap** — override `--tblr-*` tokens to apply our palette (the intended Tabler theming API)
 **Typography** — body, headings, text utilities (`b/strong` use `--fw-medium`)
-**Layout** — navbar, sidebar, page header/body, list toolbar. Nav link padding is `--jj-nav-padding: 0.75rem` (all sides). `.jj-sidebar-footer .nav-link` shares the same nav token styles as `.navbar-nav .nav-link`.
+**Layout** — navbar, sidebar, page header/body, list toolbar. Sidebar nav is structured as: (1) shared font block covering `.nav-link` and `.dropdown-item` together, (2) nav link base styles (padding, bg, colour, border-radius, transition), (3) hover/open/active state overrides, (4) dropdown caret + open animation, (5) dropdown menu panel + item styles. `.jj-sidebar-footer .nav-link` shares the same shared font block. Dropdown items use higher-specificity selectors (no `!important`) to override Tabler's rules.
 **Forms** — inputs, labels, fieldset legends, card chrome; toggle component (`.jj-toggle-row`)
 **Components** — buttons (incl. disabled state), badges, tables, sidebar icons (mask-image approach); shared dialog (`.jj-dialog`)
 **Singleton pages** — scoped via `.jj-singleton` class (added to `<body>` by `singleton_edit.html`)
 **Block editor** — all `.jj-block*` and rich-text editor styles
 **Upload** — SVG/image upload components (`.jj-upload-*`), swatch variants, modal extends `.jj-dialog`
 
-**Sidebar icons (mask-image approach):** Icon SVG files in `cms/static/icons/` are applied via `mask-image` + `background-color: currentColor`. The icon shape acts as a stencil so it automatically inherits the nav-link text colour in all states (default, hover, active) — no per-state colour overrides needed. Both `mask-image` and `-webkit-mask-image` (Safari) are set. The `.fa-*` class names from the starlette-admin `icon=` API are remapped to SVG masks in `admin.css`.
+**Sidebar nav key selectors:**
+- `.navbar-vertical .navbar-nav .nav-item` — uses `--jj-nav-item-gap` for vertical spacing
+- `.navbar-vertical .navbar-nav .nav-item.dropdown:has(.dropdown-menu.show) > .nav-link` — open trigger state (hover bg, flatten bottom-right corner)
+- `.navbar-vertical .navbar-nav .nav-link.dropdown-toggle::after` — chevron caret via SVG mask; rotates 180° when open
+- `.navbar-vertical .navbar-nav .dropdown-menu` — uses `--jj-dropdown-padding-y/x`; border-radius flattens top-left to connect visually to open trigger
+- `.navbar-vertical.navbar-expand-lg .navbar-collapse .navbar-nav .dropdown-item` — full path required to beat Tabler specificity (no `!important`)
+
+**Sidebar icons (mask-image approach):** Icon SVG files in `cms/static/icons/` (`chevron.svg`, `close.svg`, `dashboard.svg`, `home.svg`, `logout.svg`, `message.svg`) are applied via `mask-image` + `background-color: currentColor`. The icon shape acts as a stencil so it automatically inherits the nav-link text colour in all states (default, hover, active) — no per-state colour overrides needed. Both `mask-image` and `-webkit-mask-image` (Safari) are set. The `.fa-*` class names from the starlette-admin `icon=` API are remapped to SVG masks in `admin.css`.
 
 **`!important` discipline:** only used where Tabler's high-specificity selectors cannot be beaten by token remapping alone. Always accompanied by a comment explaining why.
 

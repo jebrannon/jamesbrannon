@@ -742,16 +742,16 @@ def test_logo_css_sizing(admin_client):
     tokens_css = Path(__file__).parent.parent / "static" / "admin-tokens.css"
     assert tokens_css.exists()
     tokens_content = tokens_css.read_text()
-    assert "--navbar-logo-w: 4.5rem" in tokens_content
-    assert "--navbar-logo-h: 6rem" in tokens_content
+    assert "--jj-navbar-logo-w: 4.5rem" in tokens_content
+    assert "--jj-navbar-logo-h: 6rem" in tokens_content
 
     # Verify the selector that applies them is in admin.css
     admin_css = Path(__file__).parent.parent / "static" / "admin.css"
     assert admin_css.exists()
     admin_content = admin_css.read_text()
     assert "navbar-vertical.navbar-expand-lg .navbar-brand" in admin_content
-    assert "var(--navbar-logo-w)" in admin_content
-    assert "var(--navbar-logo-h)" in admin_content
+    assert "var(--jj-navbar-logo-w)" in admin_content
+    assert "var(--jj-navbar-logo-h)" in admin_content
 
 
 def test_mobile_user_icon_hidden(admin_client):

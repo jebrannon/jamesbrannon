@@ -171,8 +171,8 @@ details summary { color: var(--jj-light) !important; }
 
 /* Brand logo in sidebar */
 .navbar-logo {
-  width:   var(--navbar-logo-w);
-  height:  var(--navbar-logo-h);
+  width:   var(--jj-navbar-logo-w);
+  height:  var(--jj-navbar-logo-h);
   display: block;
   margin:  0;
 }
@@ -181,7 +181,7 @@ details summary { color: var(--jj-light) !important; }
 .navbar-vertical.navbar-expand-lg .navbar-brand {
   align-self:      flex-start;
   justify-content: flex-start;
-  padding:         2rem 1rem;
+  padding:         var(--page-padding) var(--page-padding-sm);
 }
 
 /* Sidebar collapse — flex column so logout can pin to bottom */
@@ -200,13 +200,7 @@ details summary { color: var(--jj-light) !important; }
   margin-top: auto;
 }
 
-/* Remove Tabler's min-height and enforce our padding token on sidebar nav links */
-.navbar-vertical .navbar-nav .nav-link {
-  min-height: 0 !important;
-  padding:    var(--jj-nav-padding) !important;
-}
-
-/* Neutralise Tabler's active indicator pseudo-elements — we use bg-color instead */
+/* Neutralise Tabler's active indicator (::after left border) — we use bg-color instead */
 .navbar-vertical.navbar-expand-lg .navbar-collapse .nav-item.active::after,
 .navbar-expand-lg .nav-item.active::after {
   display: none !important;
@@ -220,43 +214,56 @@ details summary { color: var(--jj-light) !important; }
 }
 
 .navbar-vertical .navbar-nav .nav-item {
-  margin-bottom: 0.25rem;
+  margin-bottom: var(--jj-nav-item-gap);
 }
 
+/* Shared font style — nav links and dropdown items */
+.navbar-vertical .navbar-nav .nav-link,
+.navbar-vertical .jj-sidebar-footer .nav-link,
+.navbar-vertical .navbar-nav .dropdown-item {
+  font-family:     var(--font);
+  font-size:       var(--fs-btn);
+  line-height:     var(--lh-btn);
+  font-weight:     var(--fw-btn);
+  font-style:      normal;
+  text-decoration: none;
+}
+
+/* Nav link base */
 .navbar-vertical .navbar-nav .nav-link,
 .navbar-vertical .jj-sidebar-footer .nav-link {
   display:          flex;
   align-items:      center;
-  padding:          var(--jj-nav-padding);
+  padding:          var(--jj-nav-padding) !important;
+  min-height:       0 !important;
   background-color: var(--jj-nav-bg);
   color:            var(--jj-nav-color);
-  font-family:      var(--font);
-  font-size:        var(--fs-btn);
-  line-height:      var(--lh-btn);
-  font-weight:      var(--fw-btn);
-  font-style:       normal;
-  text-decoration:  none;
   border-radius:    var(--jj-nav-radius);
   gap:              var(--jj-nav-icon-gap);
   transition:       background-color 0.2s ease, color 0.2s ease;
 }
-.navbar-vertical .navbar-nav .nav-link i,
-.navbar-vertical .navbar-nav .nav-link svg,
-.navbar-vertical .jj-sidebar-footer .nav-link i,
-.navbar-vertical .jj-sidebar-footer .nav-link svg {
-  color: var(--jj-nav-icon-color);
-}
+
+/* Nav link — hover */
 .navbar-vertical .navbar-nav .nav-link:hover,
 .navbar-vertical .jj-sidebar-footer .nav-link:hover {
   background-color: var(--jj-nav-hover-bg);
   color:            var(--jj-nav-color);
 }
-.navbar-vertical .navbar-nav .nav-link:hover i,
-.navbar-vertical .navbar-nav .nav-link:hover svg,
-.navbar-vertical .jj-sidebar-footer .nav-link:hover i,
-.navbar-vertical .jj-sidebar-footer .nav-link:hover svg {
-  color: var(--jj-nav-icon-hover);
+
+/* Dropdown trigger — open state uses hover styling.
+   :has() used because only .dropdown-menu gets .show, not the trigger or li. */
+.navbar-vertical .navbar-nav .nav-item.dropdown:has(.dropdown-menu.show) > .nav-link {
+  background-color: var(--jj-nav-hover-bg);
+  color:            var(--jj-nav-color);
+  border-radius:    0 var(--jj-radius) 0 0; /* flatten bottom-right to connect with menu */
 }
+
+/* Nav link — active */
+.navbar-vertical .navbar-nav .nav-link.active {
+  background-color: var(--jj-nav-active-bg);
+  color:            var(--jj-nav-active-color);
+}
+
 /* Dropdown caret — replace Bootstrap's border-triangle with chevron SVG */
 .navbar-vertical .navbar-nav .nav-link.dropdown-toggle::after {
   content:               '' !important;
@@ -287,63 +294,39 @@ details summary { color: var(--jj-light) !important; }
 /* Dropdown menu panel */
 .navbar-vertical .navbar-nav .dropdown-menu {
   background-color: var(--jj-grey-dark) !important;
-  padding-top:      0.25rem !important;
-  padding-bottom:   0.25rem !important;
-  padding-right:    0.5rem !important;
+  padding-top:      var(--jj-dropdown-padding-y) !important;
+  padding-bottom:   var(--jj-dropdown-padding-y) !important;
+  padding-right:    var(--jj-dropdown-padding-x) !important;
   border-radius:    0 0 var(--jj-radius) 0 !important;
-  border-top:       1px solid var(--jj-dark) !important;
+  border-top:       1px solid var(--jj-dark) !important; /* visually connects to the open toggle above */
 }
 
-/* Dropdown items — match nav item tokens */
+/* Dropdown items — gap between siblings */
 .navbar-vertical .navbar-nav .dropdown-item + .dropdown-item {
-  margin-top: 0.25rem;
-}
-.navbar-vertical .navbar-nav .dropdown-item {
-  padding:          var(--jj-nav-padding) !important;
-  transition:       background-color 0.2s ease, color 0.2s ease;
-  background-color: var(--jj-grey-dark) !important;
-  color:            var(--jj-light) !important;
-  font-family:      var(--font);
-  font-size:        var(--fs-btn);
-  line-height:      var(--lh-btn);
-  font-weight:      var(--fw-btn);
-  font-style:       normal;
-  text-decoration:  none;
-  border-radius:    var(--jj-nav-radius);
-}
-.navbar-vertical .navbar-nav .dropdown-item:hover {
-  background-color: var(--jj-dark) !important;
-  color:            var(--jj-light) !important;
-}
-.navbar-vertical .navbar-nav .dropdown-item.active,
-.navbar-vertical .navbar-nav .dropdown-item:active {
-  background-color: var(--jj-primary) !important;
-  color:            var(--jj-dark) !important;
+  margin-top: var(--jj-nav-item-gap);
 }
 
-/* Dropdown trigger — open state uses hover styling.
-   :has() targets the toggle via the .dropdown-menu.show child (only element that gets .show). */
-.navbar-vertical .navbar-nav .nav-item.dropdown:has(.dropdown-menu.show) > .nav-link {
-  background-color: var(--jj-nav-hover-bg);
-  color:            var(--jj-nav-color);
-  border-radius:    0 var(--jj-radius) 0 0;
+/* Dropdown items — higher specificity matches Tabler's rule, no !important needed */
+.navbar-vertical.navbar-expand-lg .navbar-collapse .navbar-nav .dropdown-item {
+  padding:          var(--jj-nav-padding);
+  background-color: var(--jj-grey-dark);
+  color:            var(--jj-light);
+  border-radius:    var(--jj-nav-radius);
+  transition:       background-color 0.2s ease, color 0.2s ease;
 }
-.navbar-vertical .navbar-nav .nav-item.dropdown:has(.dropdown-menu.show) > .nav-link i,
-.navbar-vertical .navbar-nav .nav-item.dropdown:has(.dropdown-menu.show) > .nav-link svg {
-  color: var(--jj-nav-icon-hover);
+.navbar-vertical.navbar-expand-lg .navbar-collapse .navbar-nav .dropdown-item:hover {
+  background-color: var(--jj-dark);
+  color:            var(--jj-light);
 }
-.navbar-vertical .navbar-nav .nav-link.active {
-  background-color: var(--jj-nav-active-bg);
-  color:            var(--jj-nav-active-color);
-}
-.navbar-vertical .navbar-nav .nav-link.active i,
-.navbar-vertical .navbar-nav .nav-link.active svg {
-  color: var(--jj-nav-icon-active);
+.navbar-vertical.navbar-expand-lg .navbar-collapse .navbar-nav .dropdown-item.active,
+.navbar-vertical.navbar-expand-lg .navbar-collapse .navbar-nav .dropdown-item:active {
+  background-color: var(--jj-primary);
+  color:            var(--jj-dark);
 }
 
 /* Page header — top/side padding, reduced bottom before content */
 .jj-page-header {
-  padding: 2rem;
+  padding: var(--page-padding);
 }
 
 .jj-page-header h1 {
@@ -372,7 +355,7 @@ details summary { color: var(--jj-light) !important; }
 
 /* Page body — fills remaining height */
 .jj-page-body {
-  padding: 1.5rem 2rem 2rem 2rem;
+  padding: 1.5rem var(--page-padding) var(--page-padding) var(--page-padding);
   flex: 1;
 }
 
@@ -573,9 +556,6 @@ legend {
   --tblr-btn-hover-border-color: transparent;
   --tblr-btn-active-bg:          var(--jj-btn-danger-hover-bg);
   --tblr-btn-active-color:       var(--jj-btn-danger-hover-text);
-  background-color: var(--jj-btn-danger-bg);
-  border-color:     transparent;
-  color:            var(--jj-btn-danger-text);
 }
 
 /* Disabled — all variants */

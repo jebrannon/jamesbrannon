@@ -68,21 +68,25 @@
   --page-padding-sm: 1rem;
 
   /* ── Navbar ──────────────────────────────────────────────────────────────── */
-  --navbar-logo-w: 4.5rem;
-  --navbar-logo-h: 6rem;
+  --jj-navbar-logo-w: 4.5rem;
+  --jj-navbar-logo-h: 6rem;
 
   /* ── Sidebar nav items ───────────────────────────────────────────────────── */
-  --jj-nav-padding:       0.75rem;        /* 12px all sides — matches Tabler's nav-link override */
-  --jj-nav-bg:            var(--jj-dark);
-  --jj-nav-color:         var(--jj-light);
-  --jj-nav-hover-bg:      var(--jj-grey-dark);
-  --jj-nav-active-bg:     var(--jj-primary);
-  --jj-nav-active-color:  var(--jj-dark);
-  --jj-nav-radius:        0 var(--jj-radius) var(--jj-radius) 0; /* top-right + bottom-right only */
-  --jj-nav-icon-gap:      1rem;
-  --jj-nav-icon-color:    var(--jj-nav-color);
-  --jj-nav-icon-hover:    var(--jj-nav-color);
-  --jj-nav-icon-active:   var(--jj-nav-active-color);
+  --jj-nav-padding:      0.75rem;        /* 12px all sides — matches Tabler's nav-link override */
+  --jj-nav-bg:           var(--jj-dark);
+  --jj-nav-color:        var(--jj-light);
+  --jj-nav-hover-bg:     var(--jj-grey-dark);
+  --jj-nav-active-bg:    var(--jj-primary);
+  --jj-nav-active-color: var(--jj-dark);
+  --jj-nav-radius:       0 var(--jj-radius) var(--jj-radius) 0; /* top-right + bottom-right only */
+  --jj-nav-item-gap:     0.25rem;        /* vertical gap between nav items */
+  --jj-nav-icon-gap:     1rem;
+  --jj-nav-icon-color:   var(--jj-nav-color);   /* default + hover — same value, one token */
+  --jj-nav-icon-active:  var(--jj-nav-active-color);
+
+  /* ── Dropdown ────────────────────────────────────────────────────────────── */
+  --jj-dropdown-padding-y: 0.25rem;
+  --jj-dropdown-padding-x: 0.5rem;
 
   /* ── Sidebar ─────────────────────────────────────────────────────────────── */
 
