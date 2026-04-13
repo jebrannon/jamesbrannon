@@ -87,6 +87,7 @@
   /* ── Sidebar ─────────────────────────────────────────────────────────────── */
 
   /* ── Icons ───────────────────────────────────────────────────────────────── */
+  --jj-icon-chevron:   '/static/icons/chevron.svg';
   --jj-icon-close:     '/static/icons/close.svg';
   --jj-icon-dashboard: '/static/icons/dashboard.svg';
   --jj-icon-home:      '/static/icons/home.svg';

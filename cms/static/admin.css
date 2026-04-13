@@ -200,6 +200,18 @@ details summary { color: var(--jj-light) !important; }
   margin-top: auto;
 }
 
+/* Remove Tabler's min-height and enforce our padding token on sidebar nav links */
+.navbar-vertical .navbar-nav .nav-link {
+  min-height: 0 !important;
+  padding:    var(--jj-nav-padding) !important;
+}
+
+/* Neutralise Tabler's active indicator pseudo-elements — we use bg-color instead */
+.navbar-vertical.navbar-expand-lg .navbar-collapse .nav-item.active::after,
+.navbar-expand-lg .nav-item.active::after {
+  display: none !important;
+}
+
 /* Sidebar nav items */
 .navbar-vertical .navbar-nav .nav-link-icon {
   margin-right: 0;
@@ -226,6 +238,7 @@ details summary { color: var(--jj-light) !important; }
   text-decoration:  none;
   border-radius:    var(--jj-nav-radius);
   gap:              var(--jj-nav-icon-gap);
+  transition:       background-color 0.2s ease, color 0.2s ease;
 }
 .navbar-vertical .navbar-nav .nav-link i,
 .navbar-vertical .navbar-nav .nav-link svg,
@@ -242,6 +255,81 @@ details summary { color: var(--jj-light) !important; }
 .navbar-vertical .navbar-nav .nav-link:hover svg,
 .navbar-vertical .jj-sidebar-footer .nav-link:hover i,
 .navbar-vertical .jj-sidebar-footer .nav-link:hover svg {
+  color: var(--jj-nav-icon-hover);
+}
+/* Dropdown caret — replace Bootstrap's border-triangle with chevron SVG */
+.navbar-vertical .navbar-nav .nav-link.dropdown-toggle::after {
+  content:               '' !important;
+  display:               block !important;
+  width:                 8px !important;
+  height:                8px !important;
+  margin-left:           auto !important;
+  flex-shrink:           0;
+  background-color:      currentColor;
+  mask-image:            url('/static/icons/chevron.svg');
+  mask-size:             contain;
+  mask-repeat:           no-repeat;
+  mask-position:         center;
+  -webkit-mask-image:    url('/static/icons/chevron.svg');
+  -webkit-mask-size:     contain;
+  -webkit-mask-repeat:   no-repeat;
+  -webkit-mask-position: center;
+  border:                none !important;
+  vertical-align:        0 !important;
+  transform:             rotate(0deg);
+  transition:            transform 0.2s ease;
+}
+/* Rotate chevron when open */
+.navbar-vertical .navbar-nav .nav-item.dropdown:has(.dropdown-menu.show) > .nav-link.dropdown-toggle::after {
+  transform: rotate(180deg);
+}
+
+/* Dropdown menu panel */
+.navbar-vertical .navbar-nav .dropdown-menu {
+  background-color: var(--jj-grey-dark) !important;
+  padding-top:      0.25rem !important;
+  padding-bottom:   0.25rem !important;
+  padding-right:    0.5rem !important;
+  border-radius:    0 0 var(--jj-radius) 0 !important;
+  border-top:       1px solid var(--jj-dark) !important;
+}
+
+/* Dropdown items — match nav item tokens */
+.navbar-vertical .navbar-nav .dropdown-item + .dropdown-item {
+  margin-top: 0.25rem;
+}
+.navbar-vertical .navbar-nav .dropdown-item {
+  padding:          var(--jj-nav-padding) !important;
+  transition:       background-color 0.2s ease, color 0.2s ease;
+  background-color: var(--jj-grey-dark) !important;
+  color:            var(--jj-light) !important;
+  font-family:      var(--font);
+  font-size:        var(--fs-btn);
+  line-height:      var(--lh-btn);
+  font-weight:      var(--fw-btn);
+  font-style:       normal;
+  text-decoration:  none;
+  border-radius:    var(--jj-nav-radius);
+}
+.navbar-vertical .navbar-nav .dropdown-item:hover {
+  background-color: var(--jj-dark) !important;
+  color:            var(--jj-light) !important;
+}
+.navbar-vertical .navbar-nav .dropdown-item.active,
+.navbar-vertical .navbar-nav .dropdown-item:active {
+  background-color: var(--jj-primary) !important;
+  color:            var(--jj-dark) !important;
+}
+
+/* Dropdown trigger — open state uses hover styling.
+   :has() targets the toggle via the .dropdown-menu.show child (only element that gets .show). */
+.navbar-vertical .navbar-nav .nav-item.dropdown:has(.dropdown-menu.show) > .nav-link {
+  background-color: var(--jj-nav-hover-bg);
+  color:            var(--jj-nav-color);
+  border-radius:    0 var(--jj-radius) 0 0;
+}
+.navbar-vertical .navbar-nav .nav-item.dropdown:has(.dropdown-menu.show) > .nav-link i,
+.navbar-vertical .navbar-nav .nav-item.dropdown:has(.dropdown-menu.show) > .nav-link svg {
   color: var(--jj-nav-icon-hover);
 }
 .navbar-vertical .navbar-nav .nav-link.active {
